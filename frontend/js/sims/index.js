@@ -198,6 +198,48 @@ export const SIMS = [
       <rect x="180" y="110" width="22" height="0" fill="#1baf7a"/><rect x="180" y="30" width="22" height="80" fill="#1baf7a"/><text x="120" y="24" font-size="18" text-anchor="middle" fill="#39424e" font-family="sans-serif">⇌</text>`),
   },
   {
+    id: "titration", domain: "chemistry", title: "Acid–Base Titration",
+    blurb: "Drip base into acid (or acid into base), watch the indicator flip and find the equivalence point.",
+    load: () => import("./titration.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="112" y="4" width="14" height="60" fill="#fff" stroke="#39424e" stroke-width="2"/>
+      <rect x="114" y="30" width="10" height="32" fill="#86b6ef"/><path d="M104 80 L78 122 L160 122 L134 80 Z" fill="#e87ba4" stroke="#39424e" stroke-width="3"/>
+      <path d="M150 110 C170 110 176 30 200 26 L230 24" fill="none" stroke="#2a78d6" stroke-width="3"/>`),
+  },
+  {
+    id: "buffers", domain: "chemistry", title: "Buffers",
+    blurb: "Add acid or base to a buffer and to pure water side by side. Why does the buffer barely budge?",
+    load: () => import("./buffers.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="36" y="40" width="64" height="72" fill="#eda100" opacity=".8"/>
+      <rect x="140" y="40" width="64" height="72" fill="#e34948" opacity=".8"/>
+      <path d="M30 30 v84 h76 v-84 M134 30 v84 h76 v-84" fill="none" stroke="#39424e" stroke-width="3"/>`),
+  },
+  {
+    id: "beers", domain: "chemistry", title: "Beer's Law Lab",
+    blurb: "Shine light of any colour through a coloured solution and measure absorbance and transmittance.",
+    load: () => import("./beers.js"),
+    art: sky(`<rect width="240" height="128" fill="#1a2230"/><rect x="10" y="44" width="40" height="40" fill="#39424e"/>
+      <rect x="50" y="60" width="60" height="8" fill="#1baf7a"/><rect x="110" y="30" width="26" height="70" fill="#a3319e" opacity=".85"/>
+      <rect x="136" y="60" width="50" height="8" fill="#1baf7a" opacity=".35"/><rect x="186" y="40" width="46" height="48" fill="#39424e"/>`),
+  },
+  {
+    id: "molecules", domain: "chemistry", title: "Molecule Shapes",
+    blurb: "VSEPR in 3D: see how bonds and lone pairs arrange themselves, and measure the bond angles.",
+    load: () => import("./molecules.js"),
+    art: sky(`<rect width="240" height="128" fill="#131c2c"/><line x1="120" y1="64" x2="120" y2="16" stroke="#c9ced6" stroke-width="6"/>
+      <line x1="120" y1="64" x2="74" y2="96" stroke="#c9ced6" stroke-width="6"/><line x1="120" y1="64" x2="168" y2="96" stroke="#c9ced6" stroke-width="6"/>
+      <circle cx="120" cy="16" r="12" fill="#7cc76b"/><circle cx="74" cy="96" r="12" fill="#7cc76b"/><circle cx="168" cy="96" r="12" fill="#7cc76b"/>
+      <circle cx="120" cy="64" r="16" fill="#eb6834"/><circle cx="160" cy="44" r="16" fill="#eb6834" opacity=".35"/>`),
+  },
+  {
+    id: "atom", domain: "chemistry", title: "Build an Atom",
+    blurb: "Add protons, neutrons and electrons. Make elements, ions and isotopes; check which are stable.",
+    load: () => import("./atom.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><circle cx="120" cy="64" r="30" fill="none" stroke="#c9ced6" stroke-opacity=".4"/>
+      <circle cx="120" cy="64" r="52" fill="none" stroke="#c9ced6" stroke-opacity=".4"/>
+      <circle cx="115" cy="60" r="7" fill="#e34948"/><circle cx="125" cy="62" r="7" fill="#9aa6b5"/><circle cx="118" cy="70" r="7" fill="#9aa6b5"/><circle cx="126" cy="70" r="7" fill="#e34948"/>
+      <circle cx="150" cy="64" r="5" fill="#5598e7"/><circle cx="90" cy="64" r="5" fill="#5598e7"/><circle cx="120" cy="12" r="5" fill="#5598e7"/>`),
+  },
+  {
     id: "grapher", domain: "mathematics", title: "Calculus Grapher",
     blurb: "Plot any function with its derivative, tangent line and the area under the curve.",
     load: () => import("./grapher.js"),

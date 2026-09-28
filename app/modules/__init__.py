@@ -28,3 +28,4 @@ from app.modules.physics import track  # noqa: F401
 from app.modules.chemistry import spectroscopy  # noqa: F401
 from app.modules.chemistry import titration  # noqa: F401
 from app.modules.chemistry import vsepr  # noqa: F401
+from app.modules.chemistry import atoms  # noqa: F401

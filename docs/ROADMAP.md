@@ -84,15 +84,15 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Orbital perturbations (J2 precession, drag decay)
 
 **Chemistry**
-- [ ] Build an atom / isotopes & atomic mass
-- [ ] Molecule shapes (VSEPR geometry)
+- [x] Build an atom / isotopes & atomic mass
+- [x] Molecule shapes (VSEPR geometry)
 - [ ] Balancing chemical equations (interactive)
 - [ ] Reactants, products & leftovers (limiting reagent visual)
 - [ ] Molarity & dilution
-- [ ] Acid–base titration curves (strong/weak, indicators)
-- [ ] Buffers & Henderson–Hasselbalch
+- [x] Acid–base titration curves (strong/weak, indicators)
+- [x] Buffers & Henderson–Hasselbalch
 - [ ] Polyprotic acids & speciation diagrams
-- [ ] Beer–Lambert law (spectrophotometer)
+- [x] Beer–Lambert law (spectrophotometer)
 - [ ] Electrochemistry: galvanic cells & the Nernst equation
 - [ ] Real gases (van der Waals) vs ideal
 - [ ] States of matter & phase diagrams (Clausius–Clapeyron)

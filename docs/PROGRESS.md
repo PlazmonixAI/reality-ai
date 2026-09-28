@@ -74,3 +74,11 @@
 - Verified: 1D restitution formulas, 90° split for equal-mass glancing collisions, momentum/energy conservation, ramp accelerations and stick/slip, √(2gh) and √(2ga) on a parabola, RC 63.2 % at τ, RL rise, RLC ringing frequency & Q & bandwidth, dipole far-field flux, ∫EMF dt = −ΔΦ; 320 tests passing
 - **Next:** Phase 6 batch 4 — chemistry (titration, buffers, Beer–Lambert, molecule shapes, build an atom)
 - **Known issues:** Faraday sim neglects coil self-inductance (no magnetic drag); skater always stays on the track
+
+## 2026-09-28 — Phase 6, batch 4 (chemistry)
+- New engine tools: `titration_curve` (exact charge balance, equivalence/half-equivalence, indicators), `buffer_ph` (exact + Henderson–Hasselbalch + capacity), `beer_lambert`, `absorbance_spectrum`, `molecule_shape` (VSEPR from a formula; repulsion-minimised domains, ideal and lone-pair-compressed angles), `atom_builder` + `nuclear_binding_energy` (element/ion/isotope stability for Z ≤ 20, Madelung electron configuration, semi-empirical mass formula)
+- New sims: Acid–Base Titration, Buffers (buffer vs pure water), Beer's Law Lab (spectrophotometer, spectrum, Beer's-law line), Molecule Shapes (rotatable 3D), Build an Atom (Bohr shells, mini periodic table)
+- Verified: strong/strong equivalence pH 7, acetic half-equivalence = pKa and equivalence 8.73, NH3 equivalence 5.28, buffer + 0.01 mol HCl = 4.673, buffer capacity vs numerical derivative, A = εlc, 17 textbook VSEPR shapes, K fills 4s before 3d, Fe-56 binding energy 8.79 MeV/nucleon; 363 tests passing
+- Note: large reference tables are avoided (computed where possible) after "output blocked by content filtering" errors in the session; spectrophotometer solutions use illustrative single-band absorptivities
+- **Next:** Phase 6 batch 5 — mathematics (unit circle, Fourier series, slope fields, vectors, probability)
+- **Known issues:** VSEPR supports one central atom and terminal H/halogens/O/S/N only; Build an Atom limited to Z ≤ 20
