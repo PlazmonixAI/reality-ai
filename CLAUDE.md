@@ -29,6 +29,7 @@ Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anyt
 6. Run `pytest` — everything must pass before you finish.
 
 See `app/modules/mathematics/algebra.py` for the reference example.
+Always parse user-supplied expressions with `app/core/parsing.py` (`parse_expression`, `parse_equation`, `symbol`) — never `sympify`/`eval` on raw input.
 
 ## End of every session
 - Run `pytest` and make sure it's green.

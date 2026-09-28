@@ -1,6 +1,7 @@
 """Reference example tool. Copy this pattern for every new tool."""
 import sympy as sp
 
+from app.core.parsing import parse_equation, symbol
 from app.core.registry import tool
 
 
@@ -10,12 +11,8 @@ from app.core.registry import tool
     description="Solve an algebraic equation for a variable. Example: equation='x**2 - 4 = 0', variable='x'.",
 )
 def solve_equation(equation: str, variable: str = "x") -> dict:
-    var = sp.Symbol(variable)
-    if "=" in equation:
-        lhs, rhs = equation.split("=", 1)
-        expr = sp.sympify(lhs) - sp.sympify(rhs)
-    else:
-        expr = sp.sympify(equation)
+    var = symbol(variable)
+    expr = parse_equation(equation)
     solutions = sp.solve(expr, var)
     return {
         "result": [str(s) for s in solutions],

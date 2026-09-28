@@ -8,12 +8,12 @@ Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
 - [x] Reference tool: `mathematics.solve_equation`
 - [x] Test setup
 
-## Phase 1 — Mathematics core
-- [ ] Symbolic: differentiate, integrate (definite + indefinite), limits, series expansion
-- [ ] Linear algebra: solve linear systems, eigenvalues/eigenvectors, determinant
-- [ ] ODE solver: numerically solve initial value problems (scipy `solve_ivp`)
-- [ ] Numerical root finding and optimization (scipy)
-- [ ] Tests for all of the above
+## Phase 1 — Mathematics core ✅
+- [x] Symbolic: differentiate, integrate (definite + indefinite), limits, series expansion
+- [x] Linear algebra: solve linear systems, eigenvalues/eigenvectors, determinant
+- [x] ODE solver: numerically solve initial value problems (scipy `solve_ivp`)
+- [x] Numerical root finding and optimization (scipy)
+- [x] Tests for all of the above
 
 ## Phase 2 — Physics: Orbital mechanics (flagship)
 - [ ] Circular/escape velocity, orbital period (Kepler's 3rd law)
