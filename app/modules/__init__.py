@@ -20,3 +20,8 @@ from app.modules.physics import circuits  # noqa: F401
 from app.modules.physics import electrostatics  # noqa: F401
 from app.modules.physics import optics  # noqa: F401
 from app.modules.physics import waves  # noqa: F401
+from app.modules.physics import ac_circuits  # noqa: F401
+from app.modules.physics import collisions  # noqa: F401
+from app.modules.physics import magnetism  # noqa: F401
+from app.modules.physics import ramp  # noqa: F401
+from app.modules.physics import track  # noqa: F401

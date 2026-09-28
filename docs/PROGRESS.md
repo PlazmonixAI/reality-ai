@@ -66,3 +66,11 @@
 - Verified against textbook results: pulse speed √(T/μ), fixed-end inversion, resonance at harmonics, double-slit fringe spacing λD/d, single-slit minima, lens/mirror image positions (rays meet at the image), 45° air→water = 32.12°, R(0°) = 4 % for glass, Brewster p-null, TIR, divider/parallel/bridge circuits, power conservation, point-charge and dipole fields; 281 tests passing
 - **Next:** Phase 6 batch 3 — collisions, forces on a ramp, energy skate park, RC/RLC circuits, magnetic fields & induction
 - **Known issues:** near-slit wave view compresses the slit spacing when it exceeds ~24 wavelengths (flagged on screen; the screen pattern is exact); circuit wires are 0.1 mΩ resistors
+
+## 2026-09-28 — Phase 6, batch 3 (mechanics & electromagnetism)
+- New engine tools: `collision_1d`, `collisions_2d` (event-driven discs, exact between impacts), `ramp_motion` (static/kinetic friction, piecewise-exact), `skate_track` (spline track y(x), friction incl. centripetal normal force), `rlc_circuit` + `rlc_frequency_response`, `magnet_field` + `magnet_coil_induction` (two-pole magnet, continuous flux through the coil, EMF = −N dΦ/dt)
+- Shared `physics/fieldlines.py` RK4 tracer now used by electric and magnetic field tools
+- New sims: Collisions Lab (drag balls & velocity arrows), Forces on a Ramp (free-body diagram, energy graph), Energy Skate Park (drag track points and the skater, energy bars), RC/RL/RLC Circuits (transients, AC, resonance curve), Faraday's Law (magnet through a coil, bulb, voltmeter, flux/EMF graphs)
+- Verified: 1D restitution formulas, 90° split for equal-mass glancing collisions, momentum/energy conservation, ramp accelerations and stick/slip, √(2gh) and √(2ga) on a parabola, RC 63.2 % at τ, RL rise, RLC ringing frequency & Q & bandwidth, dipole far-field flux, ∫EMF dt = −ΔΦ; 320 tests passing
+- **Next:** Phase 6 batch 4 — chemistry (titration, buffers, Beer–Lambert, molecule shapes, build an atom)
+- **Known issues:** Faraday sim neglects coil self-inductance (no magnetic drag); skater always stays on the track

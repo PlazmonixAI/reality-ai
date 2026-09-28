@@ -5,6 +5,7 @@ from typing import Any
 import numpy as np
 
 from app.core.registry import tool
+from app.modules.physics.fieldlines import ring_seeds, trace_field_lines
 
 K_E = 8.9875517923e9  # Coulomb constant, N m^2 / C^2
 
@@ -73,54 +74,18 @@ def electric_field(
     X, Y = np.meshgrid(xs, ys)
     ex, ey, v = _field(q, X, Y)
 
-    # Field lines: start around each charge of the dominant sign, follow E (or -E), RK4 with fixed arc step.
+    # Field lines: start around each charge of the dominant sign and follow E (or -E) to a sink or the edge.
     span = max(x_range[1] - x_range[0], y_range[1] - y_range[0])
-    h, r_stop = span / 250, span / 120
     total = q[:, 0].sum()
     start_sign = 1 if total >= 0 else -1
     qmax = np.max(np.abs(q[:, 0])) or 1
-    sinks = q[q[:, 0] * start_sign < 0][:, 1:]
-    seeds = []
-    for qq, cx, cy in q:
-        if qq == 0 or np.sign(qq) != start_sign:
-            continue
-        count = max(4, int(round(lines_per_charge * abs(qq) / qmax)))
-        a = 2 * np.pi * (np.arange(count) + 0.5) / count
-        seeds.append(np.column_stack([cx + r_stop * np.cos(a), cy + r_stop * np.sin(a)]))
-    lines = []
-    if seeds:
-        P = np.vstack(seeds)
-        paths = [[tuple(p)] for p in P]
-        active = np.ones(len(P), dtype=bool)
-        lo = np.array([x_range[0], y_range[0]]) - span * 0.1
-        hi = np.array([x_range[1], y_range[1]]) + span * 0.1
-
-        def direction(pts):
-            fx, fy, _ = _field(q, pts[:, 0], pts[:, 1])
-            n = np.hypot(fx, fy)
-            n[n == 0] = np.inf
-            return start_sign * np.column_stack([fx / n, fy / n])
-
-        for step in range(1200):
-            if not active.any():
-                break
-            A = P[active]
-            k1 = direction(A)
-            k2 = direction(A + h / 2 * k1)
-            k3 = direction(A + h / 2 * k2)
-            k4 = direction(A + h * k3)
-            A = A + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
-            P[active] = A
-            ids = np.flatnonzero(active)
-            done = np.any((A < lo) | (A > hi), axis=1)
-            if len(sinks):
-                d = np.min(np.hypot(A[:, None, 0] - sinks[None, :, 0], A[:, None, 1] - sinks[None, :, 1]), axis=1)
-                done |= d < r_stop
-            for j, i in enumerate(ids):
-                if step % 2 == 0 or done[j]:
-                    paths[i].append((float(A[j, 0]), float(A[j, 1])))
-            active[ids[done]] = False
-        lines = [[[round(x, 6), round(y, 6)] for x, y in path] for path in paths]
+    seeds = [ring_seeds(cx, cy, span / 120, max(4, int(round(lines_per_charge * abs(qq) / qmax))))
+             for qq, cx, cy in q if qq != 0 and np.sign(qq) == start_sign]
+    lines = trace_field_lines(
+        lambda x, y: _field(q, x, y)[:2],
+        np.vstack(seeds) if seeds else np.empty((0, 2)),
+        q[q[:, 0] * start_sign < 0][:, 1:], x_range, y_range, direction_sign=start_sign,
+    )
 
     probes = []
     for pt in points or []:

@@ -120,6 +120,51 @@ export const SIMS = [
       <circle cx="72" cy="64" r="13" fill="#e34948"/><circle cx="168" cy="64" r="13" fill="#2a78d6"/>`),
   },
   {
+    id: "collisions", domain: "physics", title: "Collisions Lab",
+    blurb: "Set up billiard-ball collisions, elastic or sticky, and watch momentum stay constant.",
+    load: () => import("./collisions.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><rect x="8" y="8" width="224" height="112" fill="none" stroke="#39424e" stroke-width="3"/>
+      <circle cx="80" cy="70" r="18" fill="#eb6834"/><circle cx="150" cy="56" r="24" fill="#2a78d6"/>
+      <line x1="80" y1="70" x2="118" y2="66" stroke="#16202c" stroke-width="2.5"/><path d="M118 66 l-9 -5 l1 10z" fill="#16202c"/>`),
+  },
+  {
+    id: "ramp", domain: "physics", title: "Forces on a Ramp",
+    blurb: "Slide a block on an incline: gravity, normal force, static and kinetic friction, pushes.",
+    load: () => import("./ramp.js"),
+    art: sky(`<rect width="240" height="128" fill="#dff0ff"/><rect y="108" width="240" height="20" fill="#6cbf5b"/>
+      <path d="M20 108 L200 108 L200 28 Z" fill="#c8a878" stroke="#8a6d3b" stroke-width="2"/>
+      <rect x="118" y="40" width="30" height="30" fill="#2a78d6" transform="rotate(-24 133 70)"/>
+      <line x1="140" y1="58" x2="110" y2="72" stroke="#e34948" stroke-width="3"/>`),
+  },
+  {
+    id: "skate", domain: "physics", title: "Energy Skate Park",
+    blurb: "Build a track, drop a skater, and watch kinetic, potential and thermal energy trade places.",
+    load: () => import("./skate.js"),
+    art: sky(`<rect width="240" height="128" fill="#bfe3ff"/><rect y="112" width="240" height="16" fill="#6cbf5b"/>
+      <path d="M16 20 C60 120 180 120 224 20" fill="none" stroke="#7b5a3a" stroke-width="7"/>
+      <circle cx="52" cy="54" r="7" fill="#eb6834"/><rect x="45" y="61" width="14" height="12" rx="3" fill="#2a78d6"/>
+      <rect x="170" y="30" width="12" height="40" fill="#2a78d6"/><rect x="186" y="50" width="12" height="20" fill="#eb6834"/><rect x="202" y="64" width="12" height="6" fill="#1baf7a"/>`),
+  },
+  {
+    id: "rlc", domain: "physics", title: "RC, RL & RLC Circuits",
+    blurb: "Charge a capacitor, build up an inductor's current, ring an RLC circuit and find resonance.",
+    load: () => import("./rlc.js"),
+    art: sky(`<rect width="240" height="128" fill="#f8fafc"/><rect x="30" y="24" width="180" height="84" fill="none" stroke="#8a6d3b" stroke-width="4"/>
+      <circle cx="30" cy="66" r="14" fill="#f8fafc" stroke="#39424e" stroke-width="3"/>
+      <polyline points="70,24 76,16 84,32 92,16 100,32 106,24" fill="#f8fafc" stroke="#2a78d6" stroke-width="3"/>
+      <path d="M126 24 a6 6 0 0 1 12 0 a6 6 0 0 1 12 0 a6 6 0 0 1 12 0" fill="none" stroke="#eb6834" stroke-width="3"/>
+      <line x1="184" y1="12" x2="184" y2="36" stroke="#1baf7a" stroke-width="3"/><line x1="194" y1="12" x2="194" y2="36" stroke="#1baf7a" stroke-width="3"/>`),
+  },
+  {
+    id: "faraday", domain: "physics", title: "Faraday's Law",
+    blurb: "Push a magnet through a coil and light a bulb. Flux, induced EMF and Lenz's law.",
+    load: () => import("./faraday.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/>${[0, 1, 2, 3, 4, 5].map((i) => `<ellipse cx="${140 + i * 6}" cy="60" rx="9" ry="30" fill="none" stroke="#c98843" stroke-width="2.5"/>`).join("")}
+      <rect x="40" y="52" width="36" height="16" fill="#2a78d6"/><rect x="76" y="52" width="36" height="16" fill="#e34948"/>
+      <path d="M112 60 C140 10 60 10 40 60" fill="none" stroke="#4a3aa7" stroke-opacity=".4" stroke-width="1.5"/>
+      <circle cx="150" cy="110" r="9" fill="#ffe27a" stroke="#39424e" stroke-width="2"/>`),
+  },
+  {
     id: "gas", domain: "chemistry", title: "Gas Properties",
     blurb: "Pump gas into a box, heat it, squeeze it. Pressure from PV = nRT and real molecular speeds.",
     load: () => import("./gas.js"),

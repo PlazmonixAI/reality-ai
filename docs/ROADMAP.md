@@ -59,13 +59,13 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Geometric optics: lenses & mirrors (ray tracing)
 - [x] Refraction & Snell's law, total internal reflection
 - [x] DC circuit construction (Kirchhoff solver)
-- [ ] RC / RL / RLC circuits (transients, resonance)
+- [x] RC / RL / RLC circuits (transients, resonance)
 - [x] Coulomb's law & electric field lines / equipotentials
-- [ ] Magnetic fields, Faraday's law & induction
+- [x] Magnetic fields, Faraday's law & induction
 - [ ] Charged particle in E/B fields (Lorentz force, cyclotron)
-- [ ] Collisions lab (1D/2D, elastic/inelastic, momentum)
-- [ ] Forces & motion on a ramp with friction
-- [ ] Energy skate park (track energy conservation)
+- [x] Collisions lab (1D/2D, elastic/inelastic, momentum)
+- [x] Forces & motion on a ramp with friction
+- [x] Energy skate park (track energy conservation)
 - [ ] Rotational dynamics: torque, moment of inertia, rolling
 - [ ] Double pendulum & chaos
 - [ ] Coupled oscillators & normal modes
