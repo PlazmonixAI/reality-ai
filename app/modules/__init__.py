@@ -5,6 +5,7 @@ from app.modules.mathematics import calculus  # noqa: F401
 from app.modules.mathematics import linear_algebra  # noqa: F401
 from app.modules.mathematics import numerical  # noqa: F401
 from app.modules.mathematics import ode  # noqa: F401
+from app.modules.mathematics import plotting  # noqa: F401
 from app.modules.physics import elements  # noqa: F401
 from app.modules.physics import orbital  # noqa: F401
 from app.modules.physics import propagation  # noqa: F401

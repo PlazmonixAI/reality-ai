@@ -1,6 +1,6 @@
 # Reality AI — Build Roadmap
 
-Scope: Physics, Chemistry and Mathematics. Biology is out of scope.
+Scope: Physics, Chemistry and Mathematics, with an interactive simulator. Biology is out of scope.
 
 One session = one phase. Keep each session tightly scoped.
 Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
@@ -42,14 +42,89 @@ Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
 - [x] pH / pOH for strong and weak acids/bases
 - [x] Tests
 
-## Phase 5 — AI representative
+## Phase 5 — Simulator frontend (batch 1) ✅
+- [x] Frontend served by FastAPI at `/` (plain JS + Canvas, no build step), gallery + hash router
+- [x] Shared kit: engine client with debounced latest-wins requests, controls, HiDPI canvas + pan/zoom, graphs with hover, playback bar
+- [x] New engine tools for the visuals: `evaluate_function`, `pendulum`, `maxwell_boltzmann`, oscillator energy arrays
+- [x] 12 simulations: Projectile Motion, Gravity & Orbits, Hohmann Transfer, Earth–Moon Voyage, Masses & Springs, Pendulum Lab, Rocket Lab, Gas Properties, Reaction Rates, pH Scale, Chemical Equilibrium, Calculus Grapher
+- [x] Tests: UI served, every sim module exists/parses, sims only call registered tools
+
+## Phase 6 — Simulation catalogue (batches 2+)
+Goal: cover the standard simulations taught and used worldwide in physics, chemistry and mathematics.
+Each one needs its engine tool(s) with textbook-checked tests first, then the interactive sim.
+
+**Physics**
+- [ ] Waves on a string / standing waves
+- [ ] Wave interference & double slit
+- [ ] Geometric optics: lenses & mirrors (ray tracing)
+- [ ] Refraction & Snell's law, total internal reflection
+- [ ] DC circuit construction (Kirchhoff solver)
+- [ ] RC / RL / RLC circuits (transients, resonance)
+- [ ] Coulomb's law & electric field lines / equipotentials
+- [ ] Magnetic fields, Faraday's law & induction
+- [ ] Charged particle in E/B fields (Lorentz force, cyclotron)
+- [ ] Collisions lab (1D/2D, elastic/inelastic, momentum)
+- [ ] Forces & motion on a ramp with friction
+- [ ] Energy skate park (track energy conservation)
+- [ ] Rotational dynamics: torque, moment of inertia, rolling
+- [ ] Double pendulum & chaos
+- [ ] Coupled oscillators & normal modes
+- [ ] Driven damped oscillator & resonance curves
+- [ ] Buoyancy & density; fluid pressure; Bernoulli flow
+- [ ] Doppler effect & sound
+- [ ] Heat conduction (1D/2D heat equation)
+- [ ] Thermodynamic cycles: Carnot, Otto, Diesel on a PV diagram
+- [ ] Blackbody radiation (Planck, Wien, Stefan–Boltzmann)
+- [ ] Photoelectric effect
+- [ ] Hydrogen atom energy levels & spectra (Bohr / Rydberg)
+- [ ] Quantum particle in a box / tunnelling (1D Schrödinger)
+- [ ] Radioactive decay chains & half-life
+- [ ] Special relativity: time dilation, length contraction, twin paradox
+- [ ] Kepler's laws & solar system n-body
+- [ ] Orbital perturbations (J2 precession, drag decay)
+
+**Chemistry**
+- [ ] Build an atom / isotopes & atomic mass
+- [ ] Molecule shapes (VSEPR geometry)
+- [ ] Balancing chemical equations (interactive)
+- [ ] Reactants, products & leftovers (limiting reagent visual)
+- [ ] Molarity & dilution
+- [ ] Acid–base titration curves (strong/weak, indicators)
+- [ ] Buffers & Henderson–Hasselbalch
+- [ ] Polyprotic acids & speciation diagrams
+- [ ] Beer–Lambert law (spectrophotometer)
+- [ ] Electrochemistry: galvanic cells & the Nernst equation
+- [ ] Real gases (van der Waals) vs ideal
+- [ ] States of matter & phase diagrams (Clausius–Clapeyron)
+- [ ] Colligative properties
+- [ ] Reaction mechanisms & energy profiles (catalysts)
+- [ ] Radiometric dating
+
+**Mathematics**
+- [ ] Unit circle & trigonometric graphs
+- [ ] Fourier series & signal synthesis
+- [ ] Taylor series approximation explorer
+- [ ] Riemann sums & numerical integration
+- [ ] Slope fields & ODE solution curves; phase portraits
+- [ ] Vector addition & dot/cross products
+- [ ] 2D linear transformations & eigenvectors
+- [ ] Complex numbers & the complex plane
+- [ ] Conic sections; polar and parametric curves
+- [ ] Probability distributions & the central limit theorem
+- [ ] Monte Carlo estimation (π, integrals)
+- [ ] Least-squares regression & curve fitting
+- [ ] Newton's method & root-finding visualiser
+- [ ] Fractals (Mandelbrot / Julia sets)
+- [ ] Graph theory: shortest paths
+
+## Phase 7 — AI representative
 - [ ] NIM client with multi-key rotation + retry on 429/5xx (`app/agent/llm.py`)
 - [ ] Convert registry tools into OpenAI-style tool schemas
 - [ ] Agent loop: question → tool call(s) → execute → explain (`app/agent/representative.py`)
 - [ ] `POST /ask` endpoint
 - [ ] Tests with a mocked LLM (no real API calls in tests)
 
-## Phase 6 — Polish
+## Phase 8 — Polish
 - [ ] Consistent error handling (bad input → clear 422 messages)
 - [ ] Input validation ranges (no negative masses, etc.)
 - [ ] README examples for every domain

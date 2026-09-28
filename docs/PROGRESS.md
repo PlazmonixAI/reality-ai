@@ -49,3 +49,13 @@
 - Biology is out of scope for Reality AI; the Biology phase is dropped from `docs/ROADMAP.md` and all docs
 - Phases renumbered: Phase 5 = AI representative, Phase 6 = Polish
 - **Next:** Phase 5 — AI representative
+
+## 2026-09-28 — Phase 5 (simulator frontend, batch 1)
+- Priority change: build the interactive simulator before the AI representative. Phases now: 5 simulator (done), 6 simulation catalogue, 7 AI representative, 8 polish
+- `frontend/` served at `/` by FastAPI: gallery with search, hash router, shared kit (`frontend/js/core/`), 12 PhET-style sims
+- Physics: Projectile Motion, Gravity & Orbits, Hohmann Transfer, Earth–Moon Voyage (default is a real free-return fly-by found with the engine: 10,842 m/s at 235°), Masses & Springs, Pendulum Lab, Rocket Lab
+- Chemistry: Gas Properties, Reaction Rates, pH Scale, Chemical Equilibrium; Mathematics: Calculus Grapher
+- New engine tools: `mathematics.evaluate_function`, `physics.pendulum` (nonlinear + exact elliptic-integral period), `chemistry.maxwell_boltzmann`; `harmonic_oscillator` now returns kinetic/potential arrays
+- 237 tests passing (incl. frontend wiring tests and `node --check` of every JS file); every sim checked in headless Chromium with no console errors
+- **Next:** Phase 6 — simulation catalogue, batch 2
+- **Known issues:** sims need the engine running (static hosting alone won't work); particle motion in Gas/Reaction Rates is illustrative (the numbers come from the engine); Rocket Lab mission budgets are rough reference figures

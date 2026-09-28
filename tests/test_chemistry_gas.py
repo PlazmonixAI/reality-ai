@@ -25,3 +25,28 @@ def test_solve_each_variable(unknown):
 def test_gas_validation(kwargs):
     with pytest.raises(ValueError):
         ideal_gas_law(**kwargs)
+
+
+def test_maxwell_boltzmann_nitrogen_300k():
+    from app.modules.chemistry.gas import maxwell_boltzmann
+    import math
+    r = maxwell_boltzmann(28.014, 300)
+    M = 0.028014
+    assert r["result"]["rms_speed"] == pytest.approx(math.sqrt(3 * R * 300 / M))
+    assert r["result"]["rms_speed"] == pytest.approx(516.8, abs=0.5)
+    assert r["result"]["most_probable_speed"] < r["result"]["mean_speed"] < r["result"]["rms_speed"]
+
+
+def test_maxwell_boltzmann_normalised_and_peaked():
+    import numpy as np
+    from app.modules.chemistry.gas import maxwell_boltzmann
+    r = maxwell_boltzmann(4.0026, 500, n_points=4000)
+    v, f = np.array(r["curve"]["speed"]), np.array(r["curve"]["probability_density"])
+    assert np.trapezoid(f, v) == pytest.approx(1.0, abs=1e-3)
+    assert v[np.argmax(f)] == pytest.approx(r["result"]["most_probable_speed"], rel=2e-3)
+
+
+def test_maxwell_boltzmann_validation():
+    from app.modules.chemistry.gas import maxwell_boltzmann
+    with pytest.raises(ValueError):
+        maxwell_boltzmann(-1, 300)

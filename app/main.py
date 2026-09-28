@@ -1,6 +1,8 @@
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import app.modules  # noqa: F401  (registers all tools)
@@ -39,3 +41,9 @@ def simulate(req: SimulateRequest):
         return {"tool": t.key, **t.func(**req.args)}
     except (TypeError, ValueError) as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+
+# Interactive simulator UI (plain HTML/JS, no build step). Mounted last so API routes win.
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
+if FRONTEND_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

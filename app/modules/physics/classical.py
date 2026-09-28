@@ -3,6 +3,7 @@ import math
 
 import numpy as np
 from scipy.integrate import solve_ivp
+from scipy.special import ellipk
 
 from app.core.registry import tool
 
@@ -165,7 +166,8 @@ def harmonic_oscillator(
         v = c1 * r1 * np.exp(r1 * t) + c2 * r2 * np.exp(r2 * t)
         wd = None
 
-    energy = 0.5 * mass * v**2 + 0.5 * stiffness * x**2
+    kinetic, potential = 0.5 * mass * v**2, 0.5 * stiffness * x**2
+    energy = kinetic + potential
     return {
         "result": {
             "natural_frequency": w0,
@@ -177,7 +179,89 @@ def harmonic_oscillator(
             "quality_factor": 1 / (2 * zeta) if zeta > 0 else None,
             "amplitude": math.sqrt(x0**2 + (v0 / w0) ** 2) if zeta == 0 else None,
         },
-        "trajectory": {"t": t.tolist(), "x": x.tolist(), "v": v.tolist(), "energy": energy.tolist()},
+        "trajectory": {"t": t.tolist(), "x": x.tolist(), "v": v.tolist(), "energy": energy.tolist(),
+                       "kinetic": kinetic.tolist(), "potential": potential.tolist()},
         "units": "frequencies in rad/s (and Hz), period s, displacement m, velocity m/s, energy J",
         "assumptions": ["Linear spring and viscous damping, no external forcing", "Exact analytic solution"],
+    }
+
+
+@tool(
+    domain="physics",
+    name="pendulum",
+    description=(
+        "Simple (point-mass) pendulum with the full nonlinear equation theta'' = -(g/L) sin(theta) - (b/m) theta'. "
+        "Returns the exact large-amplitude period, the small-angle period, and plot-ready theta(t), omega(t), "
+        "bob x/y and energies. Angles in degrees. Example: length=1, initial_angle_deg=60, gravity=9.81."
+    ),
+)
+def pendulum(
+    length: float,
+    initial_angle_deg: float,
+    initial_angular_velocity: float = 0.0,
+    mass: float = 1.0,
+    gravity: float = G0,
+    damping: float = 0.0,
+    duration: float | None = None,
+    n_points: int = 401,
+) -> dict:
+    if length <= 0 or mass <= 0 or gravity <= 0 or damping < 0:
+        raise ValueError("length, mass and gravity must be positive and damping >= 0")
+    if not -180 < initial_angle_deg < 180:
+        raise ValueError("initial_angle_deg must be between -180 and 180")
+    if not 2 <= n_points <= MAX_POINTS:
+        raise ValueError(f"n_points must be between 2 and {MAX_POINTS}")
+    w0 = math.sqrt(gravity / length)
+    t_small = 2 * math.pi / w0
+    th0 = math.radians(initial_angle_deg)
+
+    # Amplitude from energy (undamped): 1 - cos(A) = (1 - cos th0) + omega0^2 / (2 w0^2)
+    c = 1 - math.cos(th0) + initial_angular_velocity**2 / (2 * w0**2)
+    rotating = c >= 2
+    if rotating:
+        exact_period = None
+    else:
+        amplitude = math.acos(1 - c)
+        exact_period = 4 / w0 * float(ellipk(math.sin(amplitude / 2) ** 2)) if amplitude > 0 else t_small
+    if duration is None:
+        duration = 4 * (exact_period or t_small)
+    if duration <= 0:
+        raise ValueError("duration must be positive")
+
+    gamma = damping / mass
+
+    def rhs(_t, s):
+        return [s[1], -w0**2 * math.sin(s[0]) - gamma * s[1]]
+
+    t = np.linspace(0, duration, n_points)
+    sol = solve_ivp(rhs, (0, duration), [th0, initial_angular_velocity], t_eval=t, method="DOP853",
+                    rtol=1e-10, atol=1e-12)
+    if not sol.success:
+        raise ValueError(f"Integration failed: {sol.message}")
+    theta, omega = sol.y
+    kinetic = 0.5 * mass * (length * omega) ** 2
+    potential = mass * gravity * length * (1 - np.cos(theta))
+    return {
+        "result": {
+            "period": exact_period,
+            "small_angle_period": t_small,
+            "period_ratio": exact_period / t_small if exact_period else None,
+            "natural_frequency": w0,
+            "motion": "rotating (goes over the top)" if rotating else "oscillating",
+            "max_speed": float(np.max(np.abs(omega)) * length),
+        },
+        "trajectory": {
+            "t": t.tolist(),
+            "theta_deg": np.degrees(theta).tolist(),
+            "omega": omega.tolist(),
+            "x": (length * np.sin(theta)).tolist(),
+            "y": (-length * np.cos(theta)).tolist(),
+            "kinetic": kinetic.tolist(),
+            "potential": potential.tolist(),
+        },
+        "units": "time s, angles degrees, angular velocity rad/s, positions m (pivot at origin), energy J",
+        "assumptions": [
+            "Point mass on a massless rigid rod, no air drag except the linear damping term",
+            "Exact period from the complete elliptic integral (undamped); numerical solution via solve_ivp",
+        ],
     }

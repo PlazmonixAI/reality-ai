@@ -15,7 +15,14 @@ uvicorn app.main:app --reload
 pytest
 ```
 
-Open http://localhost:8000/docs for the API.
+Open **http://localhost:8000** for the interactive simulator, or http://localhost:8000/docs for the API.
+
+## Simulator
+PhET-style interactive simulations in `frontend/` (plain JavaScript + Canvas, no build step). Every number on screen comes from the engine's tools; the browser only animates the results.
+
+| Physics | Chemistry | Mathematics |
+|---|---|---|
+| Projectile Motion · Gravity & Orbits · Hohmann Transfer · Earth–Moon Voyage · Masses & Springs · Pendulum Lab · Rocket Lab | Gas Properties · Reaction Rates · pH Scale · Chemical Equilibrium | Calculus Grapher |
 
 ## Docs
 - `CLAUDE.md` – rules and brief for Claude Code

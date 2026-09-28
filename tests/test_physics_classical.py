@@ -116,3 +116,58 @@ def test_oscillator_validation():
         harmonic_oscillator(mass=0, stiffness=1)
     with pytest.raises(ValueError):
         harmonic_oscillator(mass=1, stiffness=1, damping=-1)
+
+
+def test_oscillator_energy_split():
+    r = harmonic_oscillator(mass=1, stiffness=4, initial_displacement=0.5)["trajectory"]
+    total = np.array(r["kinetic"]) + np.array(r["potential"])
+    assert np.allclose(total, r["energy"])
+    assert r["potential"][0] == pytest.approx(0.5 * 4 * 0.25)
+
+
+def test_pendulum_small_angle_period():
+    from app.modules.physics.classical import pendulum
+    r = pendulum(length=1.0, initial_angle_deg=1, gravity=9.81)["result"]
+    assert r["small_angle_period"] == pytest.approx(2 * math.pi * math.sqrt(1 / 9.81))
+    assert r["period"] == pytest.approx(r["small_angle_period"], rel=1e-4)
+
+
+def test_pendulum_large_angle_period():
+    # Known result: T(90°) / T0 = 2K(1/2)/pi = 1.18034
+    from app.modules.physics.classical import pendulum
+    r = pendulum(length=2.0, initial_angle_deg=90)["result"]
+    assert r["period_ratio"] == pytest.approx(1.180341, rel=1e-6)
+
+
+def test_pendulum_numerical_period_matches_exact():
+    # Zero crossings of the integrated theta(t) are half a period apart.
+    from app.modules.physics.classical import pendulum
+    r = pendulum(length=1.0, initial_angle_deg=120, n_points=10000, duration=12)
+    t, th = np.array(r["trajectory"]["t"]), np.array(r["trajectory"]["theta_deg"])
+    idx = np.where(np.diff(np.sign(th)) != 0)[0]
+    crossings = t[idx] - th[idx] * (t[idx + 1] - t[idx]) / (th[idx + 1] - th[idx])
+    assert np.mean(np.diff(crossings)) * 2 == pytest.approx(r["result"]["period"], rel=1e-5)
+
+
+def test_pendulum_energy_conserved_and_damped():
+    from app.modules.physics.classical import pendulum
+    tr = pendulum(length=1.0, initial_angle_deg=60)["trajectory"]
+    e = np.array(tr["kinetic"]) + np.array(tr["potential"])
+    assert np.ptp(e) / e[0] < 1e-8
+    trd = pendulum(length=1.0, initial_angle_deg=60, damping=0.2)["trajectory"]
+    ed = np.array(trd["kinetic"]) + np.array(trd["potential"])
+    assert ed[-1] < 0.5 * ed[0]
+
+
+def test_pendulum_over_the_top():
+    from app.modules.physics.classical import pendulum
+    r = pendulum(length=1.0, initial_angle_deg=0, initial_angular_velocity=10, gravity=9.81)["result"]
+    assert r["motion"].startswith("rotating") and r["period"] is None
+
+
+def test_pendulum_validation():
+    from app.modules.physics.classical import pendulum
+    with pytest.raises(ValueError):
+        pendulum(length=0, initial_angle_deg=10)
+    with pytest.raises(ValueError):
+        pendulum(length=1, initial_angle_deg=180)
