@@ -109,3 +109,10 @@
 - Verified: Stefan–Boltzmann constant, Wien peak for the Sun, Planck integral = σT⁴, H-α 656.47 nm / Lyman-α 121.57 nm / H-β 486.27 nm, Bateman vs analytic two-member chain, γ = 5/3 at 0.8c and the 10-yr / 6-yr twin trip, muon lifetime dilation, Carnot/Otto/Diesel efficiencies from the enclosed area; 428 tests passing
 - **Next:** Phase 6 batch 8 — chemistry (molarity & dilution, electrochemistry/Nernst, van der Waals, Clausius–Clapeyron, reaction energy profiles)
 - **Known issues:** photoelectron animation is illustrative (the numbers come from the engine); decay presets are two-member chains
+
+## 2026-09-28 — Phase 6, batch 8 (chemistry II)
+- New engine tools: `molarity_dilution` (molar mass from the formula, C1V1 = C2V2, optional solubility limit), `galvanic_cell` (E°, Nernst E, ΔG, K, E vs log Q for 12 textbook electrodes), `van_der_waals` (isotherms, critical point, Maxwell equal-area tie line, phase and lever rule), `vapor_pressure` (Clausius–Clapeyron, boiling point at any pressure, Trouton), `reaction_profile` (barriers, Arrhenius rates, catalytic speed-up, Maxwell–Boltzmann fraction above Ea)
+- New sims: Molarity & Dilution, Galvanic Cells (animated electron flow, voltmeter), Real Gases (PV isotherms with coexistence dome and cylinder), Vapour Pressure & Boiling (pot, thermometer, places from sea level to Everest), Reaction Energy Profile (with log-scale energy distribution)
+- Verified: 0.2 M CuSO4, Daniell cell 1.10 V / ΔG° −212.3 kJ/mol / log K 37.2, Nernst 59.16 mV/decade, CO2 critical point 304 K / 74 bar, vdW Pr_sat = 0.647 at Tr = 0.9 and a numerically equal-area tie line, water boils at ~71 °C on Everest, Trouton for benzene, catalyst speed-up e^(ΔEa/RT) ≈ 2.4×10⁴ with unchanged K; 452 tests passing
+- **Next:** Phase 6 batch 9 — physics (driven oscillator resonance, coupled oscillators, double pendulum, Lorentz force/cyclotron, Doppler effect)
+- **Known issues:** Clausius–Clapeyron uses constant ΔH_vap (water at 25 °C comes out ~3.7 kPa vs 3.17 kPa real); galvanic cells use metal/ion couples only

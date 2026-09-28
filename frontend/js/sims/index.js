@@ -366,4 +366,41 @@ export const SIMS = [
       <circle cx="70" cy="92" r="24" fill="#fff" stroke="#2a78d6" stroke-width="3"/><circle cx="170" cy="92" r="24" fill="#fff" stroke="#eb6834" stroke-width="3"/>
       <line x1="70" y1="92" x2="84" y2="80" stroke="#16202c" stroke-width="2.5"/><line x1="170" y1="92" x2="170" y2="74" stroke="#16202c" stroke-width="2.5"/>`),
   },
+  {
+    id: "molarity", domain: "chemistry", title: "Molarity & Dilution",
+    blurb: "Dissolve a solute, then add water: moles stay the same while the concentration drops (C₁V₁ = C₂V₂).",
+    load: () => import("./molarity.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="36" y="50" width="60" height="64" fill="#286edc" fill-opacity=".8"/><rect x="144" y="30" width="60" height="84" fill="#286edc" fill-opacity=".3"/>
+      <path d="M32 20 V116 H100 V20 M140 20 V116 H208 V20" fill="none" stroke="#39424e" stroke-width="4"/>`),
+  },
+  {
+    id: "galvanic", domain: "chemistry", title: "Galvanic Cells",
+    blurb: "Build a battery from two metals: standard potentials, the Nernst equation, ΔG and the equilibrium constant.",
+    load: () => import("./galvanic.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="24" y="70" width="70" height="50" fill="#dce6f0"/><rect x="146" y="70" width="70" height="50" fill="#3c82e6" fill-opacity=".45"/>
+      <rect x="52" y="44" width="14" height="66" fill="#9aa6b5"/><rect x="174" y="44" width="14" height="66" fill="#c46a2c"/><path d="M80 96 V62 H160 V96" fill="none" stroke="#d9c9a3" stroke-width="12"/>
+      <path d="M59 44 V14 H181 V44" fill="none" stroke="#16202c" stroke-width="2.5"/><rect x="96" y="4" width="48" height="22" fill="#16202c"/><text x="120" y="20" fill="#1baf7a" font-size="12" text-anchor="middle" font-family="monospace">1.10 V</text>`),
+  },
+  {
+    id: "realgas", domain: "chemistry", title: "Real Gases",
+    blurb: "Van der Waals isotherms, the critical point and condensation: where real gases stop behaving ideally.",
+    load: () => import("./realgas.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M40 118 C60 30 110 20 130 30 C150 45 190 110 225 118 Z" fill="#7b8796" fill-opacity=".15" stroke="#7b8796"/>
+      <path d="M30 6 C40 60 48 76 60 76 L170 76 C190 90 210 104 230 108" fill="none" stroke="#2a78d6" stroke-width="3"/><path d="M30 20 C60 90 100 100 230 112" fill="none" stroke="#1baf7a" stroke-width="2"/>`),
+  },
+  {
+    id: "vapor", domain: "chemistry", title: "Vapour Pressure & Boiling",
+    blurb: "Why water boils at 71 °C on Everest: Clausius–Clapeyron vapour pressure against the air above.",
+    load: () => import("./vapor.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="50" y="56" width="110" height="44" fill="#2a78d6" fill-opacity=".35"/><path d="M50 30 V100 H160 V30" fill="none" stroke="#39424e" stroke-width="4"/>
+      ${[0, 1, 2, 3, 4].map((i) => `<circle cx="${66 + i * 20}" cy="${70 + (i % 2) * 14}" r="${4 + (i % 3)}" fill="none" stroke="#fff" stroke-width="2"/>`).join("")}${[0, 1, 2, 3, 4].map((i) => `<path d="M${70 + i * 18} 118 q6 -18 12 0" fill="#eb6834"/>`).join("")}
+      <rect x="196" y="16" width="12" height="96" rx="6" fill="#fff" stroke="#39424e" stroke-width="2"/><rect x="199" y="50" width="6" height="60" fill="#e34948"/>`),
+  },
+  {
+    id: "profile", domain: "chemistry", title: "Reaction Energy Profile",
+    blurb: "Activation energy, exothermic vs endothermic, and how a catalyst lowers the barrier without moving equilibrium.",
+    load: () => import("./profile.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M10 70 H50 C80 70 90 10 120 10 C150 10 160 100 190 100 H230" fill="none" stroke="#2a78d6" stroke-width="3.5"/>
+      <path d="M50 70 C80 70 95 42 120 42 C145 42 160 100 190 100" fill="none" stroke="#eb6834" stroke-width="3" stroke-dasharray="7 5"/>`),
+  },
 ];

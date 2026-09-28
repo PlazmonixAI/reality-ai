@@ -36,3 +36,7 @@ from app.modules.mathematics import approximation  # noqa: F401
 from app.modules.mathematics import complex_linear  # noqa: F401
 from app.modules.physics import modern  # noqa: F401
 from app.modules.physics import thermo  # noqa: F401
+from app.modules.chemistry import solutions  # noqa: F401
+from app.modules.chemistry import electrochem  # noqa: F401
+from app.modules.chemistry import real_gases  # noqa: F401
+from app.modules.chemistry import energy_profile  # noqa: F401
