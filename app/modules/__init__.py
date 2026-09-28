@@ -10,3 +10,8 @@ from app.modules.physics import orbital  # noqa: F401
 from app.modules.physics import propagation  # noqa: F401
 from app.modules.physics import classical  # noqa: F401
 from app.modules.physics import propulsion  # noqa: F401
+from app.modules.chemistry import acid_base  # noqa: F401
+from app.modules.chemistry import equilibrium  # noqa: F401
+from app.modules.chemistry import gas  # noqa: F401
+from app.modules.chemistry import kinetics  # noqa: F401
+from app.modules.chemistry import stoichiometry  # noqa: F401

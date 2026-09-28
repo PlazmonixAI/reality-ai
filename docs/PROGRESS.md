@@ -33,3 +33,14 @@
 - Verified: rocket equation round-trips, hand-computed two-stage rocket, staging optimum = brute-force optimum, vacuum range formulas, analytic max height with drag, terminal velocity, all oscillator regimes vs numerical ODE; 139 tests passing
 - **Next:** Phase 4 — Chemistry
 - **Known issues:** delta-v figures are ideal (no gravity/drag losses); projectile drag uses constant air density and Cd; oscillator has no external driving force
+
+## 2026-09-28 — Phase 4 (chemistry)
+- `chemistry/formula.py` + `periodic_table.py`: formula parser (nested brackets, hydrates, ion charges, states) and IUPAC atomic weights for all 118 elements
+- `chemistry/stoichiometry.py`: `molar_mass` (with mass-% composition), `balance_equation` (atoms + charge, via null space), `stoichiometry` (limiting reagent, theoretical yields, excess left)
+- `chemistry/gas.py`: `ideal_gas_law` (solve for any of P, V, n, T in SI, with atm/bar/L/°C conversions)
+- `chemistry/kinetics.py`: `reaction_kinetics` (orders 0/1/2, [A](t) or time-to-reach, half-life, decay curve), `arrhenius` (k from A/Ea/T, or two-point solve for k2, T2 or Ea)
+- `chemistry/equilibrium.py`: `equilibrium_ice` (any stoichiometry, Kc or Kp, solids/liquids excluded; stays accurate for K from 1e-30 to 1e30), `kc_kp_convert`
+- `chemistry/acid_base.py`: `ph` for strong/weak monoprotic acids and bases, exact with water autoionisation (1e-8 M HCl -> 6.98)
+- 216 tests passing
+- **Next:** Phase 5 — Biology
+- **Known issues:** pH assumes 25 °C and ideal solutions; polyprotic acids and buffers not yet supported; chemistry uses conventional units (g, g/mol, mol/L, bar) and says so in each `units` field

@@ -32,13 +32,13 @@ Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
 - [x] Simple harmonic / damped oscillator
 - [x] Tests
 
-## Phase 4 — Chemistry
-- [ ] Molar mass from formula, stoichiometry
-- [ ] Ideal gas law (solve for any variable)
-- [ ] Reaction kinetics: zero/first/second order, half-life, Arrhenius
-- [ ] Chemical equilibrium (Kc/Kp, ICE-table solver)
-- [ ] pH / pOH for strong and weak acids/bases
-- [ ] Tests
+## Phase 4 — Chemistry ✅
+- [x] Molar mass from formula, stoichiometry
+- [x] Ideal gas law (solve for any variable)
+- [x] Reaction kinetics: zero/first/second order, half-life, Arrhenius
+- [x] Chemical equilibrium (Kc/Kp, ICE-table solver)
+- [x] pH / pOH for strong and weak acids/bases
+- [x] Tests
 
 ## Phase 5 — Biology
 - [ ] Population growth: exponential, logistic
