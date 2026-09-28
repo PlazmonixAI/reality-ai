@@ -7,7 +7,7 @@ import app.modules  # noqa: F401  (registers all tools)
 from app.core.registry import get_tool, list_tools
 
 app = FastAPI(title="Reality AI", version="0.1.0",
-              description="Plazmonix AI's PCMB research-simulation engine")
+              description="Plazmonix AI's physics, chemistry and mathematics research-simulation engine")
 
 
 class SimulateRequest(BaseModel):

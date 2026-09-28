@@ -1,6 +1,6 @@
 # Reality AI
 
-Reality AI is Plazmonix AI's research-simulation engine for Physics, Chemistry, Mathematics and Biology (PCMB).
+Reality AI is Plazmonix AI's research-simulation engine for Physics, Chemistry and Mathematics.
 An AI representative (LLM via NVIDIA NIM) understands a research question, routes it to the right simulation tool, runs it, and explains the result.
 
 Built by Plazmonix AI (a Velostra Aerospace company).

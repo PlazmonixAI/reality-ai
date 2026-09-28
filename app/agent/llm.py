@@ -1,4 +1,4 @@
-"""NVIDIA NIM client with multi-key rotation. TO BUILD IN PHASE 6.
+"""NVIDIA NIM client with multi-key rotation. TO BUILD IN PHASE 5.
 
 Requirements:
 - OpenAI-compatible chat completions at settings.nim_base_url

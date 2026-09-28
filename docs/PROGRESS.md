@@ -4,7 +4,7 @@
 - FastAPI app with `/health`, `/tools`, `/simulate`
 - Tool registry with `@tool` decorator
 - Reference tool `mathematics.solve_equation` (sympy)
-- Agent layer placeholders for Phase 6
+- Agent layer placeholders (now Phase 5)
 - Tests passing
 - **Next:** Phase 1 — Mathematics core
 
@@ -16,7 +16,7 @@
 - New `app/core/parsing.py`: shared expression parser. Blocks attribute access, dunders and builtins, and only recognises a whitelist of math functions/constants so names like `N`, `S`, `gamma` stay plain variables. `solve_equation` now uses it.
 - 65 tests passing
 - **Next:** Phase 2 — Orbital mechanics
-- **Known issues:** errors that are not `ValueError`/`TypeError` (e.g. sympy `NotImplementedError`, heavy symbolic work with no timeout) still surface as 500s — handle in Phase 7. `E` and `I` mean Euler's number and the imaginary unit in expressions.
+- **Known issues:** errors that are not `ValueError`/`TypeError` (e.g. sympy `NotImplementedError`, heavy symbolic work with no timeout) still surface as 500s — handle in Polish (now Phase 6). `E` and `I` mean Euler's number and the imaginary unit in expressions.
 
 ## 2026-09-28 — Phase 2 (orbital mechanics)
 - `physics/bodies.py`: GM and radius for Sun, Mercury–Saturn and the Moon; tools accept `body` or a custom `mu`, and `radius` or `altitude`
@@ -42,5 +42,10 @@
 - `chemistry/equilibrium.py`: `equilibrium_ice` (any stoichiometry, Kc or Kp, solids/liquids excluded; stays accurate for K from 1e-30 to 1e30), `kc_kp_convert`
 - `chemistry/acid_base.py`: `ph` for strong/weak monoprotic acids and bases, exact with water autoionisation (1e-8 M HCl -> 6.98)
 - 216 tests passing
-- **Next:** Phase 5 — Biology
+- **Next:** Phase 5 — AI representative
 - **Known issues:** pH assumes 25 °C and ideal solutions; polyprotic acids and buffers not yet supported; chemistry uses conventional units (g, g/mol, mol/L, bar) and says so in each `units` field
+
+## 2026-09-28 — Scope change: biology removed
+- Biology is out of scope for Reality AI; the Biology phase is dropped from `docs/ROADMAP.md` and all docs
+- Phases renumbered: Phase 5 = AI representative, Phase 6 = Polish
+- **Next:** Phase 5 — AI representative

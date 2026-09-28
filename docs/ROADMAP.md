@@ -1,5 +1,7 @@
 # Reality AI — Build Roadmap
 
+Scope: Physics, Chemistry and Mathematics. Biology is out of scope.
+
 One session = one phase. Keep each session tightly scoped.
 Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
 
@@ -40,22 +42,14 @@ Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
 - [x] pH / pOH for strong and weak acids/bases
 - [x] Tests
 
-## Phase 5 — Biology
-- [ ] Population growth: exponential, logistic
-- [ ] Lotka-Volterra predator-prey
-- [ ] SIR epidemic model
-- [ ] Michaelis-Menten enzyme kinetics
-- [ ] Hardy-Weinberg equilibrium
-- [ ] Tests
-
-## Phase 6 — AI representative
+## Phase 5 — AI representative
 - [ ] NIM client with multi-key rotation + retry on 429/5xx (`app/agent/llm.py`)
 - [ ] Convert registry tools into OpenAI-style tool schemas
 - [ ] Agent loop: question → tool call(s) → execute → explain (`app/agent/representative.py`)
 - [ ] `POST /ask` endpoint
 - [ ] Tests with a mocked LLM (no real API calls in tests)
 
-## Phase 7 — Polish
+## Phase 6 — Polish
 - [ ] Consistent error handling (bad input → clear 422 messages)
 - [ ] Input validation ranges (no negative masses, etc.)
 - [ ] README examples for every domain

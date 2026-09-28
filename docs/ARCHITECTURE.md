@@ -9,10 +9,10 @@ POST /ask ──► AI Representative (app/agent/representative.py)
                  ▼
             Tool Registry (app/core/registry.py)
                  │
-   ┌─────────────┼──────────────┬───────────────┐
-   ▼             ▼              ▼               ▼
-mathematics   physics       chemistry        biology
-(sympy/scipy) (numpy/scipy) (numpy/scipy)    (scipy ODEs)
+   ┌─────────────┼──────────────┐
+   ▼             ▼              ▼
+mathematics   physics       chemistry
+(sympy/scipy) (numpy/scipy) (numpy/scipy)
                  │
                  ▼
      Result dict {result, units, assumptions}
@@ -25,7 +25,7 @@ mathematics   physics       chemistry        biology
 - `GET /health` — liveness check
 - `GET /tools` — list all registered tools (grouped by domain)
 - `POST /simulate` — run one tool directly: `{"domain": "...", "name": "...", "args": {...}}`
-- `POST /ask` — natural-language question → agent (Phase 6)
+- `POST /ask` — natural-language question → agent (Phase 5)
 
 ## Key decisions
 - Tools are pure Python functions; they never call the LLM. This keeps them testable and deterministic.

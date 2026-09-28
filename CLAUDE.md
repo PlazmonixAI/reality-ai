@@ -1,6 +1,7 @@
 # CLAUDE.md — Build brief for Claude Code
 
-You are building **Reality AI**, the PCMB research-simulation engine of Plazmonix AI.
+You are building **Reality AI**, the Physics, Chemistry and Mathematics research-simulation engine of Plazmonix AI.
+Biology is out of scope: do not add biology tools.
 Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anything.
 
 ## What Reality AI does
