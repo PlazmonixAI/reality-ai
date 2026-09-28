@@ -22,7 +22,7 @@ PhET-style interactive simulations in `frontend/` (plain JavaScript + Canvas, no
 
 | Physics | Chemistry | Mathematics |
 |---|---|---|
-| Projectile Motion · Gravity & Orbits · Hohmann Transfer · Earth–Moon Voyage · Masses & Springs · Pendulum Lab · Rocket Lab · Waves on a String · Wave Interference · Lenses & Mirrors · Bending Light · Circuit Builder · Charges & Fields · Collisions Lab · Forces on a Ramp · Energy Skate Park · RC/RL/RLC Circuits · Faraday's Law | Gas Properties · Reaction Rates · pH Scale · Chemical Equilibrium · Acid–Base Titration · Buffers · Beer's Law Lab · Molecule Shapes · Build an Atom | Calculus Grapher · Unit Circle & Trig · Fourier Series · Slope Fields & Phase Portraits · Vector Addition · Probability & the CLT |
+| Projectile Motion · Gravity & Orbits · Hohmann Transfer · Earth–Moon Voyage · Masses & Springs · Pendulum Lab · Rocket Lab · Waves on a String · Wave Interference · Lenses & Mirrors · Bending Light · Circuit Builder · Charges & Fields · Collisions Lab · Forces on a Ramp · Energy Skate Park · RC/RL/RLC Circuits · Faraday's Law | Gas Properties · Reaction Rates · pH Scale · Chemical Equilibrium · Acid–Base Titration · Buffers · Beer's Law Lab · Molecule Shapes · Build an Atom | Calculus Grapher · Unit Circle & Trig · Fourier Series · Slope Fields & Phase Portraits · Vector Addition · Probability & the CLT · Taylor Series · Riemann Sums · Complex Plane · Linear Transformations · Newton's Method |
 
 ## Docs
 - `CLAUDE.md` – rules and brief for Claude Code

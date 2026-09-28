@@ -95,3 +95,10 @@
 - Also this session: logo design prompt written (see chat); product renamed to Reality ASM
 - **Next:** Phase 6 batch 6 — more mathematics (Taylor series, Riemann sums, complex plane, linear transformations, Newton's method) or physics (thermodynamic cycles, blackbody, photoelectric effect)
 - **Known issues:** phase-portrait equilibria are found numerically inside the visible window only
+
+## 2026-09-28 — Phase 6, batch 6 (mathematics II)
+- Working autonomously at the user's request (no check-ins between batches)
+- New engine tools: `taylor_approximation`, `riemann_sum` (left/right/midpoint/trapezoid/Simpson vs quad), `newton_method` (iterates + tangents, cycle/divergence detection, observed order), `complex_numbers` (polar forms, product/quotient, n-th roots), `linear_transform_2d` (determinant, eigenvectors, type, transformed grid)
+- New sims: Taylor Series, Riemann Sums (with convergence-rate plot), Complex Plane, Linear Transformations, Newton's Method; shared `frontend/js/sims/plotkit.js` for axes/curves
+- Verified: sin Taylor coefficients and Lagrange bound, rules on x² exact values, midpoint error ∝ 1/n², √2 quadratic convergence, double-root linear convergence, the classic 0 ↔ 1 Newton cycle, 4th roots of 1 + i, rotation/reflection/shear/singular classification; 411 tests passing
+- **Next:** Phase 6 batch 7 — modern & thermal physics (heat-engine cycles, blackbody, photoelectric effect, hydrogen spectrum, radioactive decay, special relativity)

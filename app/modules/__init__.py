@@ -32,3 +32,5 @@ from app.modules.chemistry import atoms  # noqa: F401
 from app.modules.mathematics import dynamics  # noqa: F401
 from app.modules.mathematics import trig_fourier  # noqa: F401
 from app.modules.mathematics import vectors_prob  # noqa: F401
+from app.modules.mathematics import approximation  # noqa: F401
+from app.modules.mathematics import complex_linear  # noqa: F401

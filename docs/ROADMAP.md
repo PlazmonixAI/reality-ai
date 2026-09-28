@@ -103,17 +103,17 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 **Mathematics**
 - [x] Unit circle & trigonometric graphs
 - [x] Fourier series & signal synthesis
-- [ ] Taylor series approximation explorer
-- [ ] Riemann sums & numerical integration
+- [x] Taylor series approximation explorer
+- [x] Riemann sums & numerical integration
 - [x] Slope fields & ODE solution curves; phase portraits
 - [x] Vector addition & dot/cross products
-- [ ] 2D linear transformations & eigenvectors
-- [ ] Complex numbers & the complex plane
+- [x] 2D linear transformations & eigenvectors
+- [x] Complex numbers & the complex plane
 - [ ] Conic sections; polar and parametric curves
 - [x] Probability distributions & the central limit theorem
 - [ ] Monte Carlo estimation (π, integrals)
 - [ ] Least-squares regression & curve fitting
-- [ ] Newton's method & root-finding visualiser
+- [x] Newton's method & root-finding visualiser
 - [ ] Fractals (Mandelbrot / Julia sets)
 - [ ] Graph theory: shortest paths
 

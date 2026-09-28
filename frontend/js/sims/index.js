@@ -286,4 +286,41 @@ export const SIMS = [
     art: sky(`<rect width="240" height="128" fill="#fff"/>${[4, 12, 26, 44, 60, 66, 60, 44, 26, 12, 4].map((hh, i) => `<rect x="${32 + i * 16}" y="${110 - hh * 1.4}" width="12" height="${hh * 1.4}" fill="#2a78d6" opacity=".45"/>`).join("")}
       <path d="M26 110 C80 110 90 14 122 14 C154 14 164 110 218 110" fill="none" stroke="#eb6834" stroke-width="3"/>`),
   },
+  {
+    id: "taylor", domain: "mathematics", title: "Taylor Series",
+    blurb: "Approximate functions with polynomials, move the centre, and find where the series stops working.",
+    load: () => import("./taylor.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M10 64 C40 10 70 10 100 64 S160 118 190 64 S220 30 230 40" fill="none" stroke="#2a78d6" stroke-width="3"/>
+      <path d="M40 120 C70 30 100 30 120 64 S150 100 170 20" fill="none" stroke="#eb6834" stroke-width="2.5" stroke-dasharray="7 5"/><circle cx="120" cy="64" r="5" fill="#1baf7a"/>`),
+  },
+  {
+    id: "riemann", domain: "mathematics", title: "Riemann Sums",
+    blurb: "Left, right, midpoint, trapezoid and Simpson: approximate integrals and compare how fast they converge.",
+    load: () => import("./riemann.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/>${[0, 1, 2, 3, 4, 5, 6].map((i) => { const x = 30 + i * 26, hh = 8 + i * i * 2.2; return `<rect x="${x}" y="${112 - hh}" width="26" height="${hh}" fill="#2a78d6" fill-opacity=".22" stroke="#2a78d6"/>`; }).join("")}
+      <path d="M30 110 C90 106 150 80 212 8" fill="none" stroke="#16202c" stroke-width="3"/>`),
+  },
+  {
+    id: "complex", domain: "mathematics", title: "Complex Plane",
+    blurb: "Drag complex numbers: see sums, products (angles add!), quotients and the n-th roots.",
+    load: () => import("./complex.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><line x1="0" y1="80" x2="240" y2="80" stroke="#7b8796"/><line x1="100" y1="0" x2="100" y2="128" stroke="#7b8796"/>
+      <line x1="100" y1="80" x2="150" y2="50" stroke="#2a78d6" stroke-width="3.5"/><line x1="100" y1="80" x2="115" y2="30" stroke="#eb6834" stroke-width="3.5"/>
+      <line x1="100" y1="80" x2="60" y2="10" stroke="#1baf7a" stroke-width="3.5"/>`),
+  },
+  {
+    id: "transform", domain: "mathematics", title: "Linear Transformations",
+    blurb: "Bend the plane with a 2×2 matrix: determinant as area, eigenvectors that keep their direction.",
+    load: () => import("./transform.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/>${[-3, -2, -1, 0, 1, 2, 3].map((k) => `<line x1="${120 + k * 22 - 60}" y1="128" x2="${120 + k * 22 + 60}" y2="0" stroke="#2a78d6" stroke-opacity=".35"/><line x1="0" y1="${64 + k * 18}" x2="240" y2="${64 + k * 18 - 30}" stroke="#2a78d6" stroke-opacity=".35"/>`).join("")}
+      <path d="M120 64 L162 57 L184 18 L142 25 Z" fill="#eb6834" fill-opacity=".25" stroke="#eb6834" stroke-width="2"/>`),
+  },
+  {
+    id: "newton", domain: "mathematics", title: "Newton's Method",
+    blurb: "Slide down tangent lines to a root — and see when Newton's method cycles or runs away.",
+    load: () => import("./newton.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><line x1="0" y1="90" x2="240" y2="90" stroke="#7b8796"/>
+      <path d="M20 120 C80 110 140 70 220 8" fill="none" stroke="#2a78d6" stroke-width="3"/><line x1="100" y1="128" x2="230" y2="20" stroke="#eb6834" stroke-width="2"/>
+      <circle cx="196" cy="30" r="4" fill="#eb6834"/><circle cx="137" cy="90" r="5" fill="#16202c"/>`),
+  },
 ];
