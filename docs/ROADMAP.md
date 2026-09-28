@@ -15,14 +15,14 @@ Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
 - [x] Numerical root finding and optimization (scipy)
 - [x] Tests for all of the above
 
-## Phase 2 — Physics: Orbital mechanics (flagship)
-- [ ] Circular/escape velocity, orbital period (Kepler's 3rd law)
-- [ ] Hohmann transfer: delta-v for both burns + transfer time
-- [ ] Two-body orbit propagation (state vectors over time)
-- [ ] Orbital elements <-> state vectors conversion
-- [ ] Simple n-body propagation (e.g. Earth-Moon-spacecraft)
-- [ ] Plot-ready output (arrays of positions) for a future frontend
-- [ ] Tests (e.g. LEO→GEO Hohmann ≈ 3.9 km/s total)
+## Phase 2 — Physics: Orbital mechanics (flagship) ✅
+- [x] Circular/escape velocity, orbital period (Kepler's 3rd law)
+- [x] Hohmann transfer: delta-v for both burns + transfer time
+- [x] Two-body orbit propagation (state vectors over time)
+- [x] Orbital elements <-> state vectors conversion
+- [x] Simple n-body propagation (e.g. Earth-Moon-spacecraft)
+- [x] Plot-ready output (arrays of positions) for a future frontend
+- [x] Tests (e.g. LEO→GEO Hohmann ≈ 3.9 km/s total)
 
 ## Phase 3 — Physics: Propulsion + classical
 - [ ] Tsiolkovsky rocket equation (solve for any variable)
