@@ -101,13 +101,15 @@ def balance_equation(equation: str) -> dict:
     description=(
         "Limiting reagent and theoretical yields. equation is balanced automatically. Give the amount of each "
         "starting reactant as masses (grams) and/or moles, e.g. masses={'H2': 4, 'O2': 32}. Returns moles "
-        "reacted, product amounts (mol and g) and leftover excess reactants."
+        "reacted, product amounts (mol and g) and leftover excess reactants. whole_reactions=True treats the amounts "
+        "as molecule counts and allows only complete reaction events (so leftovers of every reactant are whole numbers)."
     ),
 )
 def stoichiometry(
     equation: str,
     masses: dict[str, float] | None = None,
     moles: dict[str, float] | None = None,
+    whole_reactions: bool = False,
 ) -> dict:
     eq = parse_equation(equation)
     coeffs = _balance(eq)
@@ -132,6 +134,8 @@ def stoichiometry(
     extents = {name: n / reactants[name][0] for name, n in given.items()}
     limiting = min(extents, key=extents.get)
     xi = extents[limiting]
+    if whole_reactions:  # counting individual molecules: only complete reaction events happen
+        xi = float(int(xi + 1e-9))
 
     def amounts(name, coeff, n_mol):
         mm = molar_mass_of(name)
@@ -143,7 +147,7 @@ def stoichiometry(
             "products": {name: amounts(name, c, c * xi) for name, (c, _) in products.items()},
             "reactants_consumed": {name: amounts(name, c, c * xi) for name, (c, _) in reactants.items()},
             "excess_remaining": {name: amounts(name, reactants[name][0], n - reactants[name][0] * xi)
-                                 for name, n in given.items() if name != limiting},
+                                 for name, n in given.items() if name != limiting or n - reactants[name][0] * xi > 1e-12},
         },
         "balanced_equation": _format(eq, coeffs),
         "extent_of_reaction": xi,

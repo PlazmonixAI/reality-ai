@@ -86,20 +86,20 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 **Chemistry**
 - [x] Build an atom / isotopes & atomic mass
 - [x] Molecule shapes (VSEPR geometry)
-- [ ] Balancing chemical equations (interactive)
-- [ ] Reactants, products & leftovers (limiting reagent visual)
+- [x] Balancing chemical equations (interactive)
+- [x] Reactants, products & leftovers (limiting reagent visual)
 - [x] Molarity & dilution
 - [x] Acid–base titration curves (strong/weak, indicators)
 - [x] Buffers & Henderson–Hasselbalch
-- [ ] Polyprotic acids & speciation diagrams
+- [x] Polyprotic acids & speciation diagrams
 - [x] Beer–Lambert law (spectrophotometer)
 - [x] Electrochemistry: galvanic cells & the Nernst equation
 - [x] Real gases (van der Waals) vs ideal
 - [x] Vapour pressure & boiling point (Clausius–Clapeyron)
 - [ ] States of matter & full P–T phase diagrams (triple point, sublimation)
-- [ ] Colligative properties
+- [x] Colligative properties
 - [x] Reaction mechanisms & energy profiles (catalysts)
-- [ ] Radiometric dating
+- [x] Radiometric dating
 
 **Mathematics**
 - [x] Unit circle & trigonometric graphs

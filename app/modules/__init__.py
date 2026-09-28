@@ -53,3 +53,7 @@ from app.modules.physics import fluids  # noqa: F401
 from app.modules.physics import heat  # noqa: F401
 from app.modules.physics import quantum  # noqa: F401
 from app.modules.physics import kepler  # noqa: F401
+from app.modules.chemistry import reactions  # noqa: F401
+from app.modules.chemistry import speciation  # noqa: F401
+from app.modules.chemistry import colligative  # noqa: F401
+from app.modules.chemistry import dating  # noqa: F401

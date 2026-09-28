@@ -528,4 +528,38 @@ export const SIMS = [
     art: sky(`<rect width="240" height="128" fill="#0b1426"/><ellipse cx="120" cy="64" rx="100" ry="50" fill="none" stroke="#c9ced6" stroke-opacity=".6"/>
       <path d="M60 64 L220 64 A100 50 0 0 0 210 40 Z" fill="#eb6834" fill-opacity=".35"/><path d="M60 64 L40 96 A100 50 0 0 1 20 64 Z" fill="#2a78d6" fill-opacity=".35"/><circle cx="60" cy="64" r="8" fill="#ffd479"/><circle cx="210" cy="40" r="5" fill="#2a78d6"/>`),
   },
+  {
+    id: "balance", domain: "chemistry", title: "Balancing Equations",
+    blurb: "Set the coefficients yourself and watch the atom tally: every element must match on both sides.",
+    load: () => import("./balance.js"),
+    art: sky(`<rect width="240" height="128" fill="#eef8f2"/><text x="120" y="30" font-size="16" text-anchor="middle" font-family="system-ui" font-weight="bold" fill="#16202c">2 H₂ + O₂ → 2 H₂O</text>
+      <rect x="50" y="60" width="18" height="56" fill="#2a78d6"/><rect x="70" y="60" width="18" height="56" fill="#eb6834"/><rect x="150" y="88" width="18" height="28" fill="#2a78d6"/><rect x="170" y="88" width="18" height="28" fill="#eb6834"/>`),
+  },
+  {
+    id: "reactants", domain: "chemistry", title: "Reactants & Leftovers",
+    blurb: "Mix molecules and see what forms: the limiting reactant runs out, the excess is left over.",
+    load: () => import("./reactants.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="10" y="20" width="100" height="96" fill="#fff" stroke="#39424e" stroke-width="2"/><rect x="130" y="20" width="100" height="96" fill="#fff" stroke="#39424e" stroke-width="2"/>
+      ${[[40, 50], [70, 50], [55, 85]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="8" fill="#3b6fd6"/><circle cx="${x + 12}" cy="${y}" r="8" fill="#3b6fd6"/>`).join("")}${[[160, 55], [195, 55], [175, 90]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="9" fill="#3b6fd6"/><circle cx="${x + 9}" cy="${y - 7}" r="6" fill="#fff" stroke="#16202c"/><circle cx="${x - 9}" cy="${y - 7}" r="6" fill="#fff" stroke="#16202c"/><circle cx="${x}" cy="${y + 10}" r="6" fill="#fff" stroke="#16202c"/>`).join("")}`),
+  },
+  {
+    id: "speciation", domain: "chemistry", title: "Polyprotic Acids",
+    blurb: "Phosphoric, carbonic, citric acid: which protonation state dominates at each pH?",
+    load: () => import("./speciation.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M10 20 C50 20 60 110 90 110 L230 110" fill="none" stroke="#2a78d6" stroke-width="3"/><path d="M10 110 C50 110 60 20 90 20 C130 20 140 110 170 110 L230 110" fill="none" stroke="#eb6834" stroke-width="3"/>
+      <path d="M10 110 L90 110 C130 110 140 20 170 20 L230 20" fill="none" stroke="#1baf7a" stroke-width="3"/>`),
+  },
+  {
+    id: "colligative", domain: "chemistry", title: "Colligative Properties",
+    blurb: "Why salted roads don't freeze and pasta water boils hotter: it's the number of dissolved particles.",
+    load: () => import("./colligative.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="40" y="40" width="160" height="12" fill="#dbe9f7"/><rect x="24" y="60" width="190" height="12" fill="#2a78d6"/>
+      <line x1="20" y1="96" x2="220" y2="96" stroke="#7b8796"/><text x="24" y="116" font-size="12" fill="#2a78d6" font-family="system-ui">−3.7 °C</text><text x="170" y="116" font-size="12" fill="#eb6834" font-family="system-ui">101 °C</text>`),
+  },
+  {
+    id: "dating", domain: "chemistry", title: "Radiometric Dating",
+    blurb: "Carbon-14 for bones, uranium–lead for zircons: turn isotope ratios into ages with half-lives.",
+    load: () => import("./dating.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/>${Array.from({ length: 60 }, (_, i) => `<rect x="${30 + (i % 12) * 15}" y="${18 + Math.floor(i / 12) * 20}" width="12" height="16" fill="${i < 21 ? "#2a78d6" : "#eb6834"}" fill-opacity="${i < 21 ? 1 : 0.45}"/>`).join("")}`),
+  },
 ];
