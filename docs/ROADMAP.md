@@ -24,13 +24,13 @@ Deadline for cloud-session credits: **Nov 5, 2026, 1:29 PM IST**.
 - [x] Plot-ready output (arrays of positions) for a future frontend
 - [x] Tests (e.g. LEO→GEO Hohmann ≈ 3.9 km/s total)
 
-## Phase 3 — Physics: Propulsion + classical
-- [ ] Tsiolkovsky rocket equation (solve for any variable)
-- [ ] Multi-stage rocket delta-v + simple staging optimization
-- [ ] Thrust-to-weight, burn time, mass flow from Isp
-- [ ] Projectile motion with/without drag
-- [ ] Simple harmonic / damped oscillator
-- [ ] Tests
+## Phase 3 — Physics: Propulsion + classical ✅
+- [x] Tsiolkovsky rocket equation (solve for any variable)
+- [x] Multi-stage rocket delta-v + simple staging optimization
+- [x] Thrust-to-weight, burn time, mass flow from Isp
+- [x] Projectile motion with/without drag
+- [x] Simple harmonic / damped oscillator
+- [x] Tests
 
 ## Phase 4 — Chemistry
 - [ ] Molar mass from formula, stoichiometry

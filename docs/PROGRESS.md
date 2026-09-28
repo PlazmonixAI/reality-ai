@@ -26,3 +26,10 @@
 - Verified against Curtis Ex. 4.3 and 4.7, LEO→GEO Hohmann = 3.893 km/s, Earth→Mars Hohmann, Kepler's equation, sidereal month; 100 tests passing
 - **Next:** Phase 3 — Propulsion + classical mechanics
 - **Known issues:** no J2/drag/SRP perturbations; no plane-change or bi-elliptic manoeuvres; parabolic orbits unsupported in `elements_to_state`; n-body trajectories for long runs can be large (capped at 10,000 points)
+
+## 2026-09-28 — Phase 3 (propulsion + classical mechanics)
+- `physics/propulsion.py`: `rocket_equation` (solves for any one of delta-v, Isp/exhaust velocity, initial or final mass), `multi_stage_delta_v` (per-stage breakdown), `optimize_staging` (Lagrange-multiplier minimum lift-off mass for a target delta-v), `thrust_parameters` (mass flow, T/W, burn time)
+- `physics/classical.py`: `projectile_motion` (closed-form in vacuum; quadratic drag via solve_ivp with ground detection, terminal velocity), `harmonic_oscillator` (exact solutions for undamped/under/critically/over-damped, Q factor, energy)
+- Verified: rocket equation round-trips, hand-computed two-stage rocket, staging optimum = brute-force optimum, vacuum range formulas, analytic max height with drag, terminal velocity, all oscillator regimes vs numerical ODE; 139 tests passing
+- **Next:** Phase 4 — Chemistry
+- **Known issues:** delta-v figures are ideal (no gravity/drag losses); projectile drag uses constant air density and Cd; oscillator has no external driving force

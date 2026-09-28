@@ -8,3 +8,5 @@ from app.modules.mathematics import ode  # noqa: F401
 from app.modules.physics import elements  # noqa: F401
 from app.modules.physics import orbital  # noqa: F401
 from app.modules.physics import propagation  # noqa: F401
+from app.modules.physics import classical  # noqa: F401
+from app.modules.physics import propulsion  # noqa: F401
