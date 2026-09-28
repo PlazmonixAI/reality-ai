@@ -323,4 +323,47 @@ export const SIMS = [
       <path d="M20 120 C80 110 140 70 220 8" fill="none" stroke="#2a78d6" stroke-width="3"/><line x1="100" y1="128" x2="230" y2="20" stroke="#eb6834" stroke-width="2"/>
       <circle cx="196" cy="30" r="4" fill="#eb6834"/><circle cx="137" cy="90" r="5" fill="#16202c"/>`),
   },
+  {
+    id: "engine", domain: "physics", title: "Heat Engines",
+    blurb: "Run Carnot, Otto and Diesel cycles on a PV diagram: net work is the enclosed area, and nothing beats Carnot.",
+    load: () => import("./engine.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M40 20 C70 40 110 60 200 70 L190 110 C120 104 80 90 50 60 Z" fill="#2a78d6" fill-opacity=".2" stroke="#2a78d6" stroke-width="3"/>
+      <line x1="30" y1="118" x2="230" y2="118" stroke="#7b8796"/><line x1="30" y1="10" x2="30" y2="118" stroke="#7b8796"/>`),
+  },
+  {
+    id: "blackbody", domain: "physics", title: "Blackbody Spectrum",
+    blurb: "Heat a body from lava to blue stars: Planck's curve, Wien's peak shift and the T⁴ power law.",
+    load: () => import("./blackbody.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><rect x="40" y="10" width="40" height="108" fill="url(#bbv)" opacity=".4"/>
+      <defs><linearGradient id="bbv"><stop offset="0" stop-color="#7b3fe4"/><stop offset=".5" stop-color="#1baf7a"/><stop offset="1" stop-color="#e34948"/></linearGradient></defs>
+      <path d="M10 118 C40 20 70 18 110 60 S190 112 230 116" fill="none" stroke="#2a78d6" stroke-width="3"/><path d="M10 118 C60 80 90 70 140 90 S200 114 230 117" fill="none" stroke="#eb6834" stroke-width="2" stroke-dasharray="6 5"/>`),
+  },
+  {
+    id: "photoelectric", domain: "physics", title: "Photoelectric Effect",
+    blurb: "Shine light on metals: only photons above the threshold frequency free electrons, however bright the lamp.",
+    load: () => import("./photoelectric.js"),
+    art: sky(`<rect width="240" height="128" fill="#101826"/><rect x="50" y="24" width="10" height="80" fill="#b8c4d3"/><rect x="180" y="24" width="10" height="80" fill="#7b8796"/>
+      <path d="M10 6 L30 6 L60 90 L60 38 Z" fill="#7b3fe4" fill-opacity=".5"/>${[0, 1, 2, 3, 4].map((i) => `<circle cx="${80 + i * 22}" cy="${40 + (i * 13) % 50}" r="4" fill="#5598e7"/>`).join("")}`),
+  },
+  {
+    id: "hydrogen", domain: "physics", title: "Hydrogen Atom",
+    blurb: "Drop the electron between Bohr levels and see the emitted photon: Lyman, Balmer and Paschen lines.",
+    load: () => import("./hydrogen.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/>${[20, 70, 90, 98, 102].map((y) => `<line x1="20" y1="${y}" x2="110" y2="${y}" stroke="#c9ced6" stroke-opacity=".6" stroke-width="2"/>`).join("")}
+      <line x1="65" y1="90" x2="65" y2="74" stroke="#e34948" stroke-width="4"/>${[18, 34, 52].map((r) => `<circle cx="180" cy="64" r="${r}" fill="none" stroke="#c9ced6" stroke-opacity=".4"/>`).join("")}<circle cx="180" cy="64" r="5" fill="#e34948"/><circle cx="214" cy="64" r="5" fill="#5598e7"/>`),
+  },
+  {
+    id: "decay", domain: "physics", title: "Radioactive Decay",
+    blurb: "Watch 400 atoms decay at random while the totals follow exact half-life curves, including decay chains.",
+    load: () => import("./decay.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/>${Array.from({ length: 60 }, (_, i) => `<rect x="${14 + (i % 12) * 18}" y="${12 + Math.floor(i / 12) * 22}" width="14" height="14" fill="${(i * 37) % 5 < 2 ? "#2a78d6" : "#eb6834"}"/>`).join("")}`),
+  },
+  {
+    id: "relativity", domain: "physics", title: "Special Relativity",
+    blurb: "Fly to a star near light speed: time dilation, length contraction and the twin paradox, computed exactly.",
+    load: () => import("./relativity.js"),
+    art: sky(`<rect width="240" height="128" fill="#0b1426"/><circle cx="30" cy="40" r="14" fill="#2a78d6"/><circle cx="212" cy="40" r="10" fill="#ffd479"/><ellipse cx="120" cy="40" rx="12" ry="7" fill="#e8ecf2"/>
+      <circle cx="70" cy="92" r="24" fill="#fff" stroke="#2a78d6" stroke-width="3"/><circle cx="170" cy="92" r="24" fill="#fff" stroke="#eb6834" stroke-width="3"/>
+      <line x1="70" y1="92" x2="84" y2="80" stroke="#16202c" stroke-width="2.5"/><line x1="170" y1="92" x2="170" y2="74" stroke="#16202c" stroke-width="2.5"/>`),
+  },
 ];

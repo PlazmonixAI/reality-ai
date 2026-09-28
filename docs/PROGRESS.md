@@ -102,3 +102,10 @@
 - New sims: Taylor Series, Riemann Sums (with convergence-rate plot), Complex Plane, Linear Transformations, Newton's Method; shared `frontend/js/sims/plotkit.js` for axes/curves
 - Verified: sin Taylor coefficients and Lagrange bound, rules on x² exact values, midpoint error ∝ 1/n², √2 quadratic convergence, double-root linear convergence, the classic 0 ↔ 1 Newton cycle, 4th roots of 1 + i, rotation/reflection/shear/singular classification; 411 tests passing
 - **Next:** Phase 6 batch 7 — modern & thermal physics (heat-engine cycles, blackbody, photoelectric effect, hydrogen spectrum, radioactive decay, special relativity)
+
+## 2026-09-28 — Phase 6, batch 7 (modern & thermal physics)
+- New engine tools: `blackbody` (Planck spectrum, Wien peak, σT⁴, visible fraction), `photoelectric` (K_max, stopping voltage, threshold, I–V curve), `hydrogen_spectrum` (Bohr levels, all lines up to n_max with series names, reduced-mass Rydberg), `radioactive_decay` (exact Bateman chain via matrix exponential), `special_relativity` (γ, rapidity, dilation, contraction, energies, twin trip), `heat_engine_cycle` (Carnot/Otto/Diesel, net work by ∮P dV vs textbook efficiency)
+- New sims: Heat Engines (animated PV loop + piston), Blackbody Spectrum (vs the Sun, apparent colour), Photoelectric Effect (tube, battery, I–V graph), Hydrogen Atom (level diagram, Bohr orbits, spectrum strip), Radioactive Decay (400-atom grid, C-14 / I-131 / Co-60 / custom chain), Special Relativity (twin-paradox clocks, γ curve)
+- Verified: Stefan–Boltzmann constant, Wien peak for the Sun, Planck integral = σT⁴, H-α 656.47 nm / Lyman-α 121.57 nm / H-β 486.27 nm, Bateman vs analytic two-member chain, γ = 5/3 at 0.8c and the 10-yr / 6-yr twin trip, muon lifetime dilation, Carnot/Otto/Diesel efficiencies from the enclosed area; 428 tests passing
+- **Next:** Phase 6 batch 8 — chemistry (molarity & dilution, electrochemistry/Nernst, van der Waals, Clausius–Clapeyron, reaction energy profiles)
+- **Known issues:** photoelectron animation is illustrative (the numbers come from the engine); decay presets are two-member chains

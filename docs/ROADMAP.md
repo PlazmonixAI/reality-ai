@@ -73,13 +73,13 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Buoyancy & density; fluid pressure; Bernoulli flow
 - [ ] Doppler effect & sound
 - [ ] Heat conduction (1D/2D heat equation)
-- [ ] Thermodynamic cycles: Carnot, Otto, Diesel on a PV diagram
-- [ ] Blackbody radiation (Planck, Wien, Stefan–Boltzmann)
-- [ ] Photoelectric effect
-- [ ] Hydrogen atom energy levels & spectra (Bohr / Rydberg)
+- [x] Thermodynamic cycles: Carnot, Otto, Diesel on a PV diagram
+- [x] Blackbody radiation (Planck, Wien, Stefan–Boltzmann)
+- [x] Photoelectric effect
+- [x] Hydrogen atom energy levels & spectra (Bohr / Rydberg)
 - [ ] Quantum particle in a box / tunnelling (1D Schrödinger)
-- [ ] Radioactive decay chains & half-life
-- [ ] Special relativity: time dilation, length contraction, twin paradox
+- [x] Radioactive decay chains & half-life
+- [x] Special relativity: time dilation, length contraction, twin paradox
 - [ ] Kepler's laws & solar system n-body
 - [ ] Orbital perturbations (J2 precession, drag decay)
 
