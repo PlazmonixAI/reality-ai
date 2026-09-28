@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field
 import app.modules  # noqa: F401  (registers all tools)
 from app.core.registry import get_tool, list_tools
 
-app = FastAPI(title="Reality AI", version="0.1.0",
-              description="Plazmonix AI's physics, chemistry and mathematics research-simulation engine")
+app = FastAPI(title="Reality ASM", version="0.1.0",
+              description="Reality ASM (Advanced Simulation Machine): Plazmonix AI's physics, chemistry and mathematics research-simulation engine")
 
 
 class SimulateRequest(BaseModel):
@@ -20,7 +20,7 @@ class SimulateRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "reality-ai", "tools": len(list_tools())}
+    return {"status": "ok", "service": "reality-asm", "tools": len(list_tools())}
 
 
 @app.get("/tools")

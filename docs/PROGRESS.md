@@ -82,3 +82,8 @@
 - Note: large reference tables are avoided (computed where possible) after "output blocked by content filtering" errors in the session; spectrophotometer solutions use illustrative single-band absorptivities
 - **Next:** Phase 6 batch 5 — mathematics (unit circle, Fourier series, slope fields, vectors, probability)
 - **Known issues:** VSEPR supports one central atom and terminal H/halogens/O/S/N only; Build an Atom limited to Z ≤ 20
+
+## 2026-09-28 — Renamed to Reality ASM
+- Product renamed from "Reality AI" to **Reality ASM (Advanced Simulation Machine)** across the UI, API title, `/health` service id (`reality-asm`), README, CLAUDE.md and roadmap
+- The GitHub repository and folder are still named `reality-ai` (renaming the repository is done by its owner in GitHub settings)
+- **Next:** Phase 6 batch 5 — mathematics

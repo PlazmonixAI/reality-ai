@@ -9,6 +9,7 @@ def test_health():
     r = client.get("/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+    assert r.json()["service"] == "reality-asm"
 
 
 def test_tools_listing():

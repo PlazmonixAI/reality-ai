@@ -1,4 +1,4 @@
-# Reality AI — Build Roadmap
+# Reality ASM — Build Roadmap
 
 Scope: Physics, Chemistry and Mathematics, with an interactive simulator. Biology is out of scope.
 

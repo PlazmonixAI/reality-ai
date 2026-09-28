@@ -1,4 +1,4 @@
-// Client for the Reality AI engine. All numbers shown by a simulation come from these calls.
+// Client for the Reality ASM engine. All numbers shown by a simulation come from these calls.
 
 export class EngineError extends Error {}
 
@@ -13,7 +13,7 @@ export async function simulate(domain, name, args = {}, signal) {
     });
   } catch (err) {
     if (err.name === "AbortError") throw err;
-    throw new EngineError("Cannot reach the Reality AI engine. Is the server running?");
+    throw new EngineError("Cannot reach the Reality ASM engine. Is the server running?");
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {

@@ -17,7 +17,7 @@ SIM_INDEX = (FRONTEND / "js" / "sims" / "index.js").read_text()
 def test_index_served_at_root():
     r = client.get("/")
     assert r.status_code == 200
-    assert "Reality AI Simulator" in r.text
+    assert "Reality ASM" in r.text
 
 
 def test_api_routes_still_win():

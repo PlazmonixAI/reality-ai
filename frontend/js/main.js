@@ -21,7 +21,7 @@ async function route() {
 
 function renderGallery() {
   crumb.textContent = "";
-  document.title = "Reality AI Simulator";
+  document.title = "Reality ASM";
   const search = el("input", { class: "search", type: "search", placeholder: "Search simulations…", value: query, "aria-label": "Search simulations" });
   const sections = el("div");
   const draw = () => {
@@ -44,13 +44,13 @@ function renderGallery() {
   app.append(el("div", { class: "gallery" },
     el("div", { class: "hero" },
       el("h1", {}, "Interactive simulations"),
-      el("p", {}, "Every number on screen is computed by the Reality AI engine — real numerical and symbolic physics, chemistry and mathematics, animated in your browser.")),
+      el("p", {}, "Every number on screen is computed by the Reality ASM engine — real numerical and symbolic physics, chemistry and mathematics, animated in your browser.")),
     search, sections));
 }
 
 async function openSim(sim) {
   crumb.textContent = `/ ${sim.title}`;
-  document.title = `${sim.title} · Reality AI Simulator`;
+  document.title = `${sim.title} · Reality ASM`;
   const page = el("div", { class: "sim-page" });
   app.append(page);
   try {

@@ -1,6 +1,6 @@
-# Reality AI
+# Reality ASM — Advanced Simulation Machine
 
-Reality AI is Plazmonix AI's research-simulation engine for Physics, Chemistry and Mathematics.
+Reality ASM (Advanced Simulation Machine) is Plazmonix AI's research-simulation engine for Physics, Chemistry and Mathematics.
 An AI representative (LLM via NVIDIA NIM) understands a research question, routes it to the right simulation tool, runs it, and explains the result.
 
 Built by Plazmonix AI (a Velostra Aerospace company).

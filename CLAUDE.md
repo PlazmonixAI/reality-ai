@@ -1,10 +1,10 @@
 # CLAUDE.md — Build brief for Claude Code
 
-You are building **Reality AI**, the Physics, Chemistry and Mathematics research-simulation engine of Plazmonix AI.
+You are building **Reality ASM (Advanced Simulation Machine)**, the Physics, Chemistry and Mathematics research-simulation engine of Plazmonix AI.
 Biology is out of scope: do not add biology tools.
 Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anything.
 
-## What Reality AI does
+## What Reality ASM does
 1. A user asks a research question in natural language (e.g. "How much delta-v to go from LEO to GEO?").
 2. The **AI representative** (LLM via NVIDIA NIM, tool-calling) picks the right simulation tool(s) and arguments.
 3. The tool runs real numerical/symbolic computation (numpy / scipy / sympy).
