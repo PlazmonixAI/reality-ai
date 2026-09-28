@@ -40,3 +40,6 @@ from app.modules.chemistry import solutions  # noqa: F401
 from app.modules.chemistry import electrochem  # noqa: F401
 from app.modules.chemistry import real_gases  # noqa: F401
 from app.modules.chemistry import energy_profile  # noqa: F401
+from app.modules.physics import oscillations  # noqa: F401
+from app.modules.physics import charged  # noqa: F401
+from app.modules.physics import doppler  # noqa: F401

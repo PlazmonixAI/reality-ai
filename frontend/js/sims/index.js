@@ -403,4 +403,41 @@ export const SIMS = [
     art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M10 70 H50 C80 70 90 10 120 10 C150 10 160 100 190 100 H230" fill="none" stroke="#2a78d6" stroke-width="3.5"/>
       <path d="M50 70 C80 70 95 42 120 42 C145 42 160 100 190 100" fill="none" stroke="#eb6834" stroke-width="3" stroke-dasharray="7 5"/>`),
   },
+  {
+    id: "resonance", domain: "physics", title: "Resonance",
+    blurb: "Drive a mass on a spring at different frequencies: resonance peaks, Q factor and the 90° phase lag.",
+    load: () => import("./resonance.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M10 118 C60 116 90 110 110 60 C116 20 124 20 130 60 C150 110 180 116 230 118" fill="none" stroke="#eb6834" stroke-width="3"/>
+      <path d="M10 118 C70 115 100 100 120 88 C140 100 170 115 230 118" fill="none" stroke="#2a78d6" stroke-width="2" stroke-dasharray="6 5"/>`),
+  },
+  {
+    id: "coupled", domain: "physics", title: "Coupled Oscillators",
+    blurb: "Masses linked by springs: normal modes, beats and energy sloshing from one mass to the next.",
+    load: () => import("./coupled.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="6" y="34" width="10" height="60" fill="#9aa6b5"/><rect x="224" y="34" width="10" height="60" fill="#9aa6b5"/>
+      <path d="M16 64 l8 -8 l8 16 l8 -16 l8 16 l8 -8" fill="none" stroke="#4b5868" stroke-width="2"/><rect x="64" y="44" width="40" height="40" fill="#2a78d6"/>
+      <path d="M104 64 l6 -8 l6 16 l6 -16 l6 16 l6 -8" fill="none" stroke="#4b5868" stroke-width="2"/><rect x="140" y="44" width="40" height="40" fill="#eb6834"/>
+      <path d="M180 64 l8 -8 l8 16 l8 -16 l8 16 l12 -8" fill="none" stroke="#4b5868" stroke-width="2"/>`),
+  },
+  {
+    id: "doublependulum", domain: "physics", title: "Double Pendulum & Chaos",
+    blurb: "Two pendulums that start a hair apart end up doing completely different things. Measure the chaos.",
+    load: () => import("./doublependulum.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><path d="M120 20 C60 40 50 110 110 100 S200 30 150 80 S90 120 70 70" fill="none" stroke="#2a78d6" stroke-opacity=".7" stroke-width="1.5"/>
+      <line x1="120" y1="20" x2="160" y2="56" stroke="#c9ced6" stroke-width="3"/><line x1="160" y1="56" x2="150" y2="100" stroke="#c9ced6" stroke-width="3"/><circle cx="160" cy="56" r="7" fill="#7b8796"/><circle cx="150" cy="100" r="9" fill="#2a78d6"/>`),
+  },
+  {
+    id: "lorentz", domain: "physics", title: "Charges in E & B Fields",
+    blurb: "Protons and electrons in magnetic fields: cyclotron circles, and the sideways E × B drift.",
+    load: () => import("./lorentz.js"),
+    art: sky(`<rect width="240" height="128" fill="#101826"/>${Array.from({ length: 24 }, (_, i) => `<circle cx="${20 + (i % 8) * 29}" cy="${22 + Math.floor(i / 8) * 42}" r="2" fill="#c9ced6" fill-opacity=".5"/>`).join("")}
+      <path d="M20 64 ${Array.from({ length: 5 }, (_, i) => `a18 18 0 1 1 ${20} 0`).join(" ")}" fill="none" stroke="#2a78d6" stroke-width="3"/><circle cx="120" cy="64" r="7" fill="#e34948"/>`),
+  },
+  {
+    id: "doppler", domain: "physics", title: "Doppler Effect",
+    blurb: "A siren drives past: hear the pitch drop, watch wavefronts bunch up, then break the sound barrier.",
+    load: () => import("./doppler.js"),
+    art: sky(`<rect width="240" height="128" fill="#eef3f0"/><rect y="52" width="240" height="24" fill="#5b6270"/>${[10, 26, 44, 64, 86].map((r, i) => `<circle cx="${150 - i * 14}" cy="64" r="${r}" fill="none" stroke="#2a78d6" stroke-opacity=".6" stroke-width="1.5"/>`).join("")}
+      <rect x="138" y="56" width="30" height="16" rx="4" fill="#e34948"/><circle cx="120" cy="104" r="6" fill="#16202c"/>`),
+  },
 ];

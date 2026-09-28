@@ -62,16 +62,16 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] RC / RL / RLC circuits (transients, resonance)
 - [x] Coulomb's law & electric field lines / equipotentials
 - [x] Magnetic fields, Faraday's law & induction
-- [ ] Charged particle in E/B fields (Lorentz force, cyclotron)
+- [x] Charged particle in E/B fields (Lorentz force, cyclotron)
 - [x] Collisions lab (1D/2D, elastic/inelastic, momentum)
 - [x] Forces & motion on a ramp with friction
 - [x] Energy skate park (track energy conservation)
 - [ ] Rotational dynamics: torque, moment of inertia, rolling
-- [ ] Double pendulum & chaos
-- [ ] Coupled oscillators & normal modes
-- [ ] Driven damped oscillator & resonance curves
+- [x] Double pendulum & chaos
+- [x] Coupled oscillators & normal modes
+- [x] Driven damped oscillator & resonance curves
 - [ ] Buoyancy & density; fluid pressure; Bernoulli flow
-- [ ] Doppler effect & sound
+- [x] Doppler effect & sound
 - [ ] Heat conduction (1D/2D heat equation)
 - [x] Thermodynamic cycles: Carnot, Otto, Diesel on a PV diagram
 - [x] Blackbody radiation (Planck, Wien, Stefan–Boltzmann)

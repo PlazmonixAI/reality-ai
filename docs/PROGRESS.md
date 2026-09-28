@@ -116,3 +116,10 @@
 - Verified: 0.2 M CuSO4, Daniell cell 1.10 V / ΔG° −212.3 kJ/mol / log K 37.2, Nernst 59.16 mV/decade, CO2 critical point 304 K / 74 bar, vdW Pr_sat = 0.647 at Tr = 0.9 and a numerically equal-area tie line, water boils at ~71 °C on Everest, Trouton for benzene, catalyst speed-up e^(ΔEa/RT) ≈ 2.4×10⁴ with unchanged K; 452 tests passing
 - **Next:** Phase 6 batch 9 — physics (driven oscillator resonance, coupled oscillators, double pendulum, Lorentz force/cyclotron, Doppler effect)
 - **Known issues:** Clausius–Clapeyron uses constant ΔH_vap (water at 25 °C comes out ~3.7 kPa vs 3.17 kPa real); galvanic cells use metal/ion couples only
+
+## 2026-09-28 — Phase 6, batch 9 (oscillations, fields, sound)
+- New engine tools: `driven_oscillator` (steady amplitude/phase, Q, resonance curve, full transient trajectory), `coupled_oscillators` (normal modes via K v = ω² M v, exact modal-superposition motion), `double_pendulum` (DOP853 at 1e-11, twin run, Lyapunov estimate, energy drift), `charged_particle` (Lorentz force: cyclotron frequency, Larmor radius, pitch, E×B drift), `doppler_effect` (approach/recede pitch, Mach cone, drive-by with wavefront emissions and supersonic boom)
+- New sims: Resonance, Coupled Oscillators (beats, mode starts), Double Pendulum & Chaos (twin + log separation), Charges in E & B Fields (auto-scaled view), Doppler Effect (wavefronts, drive-by pitch, supersonic branches)
+- Verified: amplitude F0/(bω0) and 90° lag at resonance, exact half-power frequencies (bandwidth b/m), simulated steady amplitude, ω = √(k/m), √(3k/m) modes, complete beat transfer, 3-mass chain 2√(k/m) sin(nπ/8), double-pendulum slow mode (2 − √2) g/l, chaos vs calm, proton cyclotron 15.25 MHz/T and circle radius, electron helix pitch, E×B drift = E/B, Doppler 440 Hz textbook cases, Mach 2 cone 30°, drive-by limits and boom time; 470 tests passing
+- **Next:** Phase 6 batch 10 — maths (conics/polar/parametric, least squares, Monte Carlo, fractals, shortest paths) or remaining physics (rotation, fluids, heat conduction, quantum box, Kepler)
+- **Known issues:** Lorentz-force model is non-relativistic (v < 0.1 c); Doppler assumes still air
