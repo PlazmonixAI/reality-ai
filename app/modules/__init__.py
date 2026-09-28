@@ -25,3 +25,6 @@ from app.modules.physics import collisions  # noqa: F401
 from app.modules.physics import magnetism  # noqa: F401
 from app.modules.physics import ramp  # noqa: F401
 from app.modules.physics import track  # noqa: F401
+from app.modules.chemistry import spectroscopy  # noqa: F401
+from app.modules.chemistry import titration  # noqa: F401
+from app.modules.chemistry import vsepr  # noqa: F401
