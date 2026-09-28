@@ -480,4 +480,52 @@ export const SIMS = [
     art: sky(`<rect width="240" height="128" fill="#f4f7f2"/><path d="M30 100 L80 40 L140 70 L200 24 M80 40 L60 110 L140 70 L180 110 L200 24" fill="none" stroke="#c9ced6" stroke-width="3"/>
       <path d="M30 100 L80 40 L140 70 L200 24" fill="none" stroke="#eb6834" stroke-width="5"/>${[[30, 100], [80, 40], [140, 70], [200, 24], [60, 110], [180, 110]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="9" fill="${i < 4 ? "#2a78d6" : "#fff"}" stroke="#16202c" stroke-width="2"/>`).join("")}`),
   },
+  {
+    id: "rolling", domain: "physics", title: "Rolling Race",
+    blurb: "Ball, cylinder, hoop or ice block: moment of inertia decides who wins the race down the ramp.",
+    load: () => import("./rolling.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><path d="M10 20 L230 118 L10 118 Z" fill="#c9ced6"/><circle cx="90" cy="44" r="14" fill="#2a78d6"/><circle cx="150" cy="72" r="13" fill="none" stroke="#eb6834" stroke-width="5"/>`),
+  },
+  {
+    id: "buoyancy", domain: "physics", title: "Buoyancy",
+    blurb: "Drop cork, ice, wood or gold into water, honey or mercury: Archimedes decides what floats and how deep.",
+    load: () => import("./buoyancy.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><rect x="40" y="50" width="160" height="72" fill="#2a78d6" fill-opacity=".35"/><path d="M40 20 V122 H200 V20" fill="none" stroke="#39424e" stroke-width="4"/>
+      <rect x="70" y="36" width="36" height="36" fill="#d9b27c"/><rect x="140" y="96" width="24" height="24" fill="#e3b53a"/>`),
+  },
+  {
+    id: "bernoulli", domain: "physics", title: "Fluid Flow (Bernoulli)",
+    blurb: "Squeeze a pipe and the water speeds up while its pressure drops — continuity and Bernoulli's equation.",
+    load: () => import("./bernoulli.js"),
+    art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><path d="M10 60 H80 C100 60 100 76 120 76 C140 76 140 60 160 60 H230 V112 H160 C140 112 140 96 120 96 C100 96 100 112 80 112 H10 Z" fill="#2a78d6" fill-opacity=".25" stroke="#39424e" stroke-width="3"/>
+      <rect x="40" y="16" width="10" height="44" fill="#2a78d6" fill-opacity=".6"/><rect x="115" y="46" width="10" height="30" fill="#2a78d6" fill-opacity=".6"/><rect x="190" y="16" width="10" height="44" fill="#2a78d6" fill-opacity=".6"/>`),
+  },
+  {
+    id: "heat", domain: "physics", title: "Heat Conduction",
+    blurb: "Heat a rod at one end and watch temperature spread by the heat equation — copper vs glass vs wood.",
+    load: () => import("./heat.js"),
+    art: sky(`<defs><linearGradient id="hg"><stop offset="0" stop-color="#e34948"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#2a78d6"/></linearGradient></defs><rect width="240" height="128" fill="#f7f9fc"/>
+      <rect x="30" y="48" width="180" height="32" fill="url(#hg)" stroke="#39424e" stroke-width="2"/><rect x="10" y="38" width="20" height="52" fill="#e34948"/><rect x="210" y="38" width="20" height="52" fill="#2a78d6"/>`),
+  },
+  {
+    id: "quantum", domain: "physics", title: "Quantum Wells",
+    blurb: "Trap an electron in a box, a finite well or a spring: quantised energy levels and standing-wave states.",
+    load: () => import("./quantum.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><path d="M50 10 V116 H190 V10" fill="none" stroke="#c9ced6" stroke-width="3"/>
+      ${[100, 70, 30].map((y, j) => `<path d="${Array.from({ length: 41 }, (_, i) => `${i ? "L" : "M"}${50 + i * 3.5} ${y - 12 * Math.sin((j + 1) * Math.PI * i / 40)}`).join(" ")}" fill="none" stroke="${j === 0 ? "#eb6834" : "#2a78d6"}" stroke-width="2"/>`).join("")}`),
+  },
+  {
+    id: "tunnelling", domain: "physics", title: "Quantum Tunnelling",
+    blurb: "Fire electrons at a barrier they can't climb — and watch some of the wave leak through anyway.",
+    load: () => import("./tunnelling.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><rect x="105" y="40" width="30" height="80" fill="#eb6834" fill-opacity=".3" stroke="#eb6834" stroke-width="2"/>
+      <path d="M10 60 Q25 30 40 60 T70 60 T100 60 Q115 80 135 92 Q150 96 165 96 T195 96 T225 96" fill="none" stroke="#2a78d6" stroke-width="3"/>`),
+  },
+  {
+    id: "kepler", domain: "physics", title: "Kepler's Laws",
+    blurb: "Ellipses, equal areas in equal times and T² ∝ a³ — for Mercury, Mars, Jupiter or Halley's Comet.",
+    load: () => import("./kepler.js"),
+    art: sky(`<rect width="240" height="128" fill="#0b1426"/><ellipse cx="120" cy="64" rx="100" ry="50" fill="none" stroke="#c9ced6" stroke-opacity=".6"/>
+      <path d="M60 64 L220 64 A100 50 0 0 0 210 40 Z" fill="#eb6834" fill-opacity=".35"/><path d="M60 64 L40 96 A100 50 0 0 1 20 64 Z" fill="#2a78d6" fill-opacity=".35"/><circle cx="60" cy="64" r="8" fill="#ffd479"/><circle cx="210" cy="40" r="5" fill="#2a78d6"/>`),
+  },
 ];

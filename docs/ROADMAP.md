@@ -66,21 +66,21 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Collisions lab (1D/2D, elastic/inelastic, momentum)
 - [x] Forces & motion on a ramp with friction
 - [x] Energy skate park (track energy conservation)
-- [ ] Rotational dynamics: torque, moment of inertia, rolling
+- [x] Rotational dynamics: torque, moment of inertia, rolling
 - [x] Double pendulum & chaos
 - [x] Coupled oscillators & normal modes
 - [x] Driven damped oscillator & resonance curves
-- [ ] Buoyancy & density; fluid pressure; Bernoulli flow
+- [x] Buoyancy & density; fluid pressure; Bernoulli flow
 - [x] Doppler effect & sound
-- [ ] Heat conduction (1D/2D heat equation)
+- [x] Heat conduction (1D heat equation, Crank–Nicolson); 2D still to do
 - [x] Thermodynamic cycles: Carnot, Otto, Diesel on a PV diagram
 - [x] Blackbody radiation (Planck, Wien, Stefan–Boltzmann)
 - [x] Photoelectric effect
 - [x] Hydrogen atom energy levels & spectra (Bohr / Rydberg)
-- [ ] Quantum particle in a box / tunnelling (1D Schrödinger)
+- [x] Quantum particle in a box / tunnelling (1D Schrödinger)
 - [x] Radioactive decay chains & half-life
 - [x] Special relativity: time dilation, length contraction, twin paradox
-- [ ] Kepler's laws & solar system n-body
+- [x] Kepler's laws (equal areas, T² ∝ a³); multi-planet n-body view still to do
 - [ ] Orbital perturbations (J2 precession, drag decay)
 
 **Chemistry**
