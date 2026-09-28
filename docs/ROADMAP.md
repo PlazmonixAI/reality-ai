@@ -110,13 +110,13 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Vector addition & dot/cross products
 - [x] 2D linear transformations & eigenvectors
 - [x] Complex numbers & the complex plane
-- [ ] Conic sections; polar and parametric curves
+- [x] Conic sections; polar and parametric curves
 - [x] Probability distributions & the central limit theorem
-- [ ] Monte Carlo estimation (π, integrals)
-- [ ] Least-squares regression & curve fitting
+- [x] Monte Carlo estimation (π, integrals)
+- [x] Least-squares regression & curve fitting
 - [x] Newton's method & root-finding visualiser
-- [ ] Fractals (Mandelbrot / Julia sets)
-- [ ] Graph theory: shortest paths
+- [x] Fractals (Mandelbrot / Julia sets)
+- [x] Graph theory: shortest paths (Dijkstra, Bellman–Ford) & minimum spanning trees
 
 ## Phase 7 — AI representative
 - [ ] NIM client with multi-key rotation + retry on 429/5xx (`app/agent/llm.py`)

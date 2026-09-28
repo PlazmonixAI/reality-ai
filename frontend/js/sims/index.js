@@ -440,4 +440,44 @@ export const SIMS = [
     art: sky(`<rect width="240" height="128" fill="#eef3f0"/><rect y="52" width="240" height="24" fill="#5b6270"/>${[10, 26, 44, 64, 86].map((r, i) => `<circle cx="${150 - i * 14}" cy="64" r="${r}" fill="none" stroke="#2a78d6" stroke-opacity=".6" stroke-width="1.5"/>`).join("")}
       <rect x="138" y="56" width="30" height="16" rx="4" fill="#e34948"/><circle cx="120" cy="104" r="6" fill="#16202c"/>`),
   },
+  {
+    id: "conics", domain: "mathematics", title: "Conic Sections",
+    blurb: "Ax² + Bxy + Cy² + Dx + Ey + F = 0: ellipses, parabolas and hyperbolas with their foci, axes and asymptotes.",
+    load: () => import("./conics.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><ellipse cx="80" cy="64" rx="60" ry="36" fill="none" stroke="#2a78d6" stroke-width="3"/>
+      <circle cx="32" cy="64" r="4" fill="#eb6834"/><circle cx="128" cy="64" r="4" fill="#eb6834"/><path d="M170 10 Q200 64 170 118 M232 10 Q202 64 232 118" fill="none" stroke="#1baf7a" stroke-width="3"/>`),
+  },
+  {
+    id: "curves", domain: "mathematics", title: "Parametric & Polar Curves",
+    blurb: "Trace roses, cardioids, spirals, Lissajous figures and cycloids — with their exact arc length and area.",
+    load: () => import("./curves.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="${Array.from({ length: 121 }, (_, i) => { const t = (i / 120) * Math.PI, r = 55 * Math.cos(3 * t); return `${i ? "L" : "M"}${(120 + r * Math.cos(t)).toFixed(1)} ${(64 - r * Math.sin(t)).toFixed(1)}`; }).join(" ")}" fill="#2a78d6" fill-opacity=".15" stroke="#2a78d6" stroke-width="2.5"/>`),
+  },
+  {
+    id: "fit", domain: "mathematics", title: "Least-Squares Fitting",
+    blurb: "Drop points and fit lines, polynomials, exponentials or power laws. See R², standard errors and residuals.",
+    load: () => import("./fit.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><line x1="16" y1="112" x2="224" y2="20" stroke="#2a78d6" stroke-width="3"/>${[[30, 96], [58, 98], [80, 78], [104, 80], [130, 58], [150, 66], [176, 42], [204, 36]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#16202c"/>`).join("")}`),
+  },
+  {
+    id: "montecarlo", domain: "mathematics", title: "Monte Carlo",
+    blurb: "Throw random darts to estimate π or any integral — and watch the error shrink like 1/√N.",
+    load: () => import("./montecarlo.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><rect x="66" y="8" width="112" height="112" fill="none" stroke="#39424e" stroke-width="2"/><path d="M66 8 A112 112 0 0 1 178 120" fill="none" stroke="#16202c" stroke-width="2"/>
+      ${Array.from({ length: 70 }, (_, i) => { const x = (i * 37) % 112, y = (i * 61) % 112; return `<circle cx="${66 + x}" cy="${8 + y}" r="2.5" fill="${x * x + (112 - y) ** 2 <= 112 * 112 ? "#2a78d6" : "#eb6834"}"/>`; }).join("")}`),
+  },
+  {
+    id: "fractal", domain: "mathematics", title: "Fractal Explorer",
+    blurb: "Zoom into the Mandelbrot set and pick its Julia sets: connected shapes or Cantor dust.",
+    load: () => import("./fractal.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><circle cx="130" cy="64" r="34" fill="#08101c" stroke="#2a78d6" stroke-width="3"/><circle cx="82" cy="64" r="16" fill="#08101c" stroke="#2a78d6" stroke-width="3"/>
+      <circle cx="130" cy="26" r="8" fill="#08101c" stroke="#eb6834" stroke-width="2"/><circle cx="130" cy="102" r="8" fill="#08101c" stroke="#eb6834" stroke-width="2"/><circle cx="60" cy="64" r="5" fill="#08101c" stroke="#ebf2fa" stroke-width="2"/>`),
+  },
+  {
+    id: "shortestpath", domain: "mathematics", title: "Shortest Paths & Spanning Trees",
+    blurb: "Watch Dijkstra's algorithm settle towns one by one, or build the cheapest road network with Kruskal.",
+    load: () => import("./shortestpath.js"),
+    art: sky(`<rect width="240" height="128" fill="#f4f7f2"/><path d="M30 100 L80 40 L140 70 L200 24 M80 40 L60 110 L140 70 L180 110 L200 24" fill="none" stroke="#c9ced6" stroke-width="3"/>
+      <path d="M30 100 L80 40 L140 70 L200 24" fill="none" stroke="#eb6834" stroke-width="5"/>${[[30, 100], [80, 40], [140, 70], [200, 24], [60, 110], [180, 110]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="9" fill="${i < 4 ? "#2a78d6" : "#fff"}" stroke="#16202c" stroke-width="2"/>`).join("")}`),
+  },
 ];

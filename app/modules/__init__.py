@@ -43,3 +43,8 @@ from app.modules.chemistry import energy_profile  # noqa: F401
 from app.modules.physics import oscillations  # noqa: F401
 from app.modules.physics import charged  # noqa: F401
 from app.modules.physics import doppler  # noqa: F401
+from app.modules.mathematics import curves  # noqa: F401
+from app.modules.mathematics import fitting  # noqa: F401
+from app.modules.mathematics import monte_carlo  # noqa: F401
+from app.modules.mathematics import fractals  # noqa: F401
+from app.modules.mathematics import graphs  # noqa: F401

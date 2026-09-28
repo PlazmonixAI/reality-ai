@@ -99,7 +99,11 @@ export class LineGraph {
       ctx.strokeStyle = s.color; ctx.fillStyle = s.color;
       if (s.bars) {
         const n = s.x.length;
-        const bw = n > 1 ? Math.max(1, (X(s.x[1]) - X(s.x[0])) - 2) : 8;
+        // Bar width from the smallest gap between x values (x need not be sorted)
+        const xs = [...s.x].sort((p, q) => p - q);
+        let gap = Infinity;
+        for (let i = 1; i < n; i++) if (xs[i] > xs[i - 1]) gap = Math.min(gap, X(xs[i]) - X(xs[i - 1]));
+        const bw = Number.isFinite(gap) ? Math.max(1, Math.min(gap - 2, 40)) : 8;
         for (let i = 0; i < n; i++) {
           if (s.y[i] === null) continue;
           const x = X(s.x[i]) - bw / 2, y0 = Y(Math.max(b.ymin, 0)), y1 = Y(s.y[i]);
