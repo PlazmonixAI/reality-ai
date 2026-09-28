@@ -29,3 +29,6 @@ from app.modules.chemistry import spectroscopy  # noqa: F401
 from app.modules.chemistry import titration  # noqa: F401
 from app.modules.chemistry import vsepr  # noqa: F401
 from app.modules.chemistry import atoms  # noqa: F401
+from app.modules.mathematics import dynamics  # noqa: F401
+from app.modules.mathematics import trig_fourier  # noqa: F401
+from app.modules.mathematics import vectors_prob  # noqa: F401

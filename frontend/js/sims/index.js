@@ -248,4 +248,42 @@ export const SIMS = [
       <path d="M10 90 C50 10 80 10 120 64 S190 118 230 38" fill="none" stroke="#2a78d6" stroke-width="3"/>
       <line x1="40" y1="100" x2="140" y2="20" stroke="#1baf7a" stroke-width="2.5"/>`),
   },
+  {
+    id: "unitcircle", domain: "mathematics", title: "Unit Circle & Trig",
+    blurb: "Drag around the unit circle and see exact sin, cos and tan values trace out their graphs.",
+    load: () => import("./unitcircle.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><circle cx="70" cy="64" r="48" fill="none" stroke="#39424e" stroke-width="2"/>
+      <line x1="70" y1="64" x2="112" y2="40" stroke="#16202c" stroke-width="2.5"/><line x1="70" y1="64" x2="112" y2="64" stroke="#eb6834" stroke-width="4"/>
+      <line x1="112" y1="64" x2="112" y2="40" stroke="#2a78d6" stroke-width="4"/>
+      <path d="M130 64 C145 20 160 20 175 64 S205 108 220 64" fill="none" stroke="#2a78d6" stroke-width="2.5"/>`),
+  },
+  {
+    id: "fourier", domain: "mathematics", title: "Fourier Series",
+    blurb: "Build square, sawtooth and triangle waves from sines and cosines, one harmonic at a time.",
+    load: () => import("./fourier.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M10 90 H60 V38 H120 V90 H180 V38 H230" fill="none" stroke="#eb6834" stroke-width="2" stroke-dasharray="6 4"/>
+      <path d="M10 88 C30 94 40 90 58 60 C66 34 80 30 100 40 C112 44 116 30 122 60 C130 90 150 94 178 60 C186 34 200 30 230 40" fill="none" stroke="#2a78d6" stroke-width="3"/>`),
+  },
+  {
+    id: "phase", domain: "mathematics", title: "Slope Fields & Phase Portraits",
+    blurb: "See differential equations as flows: click to draw solutions, find and classify equilibria.",
+    load: () => import("./phase.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/>${[...Array(40)].map((_, i) => { const x = 18 + (i % 8) * 29, y = 14 + Math.floor(i / 8) * 25, a = Math.atan2(-(x - 120) * 0.5, y - 64); return `<line x1="${x - 8 * Math.cos(a)}" y1="${y - 8 * Math.sin(a)}" x2="${x + 8 * Math.cos(a)}" y2="${y + 8 * Math.sin(a)}" stroke="#7b8796" stroke-width="1.5"/>`; }).join("")}
+      <ellipse cx="120" cy="64" rx="70" ry="40" fill="none" stroke="#2a78d6" stroke-width="3"/><circle cx="120" cy="64" r="5" fill="#eb6834"/>`),
+  },
+  {
+    id: "vectors", domain: "mathematics", title: "Vector Addition",
+    blurb: "Drag two vectors: see their sum, difference, projection, dot and cross products.",
+    load: () => import("./vectors.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M40 110 L150 90 L200 30 L90 50 Z" fill="#1baf7a" opacity=".1"/>
+      <line x1="40" y1="110" x2="150" y2="90" stroke="#2a78d6" stroke-width="4"/><line x1="40" y1="110" x2="90" y2="50" stroke="#eb6834" stroke-width="4"/>
+      <line x1="40" y1="110" x2="200" y2="30" stroke="#1baf7a" stroke-width="4"/>`),
+  },
+  {
+    id: "probability", domain: "mathematics", title: "Probability & the CLT",
+    blurb: "Explore normal, binomial, Poisson and more — then watch sample means become a bell curve.",
+    load: () => import("./probability.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/>${[4, 12, 26, 44, 60, 66, 60, 44, 26, 12, 4].map((hh, i) => `<rect x="${32 + i * 16}" y="${110 - hh * 1.4}" width="12" height="${hh * 1.4}" fill="#2a78d6" opacity=".45"/>`).join("")}
+      <path d="M26 110 C80 110 90 14 122 14 C154 14 164 110 218 110" fill="none" stroke="#eb6834" stroke-width="3"/>`),
+  },
 ];

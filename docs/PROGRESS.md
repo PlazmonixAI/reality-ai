@@ -87,3 +87,11 @@
 - Product renamed from "Reality AI" to **Reality ASM (Advanced Simulation Machine)** across the UI, API title, `/health` service id (`reality-asm`), README, CLAUDE.md and roadmap
 - The GitHub repository and folder are still named `reality-ai` (renaming the repository is done by its owner in GitHub settings)
 - **Next:** Phase 6 batch 5 — mathematics
+
+## 2026-09-28 — Phase 6, batch 5 (mathematics)
+- New engine tools: `trig_exact` (exact unit-circle values via sympy), `fourier_series` (coefficients by the midpoint rule, partial sums, RMS error), `slope_field`, `phase_portrait` (direction field, trajectories, equilibria classified by Jacobian eigenvalues), `vector_operations`, `probability_distribution`, `sample_means` (central limit theorem)
+- New sims: Unit Circle & Trig, Fourier Series (with harmonic spectrum), Slope Fields & Phase Portraits (click to add curves), Vector Addition (drag vectors), Probability & the CLT
+- Verified: exact trig for special angles, square/sawtooth/triangle/x² coefficients, Gibbs overshoot ≈ 1.179, y′ = x − y exact solution, Lotka–Volterra saddle + centre, six linear equilibrium types, harmonic trajectory is a circle, binomial interval probability, 68 % rule, CLT spread σ/√n; 393 tests passing
+- Also this session: logo design prompt written (see chat); product renamed to Reality ASM
+- **Next:** Phase 6 batch 6 — more mathematics (Taylor series, Riemann sums, complex plane, linear transformations, Newton's method) or physics (thermodynamic cycles, blackbody, photoelectric effect)
+- **Known issues:** phase-portrait equilibria are found numerically inside the visible window only

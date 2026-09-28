@@ -101,16 +101,16 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Radiometric dating
 
 **Mathematics**
-- [ ] Unit circle & trigonometric graphs
-- [ ] Fourier series & signal synthesis
+- [x] Unit circle & trigonometric graphs
+- [x] Fourier series & signal synthesis
 - [ ] Taylor series approximation explorer
 - [ ] Riemann sums & numerical integration
-- [ ] Slope fields & ODE solution curves; phase portraits
-- [ ] Vector addition & dot/cross products
+- [x] Slope fields & ODE solution curves; phase portraits
+- [x] Vector addition & dot/cross products
 - [ ] 2D linear transformations & eigenvectors
 - [ ] Complex numbers & the complex plane
 - [ ] Conic sections; polar and parametric curves
-- [ ] Probability distributions & the central limit theorem
+- [x] Probability distributions & the central limit theorem
 - [ ] Monte Carlo estimation (π, integrals)
 - [ ] Least-squares regression & curve fitting
 - [ ] Newton's method & root-finding visualiser
