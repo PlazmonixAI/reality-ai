@@ -54,13 +54,13 @@ Goal: cover the standard simulations taught and used worldwide in physics, chemi
 Each one needs its engine tool(s) with textbook-checked tests first, then the interactive sim.
 
 **Physics**
-- [ ] Waves on a string / standing waves
-- [ ] Wave interference & double slit
-- [ ] Geometric optics: lenses & mirrors (ray tracing)
-- [ ] Refraction & Snell's law, total internal reflection
-- [ ] DC circuit construction (Kirchhoff solver)
+- [x] Waves on a string / standing waves
+- [x] Wave interference & double slit
+- [x] Geometric optics: lenses & mirrors (ray tracing)
+- [x] Refraction & Snell's law, total internal reflection
+- [x] DC circuit construction (Kirchhoff solver)
 - [ ] RC / RL / RLC circuits (transients, resonance)
-- [ ] Coulomb's law & electric field lines / equipotentials
+- [x] Coulomb's law & electric field lines / equipotentials
 - [ ] Magnetic fields, Faraday's law & induction
 - [ ] Charged particle in E/B fields (Lorentz force, cyclotron)
 - [ ] Collisions lab (1D/2D, elastic/inelastic, momentum)

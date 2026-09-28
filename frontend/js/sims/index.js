@@ -67,6 +67,59 @@ export const SIMS = [
       <path d="M106 100 L115 124 L124 100z" fill="#eda100"/><rect x="150" y="30" width="16" height="70" fill="#2a78d6"/><rect x="150" y="14" width="16" height="16" fill="#1baf7a"/>`),
   },
   {
+    id: "waves", domain: "physics", title: "Waves on a String",
+    blurb: "Wiggle, pulse and tune a string. Find standing waves, reflections and damping.",
+    load: () => import("./waves.js"),
+    art: sky(`<rect width="240" height="128" fill="#eef4fb"/><rect x="10" y="44" width="22" height="40" fill="#39424e"/>
+      ${[...Array(24)].map((_, i) => `<circle cx="${40 + i * 8}" cy="${64 - 26 * Math.sin(i / 23 * Math.PI * 2)}" r="3.2" fill="${i % 10 ? "#e34948" : "#1baf7a"}"/>`).join("")}
+      <rect x="228" y="40" width="6" height="48" fill="#39424e"/>`),
+  },
+  {
+    id: "interference", domain: "physics", title: "Wave Interference",
+    blurb: "Shine light through one, two or many slits and see the fringes form on the screen.",
+    load: () => import("./interference.js"),
+    art: sky(`<rect width="240" height="128" fill="#0a0f1c"/>${[...Array(9)].map((_, i) => `<circle cx="40" cy="64" r="${14 + i * 14}" fill="none" stroke="#1baf7a" stroke-opacity="${0.7 - i * 0.06}" stroke-width="3"/>`).join("")}
+      <rect x="34" y="0" width="8" height="128" fill="#c9ced6"/><rect x="34" y="52" width="8" height="6" fill="#0a0f1c"/><rect x="34" y="70" width="8" height="6" fill="#0a0f1c"/>
+      ${[...Array(13)].map((_, i) => `<rect x="214" y="${i * 10}" width="16" height="6" fill="#1baf7a" opacity="${Math.cos((i - 6) * 0.5) ** 2}"/>`).join("")}`),
+  },
+  {
+    id: "lenses", domain: "physics", title: "Lenses & Mirrors",
+    blurb: "Trace principal rays through lenses and off mirrors; find real and virtual images.",
+    load: () => import("./lenses.js"),
+    art: sky(`<rect width="240" height="128" fill="#fdfdfb"/><line x1="0" y1="80" x2="240" y2="80" stroke="#9aa6b5"/>
+      <path d="M120 20 Q134 64 120 110 Q106 64 120 20" fill="#5598e7" fill-opacity=".25" stroke="#5598e7" stroke-width="2"/>
+      <line x1="50" y1="80" x2="50" y2="44" stroke="#eb6834" stroke-width="4"/><polyline points="50,44 120,44 200,100" fill="none" stroke="#2a78d6" stroke-width="2"/>
+      <polyline points="50,44 200,110" fill="none" stroke="#eb6834" stroke-width="2"/><line x1="190" y1="80" x2="190" y2="104" stroke="#1c5cab" stroke-width="4"/>`),
+  },
+  {
+    id: "refraction", domain: "physics", title: "Bending Light",
+    blurb: "Aim a laser across air, water, glass and diamond. Snell's law, reflection and total internal reflection.",
+    load: () => import("./refraction.js"),
+    art: sky(`<rect width="240" height="64" fill="#f4f7fb"/><rect y="64" width="240" height="64" fill="#b9d3f2"/>
+      <line x1="120" y1="0" x2="120" y2="128" stroke="#7b8796" stroke-dasharray="5 5"/>
+      <line x1="50" y1="0" x2="120" y2="64" stroke="#e34948" stroke-width="5"/><line x1="120" y1="64" x2="160" y2="128" stroke="#e34948" stroke-width="5" stroke-opacity=".8"/>
+      <line x1="120" y1="64" x2="190" y2="0" stroke="#e34948" stroke-width="4" stroke-opacity=".25"/>`),
+  },
+  {
+    id: "circuit", domain: "physics", title: "Circuit Builder",
+    blurb: "Build DC circuits with batteries, resistors, bulbs and switches. Kirchhoff's laws solve them live.",
+    load: () => import("./circuit.js"),
+    art: sky(`<rect width="240" height="128" fill="#f3f6f0"/><rect x="40" y="24" width="160" height="80" fill="none" stroke="#8a6d3b" stroke-width="5"/>
+      <rect x="28" y="48" width="24" height="32" fill="#39424e"/><rect x="28" y="48" width="24" height="10" fill="#eda100"/>
+      <circle cx="120" cy="24" r="16" fill="#ffe27a" stroke="#39424e" stroke-width="2"/><rect x="176" y="54" width="48" height="20" fill="#d9b98a" transform="rotate(90 200 64)"/>
+      ${[...Array(8)].map((_, i) => `<circle cx="${60 + i * 18}" cy="104" r="3" fill="#2a78d6"/>`).join("")}`),
+  },
+  {
+    id: "charges", domain: "physics", title: "Charges & Fields",
+    blurb: "Drag charges around to see field lines, field vectors and the voltage map; measure with a sensor.",
+    load: () => import("./charges.js"),
+    art: sky(`<defs><radialGradient id="cp" cx="30%" cy="50%" r="45%"><stop offset="0" stop-color="#e34948" stop-opacity=".55"/><stop offset="1" stop-color="#f0efec" stop-opacity="0"/></radialGradient>
+      <radialGradient id="cn" cx="70%" cy="50%" r="45%"><stop offset="0" stop-color="#2a78d6" stop-opacity=".55"/><stop offset="1" stop-color="#f0efec" stop-opacity="0"/></radialGradient></defs>
+      <rect width="240" height="128" fill="#f0efec"/><rect width="240" height="128" fill="url(#cp)"/><rect width="240" height="128" fill="url(#cn)"/>
+      ${[-40, -20, 0, 20, 40].map((d) => `<path d="M72 64 Q120 ${64 + d * 2.2} 168 64" fill="none" stroke="#16202c" stroke-opacity=".6" stroke-width="1.5"/>`).join("")}
+      <circle cx="72" cy="64" r="13" fill="#e34948"/><circle cx="168" cy="64" r="13" fill="#2a78d6"/>`),
+  },
+  {
     id: "gas", domain: "chemistry", title: "Gas Properties",
     blurb: "Pump gas into a box, heat it, squeeze it. Pressure from PV = nRT and real molecular speeds.",
     load: () => import("./gas.js"),

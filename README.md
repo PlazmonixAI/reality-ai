@@ -22,7 +22,7 @@ PhET-style interactive simulations in `frontend/` (plain JavaScript + Canvas, no
 
 | Physics | Chemistry | Mathematics |
 |---|---|---|
-| Projectile Motion · Gravity & Orbits · Hohmann Transfer · Earth–Moon Voyage · Masses & Springs · Pendulum Lab · Rocket Lab | Gas Properties · Reaction Rates · pH Scale · Chemical Equilibrium | Calculus Grapher |
+| Projectile Motion · Gravity & Orbits · Hohmann Transfer · Earth–Moon Voyage · Masses & Springs · Pendulum Lab · Rocket Lab · Waves on a String · Wave Interference · Lenses & Mirrors · Bending Light · Circuit Builder · Charges & Fields | Gas Properties · Reaction Rates · pH Scale · Chemical Equilibrium | Calculus Grapher |
 
 ## Docs
 - `CLAUDE.md` – rules and brief for Claude Code

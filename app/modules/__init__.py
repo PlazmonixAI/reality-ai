@@ -16,3 +16,7 @@ from app.modules.chemistry import equilibrium  # noqa: F401
 from app.modules.chemistry import gas  # noqa: F401
 from app.modules.chemistry import kinetics  # noqa: F401
 from app.modules.chemistry import stoichiometry  # noqa: F401
+from app.modules.physics import circuits  # noqa: F401
+from app.modules.physics import electrostatics  # noqa: F401
+from app.modules.physics import optics  # noqa: F401
+from app.modules.physics import waves  # noqa: F401

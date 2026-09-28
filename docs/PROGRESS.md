@@ -59,3 +59,10 @@
 - 237 tests passing (incl. frontend wiring tests and `node --check` of every JS file); every sim checked in headless Chromium with no console errors
 - **Next:** Phase 6 — simulation catalogue, batch 2
 - **Known issues:** sims need the engine running (static hosting alone won't work); particle motion in Gas/Reaction Rates is illustrative (the numbers come from the engine); Rocket Lab mission budgets are rough reference figures
+
+## 2026-09-28 — Phase 6, batch 2 (waves, optics, circuits, fields)
+- New engine tools: `string_wave` (damped wave equation, driven end, fixed/loose/absorbing far end), `slit_interference` (N-slit Fraunhofer pattern + near-slit wave field), `lens_mirror` (thin lens / spherical mirror with principal rays), `refraction` (Snell + Fresnel, TIR, Brewster), `dc_circuit` (modified nodal analysis), `electric_field` + `coulomb_force` (field/potential maps, RK4 field lines, probes)
+- New sims: Waves on a String, Wave Interference, Lenses & Mirrors, Bending Light, Circuit Builder (grid editor, live Kirchhoff solve, glowing bulbs, current dots, short-circuit warning), Charges & Fields (drag charges, sensor, voltage map)
+- Verified against textbook results: pulse speed √(T/μ), fixed-end inversion, resonance at harmonics, double-slit fringe spacing λD/d, single-slit minima, lens/mirror image positions (rays meet at the image), 45° air→water = 32.12°, R(0°) = 4 % for glass, Brewster p-null, TIR, divider/parallel/bridge circuits, power conservation, point-charge and dipole fields; 281 tests passing
+- **Next:** Phase 6 batch 3 — collisions, forces on a ramp, energy skate park, RC/RLC circuits, magnetic fields & induction
+- **Known issues:** near-slit wave view compresses the slit spacing when it exceeds ~24 wavelengths (flagged on screen; the screen pattern is exact); circuit wires are 0.1 mΩ resistors
