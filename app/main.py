@@ -1,11 +1,14 @@
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import app.modules  # noqa: F401  (registers all tools)
+from app.agent import representative
+from app.agent.llm import LLMError, NIMClient, NoKeysError
+from app.config import settings
 from app.core.registry import get_tool, list_tools
 
 app = FastAPI(title="Reality ASM", version="0.1.0",
@@ -40,6 +43,35 @@ def simulate(req: SimulateRequest):
     try:
         return {"tool": t.key, **t.func(**req.args)}
     except (TypeError, ValueError) as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=4000)
+    history: list[dict[str, str]] = Field(default_factory=list, max_length=20)
+
+
+_client: NIMClient | None = None
+
+
+def get_llm_client() -> NIMClient:
+    """One shared NIM client so the key rotation state is kept across requests."""
+    global _client
+    if _client is None:
+        _client = NIMClient(settings.key_list, settings.nim_base_url, settings.nim_model)
+    return _client
+
+
+@app.post("/ask")
+def ask(req: AskRequest, client=Depends(get_llm_client)):
+    """Answer a research question in natural language using the engine's tools (NVIDIA NIM)."""
+    try:
+        return representative.ask(req.question, client, history=req.history)
+    except NoKeysError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except LLMError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+    except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
 

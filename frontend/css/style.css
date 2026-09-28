@@ -162,3 +162,32 @@ table.ice thead th { color: var(--text-2); font-weight: 600; }
   .gallery { padding: 20px 16px 40px; }
   .player .time { min-width: 0; }
 }
+
+/* ---------- Ask (AI representative) ---------- */
+.nav-link { color: #fff; text-decoration: none; font-weight: 600; padding: 6px 12px; border-radius: 8px; background: rgba(255,255,255,.12); }
+.nav-link:hover { background: rgba(255,255,255,.22); }
+.ask-page { max-width: 880px; margin: 0 auto; padding: 24px 16px 40px; display: flex; flex-direction: column; gap: 14px; }
+.chat-examples { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 6px 12px; cursor: pointer; font-size: 13px; color: var(--text-2); }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chat-log { display: flex; flex-direction: column; gap: 12px; min-height: 120px; }
+.bubble { padding: 12px 14px; border-radius: var(--radius); box-shadow: var(--shadow); max-width: 100%; overflow-wrap: anywhere; }
+.bubble.user { align-self: flex-end; background: var(--accent); color: var(--accent-ink); max-width: 80%; }
+.bubble.bot { background: var(--surface); }
+.bubble.pending { color: var(--text-3); font-style: italic; }
+.bubble.error { background: #fdecec; color: var(--danger); }
+.bubble .answer { white-space: pre-wrap; }
+.bubble .model { font-size: 11px; color: var(--text-3); margin: 8px 0 0; }
+.tools { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.tool-card { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; background: var(--surface-2); font-size: 13px; }
+.tool-card.failed { border-color: #f1b8b8; }
+.tool-card summary { cursor: pointer; font-weight: 600; }
+.tool-card .tool-args { font-weight: 400; color: var(--text-3); margin-left: 8px; font-family: ui-monospace, monospace; font-size: 12px; }
+.tool-card p, .tool-card ul { margin: 6px 0; }
+.tool-card ul { padding-left: 18px; color: var(--text-2); }
+.tool-units { color: var(--text-3); }
+.tool-error { color: var(--danger); }
+.chat-form { display: flex; gap: 8px; position: sticky; bottom: 12px; background: var(--bg); padding-top: 6px; }
+.chat-input { flex: 1; resize: vertical; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font: inherit; background: var(--surface); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 0 20px; font-weight: 600; cursor: pointer; }
+.btn.primary:disabled { opacity: .5; cursor: wait; }

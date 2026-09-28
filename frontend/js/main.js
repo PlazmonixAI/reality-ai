@@ -2,6 +2,7 @@
 import { SIMS, DOMAINS } from "./sims/index.js";
 import { el } from "./core/ui.js";
 import { health } from "./core/api.js";
+import { mountAsk } from "./ask.js";
 
 const app = document.getElementById("app");
 const crumb = document.getElementById("crumb");
@@ -15,6 +16,7 @@ async function route() {
   const m = location.hash.match(/^#\/sim\/([\w-]+)/);
   const sim = m && SIMS.find((s) => s.id === m[1]);
   if (sim) await openSim(sim);
+  else if (location.hash.startsWith("#/ask")) { crumb.textContent = "/ Ask"; document.title = "Ask · Reality ASM"; mountAsk(app); }
   else renderGallery();
   window.scrollTo(0, 0);
 }

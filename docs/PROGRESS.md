@@ -146,3 +146,13 @@
 - Verified: propane and Cu/Ag⁺ balancing incl. charge, phosphoric α crossovers at each pKa and H₂PO₄⁻ max ≈ 0.994, pH of 0.1 M H₃PO₄ and acetic acid, bicarbonate at pH 8.3, 1 m NaCl ΔTf = 3.72 K, sucrose −1.86 °C, glucose Π ≈ 2.44 atm, C-14 two half-lives = 11 460 y, U-Pb D/P = 1 → 4.468 Gyr, K-Ar branching; 519 tests passing
 - **Next:** Phase 7 — AI representative (NVIDIA NIM client with key rotation, tool schemas, agent loop, `POST /ask`, mocked tests) and an Ask panel in the UI
 - **Known issues:** colligative model is ideal (real salts have i slightly below the ideal value)
+
+## 2026-09-28 — Phase 7: AI representative (NVIDIA NIM)
+- `app/agent/llm.py`: synchronous NIM client (OpenAI-compatible `/chat/completions`) with a pooled key list from `NIM_API_KEYS`: round-robin start key, 429/5xx/network errors cool a key down (honouring Retry-After) and move on, exponential backoff once all keys were tried, 401/403 disable a key, other 4xx raise. Transport and sleep are injectable for tests
+- `app/agent/tool_schemas.py`: every registry tool → OpenAI function schema from its signature and type hints (`domain__name`); TF-IDF keyword ranker sends only the ~12 most relevant tools per question (105 tools would bloat every request)
+- `app/agent/representative.py`: system prompt (never invent numbers, SI units, explain assumptions/limits), tool-call loop (≤4 rounds, then a forced final answer), tool errors fed back so the model can fix arguments, results compacted (long arrays summarised) before reaching the LLM, full trace returned
+- `POST /ask` → `{answer, tool_calls, model, rounds}`; 503 without keys, 502 on LLM failure, 422 on bad input
+- UI: "Ask AI" page (`#/ask`) with example questions, chat bubbles and expandable tool-call cards (args, result, units, assumptions)
+- Tests: 19 new (rotation on 429/503, Retry-After, key disabling, give-up with backoff, network errors, 400 raise, schemas valid for all tools, tool selection, agent loop with real tool execution, error recovery, max rounds, /ask with a mocked LLM, 503 without keys) — no real API calls; verified end to end in a browser against a local mock NIM server
+- **Next:** Phase 8 polish (consistent 422s, timeouts for heavy symbolic work, README examples per domain), 2D heat equation, multi-planet n-body view, J2/drag perturbations
+- **Known issues:** keyword tool selection can miss tools for unusual phrasing (the model then says it has no fitting tool); streaming responses not implemented

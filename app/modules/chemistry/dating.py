@@ -20,7 +20,8 @@ SYSTEMS = {
     domain="chemistry",
     name="radiometric_dating",
     description=(
-        "Age of a sample from radioactive decay. system: " + ", ".join(SYSTEMS) + " (or give half_life_years). "
+        "Radiometric (carbon) dating: how old a sample is (bone, wood, fossil, rock) from radioactive decay and its "
+        "half-life. system: " + ", ".join(SYSTEMS) + " (or give half_life_years). "
         "Give fraction_remaining (parent left / parent at start, e.g. C-14 activity ratio) or daughter_parent_ratio "
         "(radiogenic daughter atoms per parent atom). Optional relative_error on the measurement gives an age range. "
         "Example: system='C-14', fraction_remaining=0.25 -> 11460 years."

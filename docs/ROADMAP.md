@@ -119,11 +119,12 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Graph theory: shortest paths (Dijkstra, Bellman–Ford) & minimum spanning trees
 
 ## Phase 7 — AI representative
-- [ ] NIM client with multi-key rotation + retry on 429/5xx (`app/agent/llm.py`)
-- [ ] Convert registry tools into OpenAI-style tool schemas
-- [ ] Agent loop: question → tool call(s) → execute → explain (`app/agent/representative.py`)
-- [ ] `POST /ask` endpoint
-- [ ] Tests with a mocked LLM (no real API calls in tests)
+- [x] NIM client with multi-key rotation + retry on 429/5xx (`app/agent/llm.py`)
+- [x] Convert registry tools into OpenAI-style tool schemas
+- [x] Agent loop: question → tool call(s) → execute → explain (`app/agent/representative.py`)
+- [x] `POST /ask` endpoint
+- [x] Tests with a mocked LLM (no real API calls in tests)
+- [x] Ask page in the simulator UI (`#/ask`) showing each tool call and its computed result
 
 ## Phase 8 — Polish
 - [ ] Consistent error handling (bad input → clear 422 messages)
