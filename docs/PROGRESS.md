@@ -164,3 +164,10 @@
 - README: API examples for every domain (verified), `/ask` usage; CLAUDE.md documents `symbolic=True` and the error convention
 - 549 tests passing, 93 % line coverage; all 72 sims re-checked in the browser (340 engine calls, no errors)
 - **Next:** 2D heat equation, multi-planet n-body view, J2/drag orbital perturbations; streaming answers for /ask
+
+## 2026-09-28 — Phase 6, batch 13 (orbital perturbations, phase diagrams) — catalogue complete
+- New engine tools: `j2_precession` (secular RAAN/perigee rates, sun-synchronous and critical inclinations, numerical two-body + J2 propagation confirming the drift), `orbital_decay` (orbit-averaged drag with a static exponential atmosphere or constant density, lifetime to 100 km), `phase_diagram` (water and CO₂: sublimation, vaporisation to the critical point, melting line, phase at any T and P)
+- New sims: J2 Precession (3D orbit plane turning, Sun direction for sun-synchronous orbits), Orbital Decay (spacecraft presets, altitude vs time), Phase Diagrams (log-P map with click-to-set state and a particle box)
+- Verified: ISS node drift −5.0°/day (numerical within 1 %), 800 km sun-synchronous inclination 98.6° with exactly 360°/year drift, frozen perigee at 63.4°, polar orbits don't precess, constant-density decay matches the closed form √a(t) = √a₀ − kt/2; water melts at 273.15 K at 1 atm with slope −13.5 MPa/K, vapour pressure at 25 °C within 2 % of steam tables, CO₂ sublimes at 194.7 K (ΔH_sub ≈ 26.1 kJ/mol); 559 tests passing
+- Every roadmap item is now ticked: 108 tools, 75 simulations
+- **Next ideas:** 2D heat equation, multi-planet solar-system view, streaming `/ask` answers, more substances for phase diagrams

@@ -81,7 +81,7 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Radioactive decay chains & half-life
 - [x] Special relativity: time dilation, length contraction, twin paradox
 - [x] Kepler's laws (equal areas, T² ∝ a³); multi-planet n-body view still to do
-- [ ] Orbital perturbations (J2 precession, drag decay)
+- [x] Orbital perturbations (J2 precession, sun-synchronous orbits, drag decay)
 
 **Chemistry**
 - [x] Build an atom / isotopes & atomic mass
@@ -96,7 +96,7 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Electrochemistry: galvanic cells & the Nernst equation
 - [x] Real gases (van der Waals) vs ideal
 - [x] Vapour pressure & boiling point (Clausius–Clapeyron)
-- [ ] States of matter & full P–T phase diagrams (triple point, sublimation)
+- [x] States of matter & full P–T phase diagrams (triple point, sublimation, critical point)
 - [x] Colligative properties
 - [x] Reaction mechanisms & energy profiles (catalysts)
 - [x] Radiometric dating

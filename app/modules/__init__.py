@@ -57,3 +57,5 @@ from app.modules.chemistry import reactions  # noqa: F401
 from app.modules.chemistry import speciation  # noqa: F401
 from app.modules.chemistry import colligative  # noqa: F401
 from app.modules.chemistry import dating  # noqa: F401
+from app.modules.physics import perturbations  # noqa: F401
+from app.modules.chemistry import phases  # noqa: F401

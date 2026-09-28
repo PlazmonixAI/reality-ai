@@ -562,4 +562,26 @@ export const SIMS = [
     load: () => import("./dating.js"),
     art: sky(`<rect width="240" height="128" fill="#f7f9fc"/>${Array.from({ length: 60 }, (_, i) => `<rect x="${30 + (i % 12) * 15}" y="${18 + Math.floor(i / 12) * 20}" width="12" height="16" fill="${i < 21 ? "#2a78d6" : "#eb6834"}" fill-opacity="${i < 21 ? 1 : 0.45}"/>`).join("")}`),
   },
+  {
+    id: "precession", domain: "physics", title: "J2 Precession",
+    blurb: "Earth's bulge slowly swings orbit planes around — and sun-synchronous satellites use it to follow the Sun.",
+    load: () => import("./precession.js"),
+    art: sky(`<rect width="240" height="128" fill="#0b1426"/><ellipse cx="120" cy="64" rx="100" ry="30" fill="none" stroke="#2a78d6" stroke-width="3" transform="rotate(-20 120 64)"/>
+      <ellipse cx="120" cy="64" rx="100" ry="30" fill="none" stroke="#2a78d6" stroke-opacity=".35" stroke-width="2" transform="rotate(10 120 64)"/><circle cx="120" cy="64" r="34" fill="#1d4f8f"/><circle cx="218" cy="22" r="9" fill="#ffd479"/>`),
+  },
+  {
+    id: "orbitdecay", domain: "physics", title: "Orbital Decay",
+    blurb: "Air drag at 400 km slowly pulls satellites down: how long will a CubeSat or a space station stay up?",
+    load: () => import("./orbitdecay.js"),
+    art: sky(`<rect width="240" height="128" fill="#0b1426"/><circle cx="120" cy="420" r="340" fill="#1d4f8f"/><path d="M30 60 Q120 20 210 60" fill="none" stroke="#c9ced6" stroke-dasharray="4 5"/>
+      <path d="M40 58 Q90 36 130 44 Q170 54 200 78" fill="none" stroke="#2a78d6" stroke-width="3"/><circle cx="200" cy="78" r="5" fill="#fff"/>`),
+  },
+  {
+    id: "phasediagram", domain: "chemistry", title: "Phase Diagrams",
+    blurb: "Solid, liquid, gas and supercritical: explore water and CO₂ on their pressure–temperature maps.",
+    load: () => import("./phasediagram.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/><path d="M20 118 Q70 110 90 80" fill="none" stroke="#1baf7a" stroke-width="3"/><path d="M90 80 Q150 50 200 20" fill="none" stroke="#2a78d6" stroke-width="3"/>
+      <path d="M90 80 L80 8" fill="none" stroke="#eb6834" stroke-width="3"/><circle cx="90" cy="80" r="4" fill="#16202c"/><circle cx="200" cy="20" r="4" fill="#16202c"/>
+      <text x="30" y="40" font-size="12" font-family="system-ui" fill="#7b8796">SOLID</text><text x="120" y="40" font-size="12" font-family="system-ui" fill="#7b8796">LIQUID</text><text x="150" y="105" font-size="12" font-family="system-ui" fill="#7b8796">GAS</text>`),
+  },
 ];
