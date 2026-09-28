@@ -13,6 +13,7 @@ MAX_POINTS = 10_000
 @tool(
     domain="mathematics",
     name="solve_ode",
+    symbolic=True,
     description=(
         "Numerically solve a system of first-order ODEs dy_i/dt = f_i(t, y) from initial values. "
         "variables: state names; equations: right-hand side for each variable (may use t, the variables and "

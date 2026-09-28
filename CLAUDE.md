@@ -26,7 +26,7 @@ Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anyt
 ## How to add a simulation tool
 1. Write a plain function in `app/modules/<domain>/<topic>.py`, with typed args and a docstring.
 2. Return a dict: `{"result": ..., "units": ..., "assumptions": [...]}`.
-3. Register it with the `@tool(domain=..., name=..., description=...)` decorator from `app/core/registry.py`.
+3. Register it with the `@tool(domain=..., name=..., description=...)` decorator from `app/core/registry.py`. Add `symbolic=True` for open-ended sympy work (solve, integrate, limits, series) so it runs under a time limit. Raise `ValueError` with a clear message for bad input (it becomes HTTP 422); arguments are type-checked against the signature by `app/core/runner.py`.
 4. Add an import line for the file in `app/modules/__init__.py` so it registers on startup. (Domain folders are namespace packages — no `__init__.py` needed.)
 5. Add tests in `tests/test_<domain>_<topic>.py`.
 6. Run `pytest` — everything must pass before you finish.

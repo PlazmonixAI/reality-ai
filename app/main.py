@@ -9,6 +9,7 @@ import app.modules  # noqa: F401  (registers all tools)
 from app.agent import representative
 from app.agent.llm import LLMError, NIMClient, NoKeysError
 from app.config import settings
+from app.core import runner
 from app.core.registry import get_tool, list_tools
 
 app = FastAPI(title="Reality ASM", version="0.1.0",
@@ -41,9 +42,11 @@ def simulate(req: SimulateRequest):
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     try:
-        return {"tool": t.key, **t.func(**req.args)}
-    except (TypeError, ValueError) as e:
+        return {"tool": t.key, **runner.run(t, req.args, timeout=settings.tool_timeout_s)}
+    except runner.ToolInputError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:  # noqa: BLE001 - a bug in a tool: report it as JSON, not a bare 500 page
+        raise HTTPException(status_code=500, detail=f"internal error in {t.key}: {e.__class__.__name__}: {e}")
 
 
 class AskRequest(BaseModel):

@@ -127,7 +127,8 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Ask page in the simulator UI (`#/ask`) showing each tool call and its computed result
 
 ## Phase 8 — Polish
-- [ ] Consistent error handling (bad input → clear 422 messages)
-- [ ] Input validation ranges (no negative masses, etc.)
-- [ ] README examples for every domain
-- [ ] Full test pass + coverage check
+- [x] Consistent error handling (bad input → clear 422 messages; tool bugs → JSON 500)
+- [x] Input validation ranges (no negative masses, etc.) + signature type checks, NaN/inf rejection, fuzz test over all tools
+- [x] README examples for every domain
+- [x] Full test pass + coverage check (93 % line coverage)
+- [x] Time limits for open-ended symbolic tools (forked child process, killed after `TOOL_TIMEOUT_S`)

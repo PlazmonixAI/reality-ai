@@ -63,7 +63,7 @@ def rlc_circuit(
         q = sol.y[0]
         i = (vs(t) - q / C) / R
     else:
-        q, i = np.zeros_like(t), vs(t) / R
+        q, i = np.zeros_like(t), vs(t) * np.ones_like(t) / R  # pure resistor: Ohm's law at every instant
     v_src = vs(t) * np.ones_like(t)
     v_r = i * R
     v_c = q / C if C else np.zeros_like(t)

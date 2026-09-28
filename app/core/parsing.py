@@ -6,6 +6,7 @@ first: no attribute access, no dunders, no builtins, bounded length.
 import re
 
 import sympy as sp
+from tokenize import TokenError
 from sympy.parsing.sympy_parser import (
     convert_xor,
     implicit_multiplication,
@@ -47,6 +48,8 @@ def parse_expression(text: str) -> sp.Expr:
         raise ValueError(f"Expression contains forbidden syntax: {text!r}")
     try:
         return parse_expr(text, global_dict=dict(_GLOBALS), transformations=_TRANSFORMS)
+    except TokenError:
+        raise ValueError(f"Could not parse expression {text!r}: unbalanced brackets or an incomplete expression") from None
     except (SyntaxError, TypeError, NameError, AttributeError, sp.SympifyError) as e:
         raise ValueError(f"Could not parse expression {text!r}: {e}") from e
 

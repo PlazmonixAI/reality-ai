@@ -10,6 +10,8 @@ import math
 from typing import Any, Protocol
 
 from app.agent.tool_schemas import select_tools, tool_for_function, tool_schema
+from app.config import settings
+from app.core import runner
 
 SYSTEM_PROMPT = """You are the AI representative of Reality ASM (Advanced Simulation Machine), Plazmonix AI's \
 physics, chemistry and mathematics simulation engine.
@@ -66,9 +68,11 @@ def run_tool(name: str, raw_args: str | dict | None) -> tuple[str | None, dict[s
     except (ValueError, TypeError) as exc:
         return t.key, {}, {"error": f"could not parse arguments: {exc}"}
     try:
-        return t.key, args, t.func(**args)
-    except (TypeError, ValueError, KeyError, ZeroDivisionError, OverflowError) as exc:
-        return t.key, args, {"error": f"{exc.__class__.__name__}: {exc}"}
+        return t.key, args, runner.run(t, args, timeout=settings.tool_timeout_s)
+    except runner.ToolInputError as exc:
+        return t.key, args, {"error": str(exc)}
+    except RuntimeError as exc:
+        return t.key, args, {"error": str(exc)}
 
 
 def ask(question: str, client: ChatClient, history: list[dict[str, str]] | None = None,

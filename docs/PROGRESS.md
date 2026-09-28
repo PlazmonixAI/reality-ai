@@ -156,3 +156,11 @@
 - Tests: 19 new (rotation on 429/503, Retry-After, key disabling, give-up with backoff, network errors, 400 raise, schemas valid for all tools, tool selection, agent loop with real tool execution, error recovery, max rounds, /ask with a mocked LLM, 503 without keys) — no real API calls; verified end to end in a browser against a local mock NIM server
 - **Next:** Phase 8 polish (consistent 422s, timeouts for heavy symbolic work, README examples per domain), 2D heat equation, multi-planet n-body view, J2/drag perturbations
 - **Known issues:** keyword tool selection can miss tools for unusual phrasing (the model then says it has no fitting tool); streaming responses not implemented
+
+## 2026-09-28 — Phase 8: polish (errors, validation, time limits, docs)
+- `app/core/runner.py`: every tool call (from `/simulate` and from the AI agent) is checked against the tool's signature — unknown/missing arguments list the valid ones, wrong types and NaN/∞ are rejected with a clear message — then errors are mapped consistently: bad or unsolvable input → HTTP 422, genuine tool bugs → JSON 500 naming the tool
+- Symbolic tools (`symbolic=True`: solve, differentiate, integrate, limit, series, linear systems, eigen, determinant, ODE, exact trig, Taylor) run in a forked child process killed after `TOOL_TIMEOUT_S` (default 20 s), so a pathological expression can't hang a worker
+- Fuzzing every tool with negative/zero/huge/NaN inputs found and fixed: a hang (NaN into an ODE integrator), a crash on unbalanced brackets (now a clear parse error), and a real bug — a pure-resistor DC circuit in `rlc_circuit` crashed; a fast fuzz test now guards all 105 tools
+- README: API examples for every domain (verified), `/ask` usage; CLAUDE.md documents `symbolic=True` and the error convention
+- 549 tests passing, 93 % line coverage; all 72 sims re-checked in the browser (340 engine calls, no errors)
+- **Next:** 2D heat equation, multi-planet n-body view, J2/drag orbital perturbations; streaming answers for /ask

@@ -11,6 +11,7 @@ from app.core.registry import tool
 @tool(
     domain="mathematics",
     name="trig_exact",
+    symbolic=True,
     description=(
         "Unit-circle values for an angle in degrees: exact symbolic sin, cos, tan (e.g. sqrt(3)/2), their "
         "decimal values, the point (cos, sin), quadrant and reference angle. Example: angle_deg=150."

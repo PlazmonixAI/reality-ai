@@ -8,6 +8,7 @@ from app.core.registry import tool
 @tool(
     domain="mathematics",
     name="solve_equation",
+    symbolic=True,
     description="Solve an algebraic equation for a variable. Example: equation='x**2 - 4 = 0', variable='x'.",
 )
 def solve_equation(equation: str, variable: str = "x") -> dict:

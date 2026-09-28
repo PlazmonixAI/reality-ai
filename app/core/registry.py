@@ -9,6 +9,7 @@ class Tool:
     name: str
     description: str
     func: Callable[..., dict[str, Any]]
+    symbolic: bool = False  # heavy sympy work: run in a child process with a time limit
 
     @property
     def key(self) -> str:
@@ -18,10 +19,11 @@ class Tool:
 _REGISTRY: dict[str, Tool] = {}
 
 
-def tool(domain: str, name: str, description: str):
-    """Decorator that registers a simulation function."""
+def tool(domain: str, name: str, description: str, symbolic: bool = False):
+    """Decorator that registers a simulation function. symbolic=True marks open-ended sympy work
+    (solving, integrating, limits, series) that must run under a time limit."""
     def decorator(func: Callable[..., dict[str, Any]]):
-        t = Tool(domain=domain, name=name, description=description, func=func)
+        t = Tool(domain=domain, name=name, description=description, func=func, symbolic=symbolic)
         if t.key in _REGISTRY:
             raise ValueError(f"Tool already registered: {t.key}")
         _REGISTRY[t.key] = t

@@ -18,6 +18,7 @@ def _numeric(expr: sp.Expr) -> float | None:
 @tool(
     domain="mathematics",
     name="differentiate",
+    symbolic=True,
     description="Symbolic derivative of an expression. Example: expression='sin(x)*x**2', variable='x', order=1.",
 )
 def differentiate(expression: str, variable: str = "x", order: int = 1) -> dict:
@@ -36,6 +37,7 @@ def differentiate(expression: str, variable: str = "x", order: int = 1) -> dict:
 @tool(
     domain="mathematics",
     name="integrate",
+    symbolic=True,
     description=(
         "Symbolic integral. Omit lower/upper for an indefinite integral; give both for a definite one. "
         "Limits may be numbers or strings like 'pi', 'oo', '-oo'. Example: expression='exp(-x**2)', "
@@ -86,6 +88,7 @@ def integrate(
 @tool(
     domain="mathematics",
     name="limit",
+    symbolic=True,
     description=(
         "Limit of an expression as variable -> point. point may be a number or 'oo'/'-oo'. "
         "direction: '+-' (two-sided), '+' (from above) or '-' (from below). Example: expression='sin(x)/x', point=0."
@@ -110,6 +113,7 @@ def limit(expression: str, variable: str = "x", point: str | float = 0, directio
 @tool(
     domain="mathematics",
     name="series",
+    symbolic=True,
     description=(
         "Taylor/Laurent series of an expression around a point, up to (not including) the given order. "
         "Example: expression='exp(x)', point=0, order=5."

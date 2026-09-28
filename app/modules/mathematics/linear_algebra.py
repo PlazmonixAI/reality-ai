@@ -28,6 +28,7 @@ def _clean(values: np.ndarray) -> tuple[list, bool]:
 @tool(
     domain="mathematics",
     name="solve_linear_system",
+    symbolic=True,
     description=(
         "Solve A x = b. matrix=A as a list of rows, vector=b. Square non-singular systems are solved exactly; "
         "non-square systems return the least-squares solution. Example: matrix=[[2,1],[1,3]], vector=[3,5]."
@@ -61,6 +62,7 @@ def solve_linear_system(matrix: list[list[float]], vector: list[float]) -> dict:
 @tool(
     domain="mathematics",
     name="eigen",
+    symbolic=True,
     description=(
         "Eigenvalues and eigenvectors of a square matrix. Complex values are returned as [re, im] pairs. "
         "Example: matrix=[[2,0],[0,3]]."
@@ -93,6 +95,7 @@ def eigen(matrix: list[list[float]]) -> dict:
 @tool(
     domain="mathematics",
     name="determinant",
+    symbolic=True,
     description="Determinant of a square matrix. Example: matrix=[[1,2],[3,4]] -> -2.",
 )
 def determinant(matrix: list[list[float]]) -> dict:

@@ -27,6 +27,7 @@ def _samples(fn, xs):
 @tool(
     domain="mathematics",
     name="taylor_approximation",
+    symbolic=True,
     description=(
         "Taylor polynomial of f(x) about a centre up to the given order, with plot-ready samples of f and the "
         "polynomial on [start, stop] and the maximum error there. Example: expression='sin(x)', centre=0, "
