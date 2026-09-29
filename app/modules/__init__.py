@@ -60,3 +60,4 @@ from app.modules.chemistry import dating  # noqa: F401
 from app.modules.physics import perturbations  # noqa: F401
 from app.modules.chemistry import phases  # noqa: F401
 from app.modules.physics import ephemeris  # noqa: F401
+from app.modules.physics import rocketry  # noqa: F401
