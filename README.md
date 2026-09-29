@@ -52,7 +52,8 @@ curl -s localhost:8000/simulate -H 'content-type: application/json' \
 ```
 
 ## Flagship sims
-- **Solar System 3D** (`#/sim/solarsystem`) — the real Solar System on any date 1800–2050: JPL-element positions, IAU spin and pole orientation, realistic textures (Earth day/night shader, clouds, atmosphere glow, Saturn's rings), time controls and facts.
+- **Solar System 3D** (`#/sim/solarsystem`) — the real Solar System on any date 1800–2050: planets, 29 moons, dwarf planets, asteroids, comets and the asteroid/Kuiper belts, all positioned by the engine; realistic rendering (normal maps, ring shadows, atmospheres, Earth day/night with clouds) and a sky of real stars.
+- **Universe Explorer** (`#/sim/universe`) — the same view's scale ladder: nearby stars (HYG catalogue), the Milky Way (model + rotation curve), ~11,000 real galaxies and the ΛCDM observable universe out to the cosmic microwave background. Scroll to zoom seamlessly between scales.
 - **Spaceflight Lab** (`#/sim/spaceflight`) — build a rocket from engines, tanks, decouplers, capsules, parachutes and legs (engine-computed Δv/TWR per stage), then fly it on Earth, the Moon or Mars with throttle, attitude/SAS, staging, time warp and a map view of the predicted orbit.
 - **AI analyst** on every simulation — a side panel that explains what's on screen using the sim's latest engine data.
 

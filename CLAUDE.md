@@ -18,7 +18,7 @@ Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anyt
 - Tools must never call the LLM. Only the agent layer talks to the LLM.
 - Stack: Python 3.11+, FastAPI, pydantic v2, numpy, scipy, sympy, httpx, pytest.
 - **Out of scope for now:** MongoDB/persistence, auth. Do not build these.
-- **Frontend (simulator UI)** lives in `frontend/`: plain HTML/CSS/ES-module JavaScript + Canvas, no build step and no npm dependencies. FastAPI serves it at `/`. The only vendored library is three.js (`frontend/vendor/three`, MIT, via an import map) for 3D views; textures live in `frontend/assets/textures` (see CREDITS.md).
+- **Frontend (simulator UI)** lives in `frontend/`: plain HTML/CSS/ES-module JavaScript + Canvas, no build step and no npm dependencies. FastAPI serves it at `/`. The only vendored library is three.js (`frontend/vendor/three`, MIT, via an import map) for 3D views; textures live in `frontend/assets/textures` (see CREDITS.md); space catalogues live in `app/data/space` (rebuild with `scripts/build_space_catalogs.py`).
 - **Simulations never invent physics in the browser.** Every number a sim shows must come from an engine tool via `POST /simulate`; the browser only animates, interpolates and draws those results. If a sim needs a new number, add a tested backend tool first.
 - Prefer small, surgical edits to existing files over rewriting whole files.
 - Keep dependencies minimal; ask (in the PR description) before adding a new heavy library.

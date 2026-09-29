@@ -141,5 +141,9 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] AI analyst panel on every simulation (sim context sent to `/ask`)
 - [x] Multi-provider LLM config (NVIDIA NIM, Groq, xAI) with key rotation; `/llm/status`
 - [ ] Connect real Groq keys and tune the prompts with live answers
-- [ ] Moons of Jupiter/Saturn, asteroid belt and comets in the 3D view
+- [x] Moons of Jupiter/Saturn, asteroid belt and comets in the 3D view (29 moons, dwarf planets, asteroids, comets with tails, main belt/trojans/Kuiper belt)
+- [x] Realistic rendering for every body: normal maps, ring shadows, atmospheres, Celestia/NASA textures for all major moons
+- [x] Universe scale ladder: real stars (HYG), Milky Way model with rotation curve, ~11,000 real galaxies, ΛCDM observable universe (`star_catalog`, `milky_way`, `galaxy_catalog`, `cosmology`)
+- [ ] Constellation lines and exoplanet systems in the Stars view
+- [ ] Deeper-survey galaxies (beyond ~2 billion ly) if an openly licensed catalogue can be bundled
 - [ ] Rocket flight in 3D / transfers between bodies (Earth → Moon) in Spaceflight Lab
