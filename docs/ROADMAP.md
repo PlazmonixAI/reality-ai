@@ -149,4 +149,5 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Transfers between bodies: the Moon moves and pulls in Earth flights (restricted three-body), lunar orbit, landing and lift-off, TLI window planner
 - [x] Engine classes (small/medium/large/heavy), payload fairings, interstages, example satellites
 - [x] Engine designer (`rocket_engine_design`) and satellite designer (`satellite_design`) whose designs fly as custom parts
-- [ ] Rocket flight in 3D; Mars transfers with the Sun's gravity
+- [x] Rocket flight in 3D, connected to the Solar System: real launch date and site, real Moon/Sun/Earth rotation, true-scale Earth–Moon view, links both ways
+- [ ] Mars transfers with the Sun's gravity; inclined (3D) trajectories
