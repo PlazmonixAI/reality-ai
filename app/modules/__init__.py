@@ -61,3 +61,5 @@ from app.modules.physics import perturbations  # noqa: F401
 from app.modules.chemistry import phases  # noqa: F401
 from app.modules.physics import ephemeris  # noqa: F401
 from app.modules.physics import rocketry  # noqa: F401
+from app.modules.physics import smallbodies  # noqa: F401
+from app.modules.physics import universe  # noqa: F401

@@ -89,8 +89,8 @@ def julian_date(date: str | None) -> float:
 
 
 def _solve_kepler(m: np.ndarray, e: float) -> np.ndarray:
-    big = m + e * np.sin(m)
-    for _ in range(30):
+    big = m + 0.85 * e * np.sign(np.sin(m))  # Danby's starting value converges for e up to ~1
+    for _ in range(50):
         big = big - (big - e * np.sin(big) - m) / (1 - e * np.cos(big))
     return big
 
@@ -101,8 +101,12 @@ def heliocentric(body: str, jd: np.ndarray) -> np.ndarray:
     t = (np.asarray(jd, float) - J2000_JD) / 36525.0
     a, e = a0 + da * t, e0 + de * t
     inc, lon, peri, node = (np.radians(v0 + dv * t) for v0, dv in ((i0, di), (l0, dl), (w0, dw), (o0, do)))
-    argp = peri - node
-    m = np.mod(lon - peri + np.pi, 2 * np.pi) - np.pi
+    return kepler_xyz(a, e, inc, node, peri - node, lon - peri)
+
+
+def kepler_xyz(a, e, inc, node, argp, m) -> np.ndarray:
+    """Position on a Keplerian ellipse (angles in radians, m = mean anomaly), shape (3, n), same units as a."""
+    m = np.mod(np.asarray(m, float) + np.pi, 2 * np.pi) - np.pi
     big = _solve_kepler(m, e)
     xp, yp = a * (np.cos(big) - e), a * np.sqrt(1 - e * e) * np.sin(big)
     cw, sw, co, so, ci, si = np.cos(argp), np.sin(argp), np.cos(node), np.sin(node), np.cos(inc), np.sin(inc)
