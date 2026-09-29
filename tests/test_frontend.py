@@ -34,7 +34,7 @@ def test_every_sim_module_exists_and_is_served():
 
 def test_sims_only_call_registered_tools():
     tools = {(d, t["name"]) for d, ts in client.get("/tools").json().items() for t in ts}
-    for f in (FRONTEND / "js" / "sims").glob("*.js"):
+    for f in (FRONTEND / "js").rglob("*.js"):
         for domain, name in re.findall(r'simulate\("(\w+)", "(\w+)"', f.read_text()):
             assert (domain, name) in tools, f"{f.name} calls unknown tool {domain}.{name}"
 

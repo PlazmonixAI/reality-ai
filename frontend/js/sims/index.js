@@ -586,11 +586,18 @@ export const SIMS = [
   },
   {
     id: "solarsystem", domain: "physics", title: "Solar System 3D",
-    blurb: "Fly through the real Solar System on any date: true planet positions, spin and tilt, with realistic textures.",
+    blurb: "The real Solar System on any date: planets, 29 moons, dwarf planets, asteroids, comets and belts — then zoom out to the stars and galaxies.",
     load: () => import("./solarsystem.js"),
     art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="40" cy="64" r="26" fill="#ffb640"/><circle cx="40" cy="64" r="34" fill="#ffb640" fill-opacity=".2"/>
       <ellipse cx="40" cy="64" rx="80" ry="22" fill="none" stroke="#4f8fe0" stroke-opacity=".5"/><ellipse cx="40" cy="64" rx="150" ry="44" fill="none" stroke="#d6a77a" stroke-opacity=".4"/>
       <circle cx="118" cy="70" r="6" fill="#4f8fe0"/><circle cx="186" cy="92" r="12" fill="#d6a77a"/><ellipse cx="186" cy="92" rx="22" ry="5" fill="none" stroke="#e3cf96" stroke-width="2"/>`),
+  },
+  {
+    id: "universe", domain: "physics", title: "Universe Explorer",
+    blurb: "From planets to the edge of the observable universe: 12,000 real stars, the Milky Way, 11,000 galaxies and the cosmic microwave background.",
+    load: () => import("./universe.js"),
+    art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="120" cy="64" r="58" fill="none" stroke="#ff9a5a" stroke-opacity=".55" stroke-width="3"/><circle cx="120" cy="64" r="40" fill="none" stroke="#4f78b0" stroke-opacity=".5"/>
+      <ellipse cx="120" cy="64" rx="26" ry="9" fill="#cfd8ff" fill-opacity=".35" transform="rotate(-20 120 64)"/><circle cx="120" cy="64" r="5" fill="#fff3d6"/>${Array.from({ length: 26 }, (_, i) => `<circle cx="${(i * 97) % 240}" cy="${(i * 53) % 128}" r="${i % 3 ? 0.8 : 1.4}" fill="#fff" fill-opacity=".7"/>`).join("")}`),
   },
   {
     id: "spaceflight", domain: "physics", title: "Spaceflight Lab",

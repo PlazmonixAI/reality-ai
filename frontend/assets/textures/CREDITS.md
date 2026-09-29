@@ -1,14 +1,18 @@
 # Texture credits
 
-Planet textures are used for the 3D Solar System view. Replace any file with a higher-resolution map of
-the same name (equirectangular, 2:1) to improve quality; no code changes are needed.
+Surface maps for the 3D Solar System view (equirectangular, 2:1; rings are 1-pixel radial strips from the inner
+to the outer edge). Replace any file with a higher-resolution map of the same name; no code changes are needed.
 
-| File | Source |
-|---|---|
-| earth_day.jpg, earth_night.jpg, earth_clouds.png, earth_bump.png, earth_water.png, stars.png | NASA Blue Marble / Black Marble derived maps, via the `three-globe` npm package examples (MIT) |
-| moon.jpg | NASA-derived lunar map, via the three.js examples (MIT) |
-| jupiter.jpg | github.com/sanderblue/solar-system-threejs |
-| sun, mercury, venus, mars, saturn, saturn_ring, uranus, uranus_ring, neptune, pluto | github.com/WaelYasmina/solarsystem |
+| Files | Source | Licence |
+|---|---|---|
+| mercury, mars, moon, saturn, *_normal, venus_clouds, europa, callisto, ceres, vesta, mimas, enceladus, tethys, dione, rhea, iapetus, saturn_ring, uranus_ring, jupiter_ring, neptune_ring | [Celestia Content](https://github.com/CelestiaProject/CelestiaContent) (`textures/`), built from NASA/JPL, USGS, Björn Jónsson, Paul Schenk, Steve Albers and others (see its README) | GPL-2.0-or-later (Celestia Content default) |
+| jupiter (Askaniy Anpilogov; Hubble OPAL + Juno), ganymede (Askaniy Anpilogov; NASA/JPL/USGS, Björn Jónsson, Brian Swift), titan (haze map: Gordan Ugarković, Kevin M. Gill, AstroChara), triton (Askaniy Anpilogov; NASA/JPL/USGS), neptune (Askaniy Anpilogov; NASA/JPL/Björn Jónsson, Karkoschka), phobos (Askaniy Anpilogov; Phil Stooke / NASA PDS), io (ItzImcool, AstroChara; NASA/JPL/USGS, Juno) | Celestia Content | CC BY 3.0 (io: CC BY 4.0, titan: CC BY 4.0) |
+| ariel, miranda, titania, oberon, umbriel | Celestia Content (ItzImcool; Paul Schenk; NASA/JPL/Ted Stryk) | CC BY-SA 4.0 |
+| deimos | Phil Stooke, Small Bodies Maps v3.0, NASA PDS (via Celestia Content) | CC0 1.0 |
+| asteroid, icy | Celestia Content (cubicApocalypse), generic surfaces for bodies without a map | CC BY 4.0 |
+| charon | NASA 3D Resources ([github.com/nasa/NASA-3D-Resources](https://github.com/nasa/NASA-3D-Resources)) | Public domain (NASA) |
+| earth_day, earth_night, earth_clouds, earth_water | NASA Blue Marble / Black Marble derived maps, via the `three-globe` npm package examples | MIT (package); NASA imagery public domain |
+| sun, pluto, uranus | github.com/WaelYasmina/solarsystem | unverified — replace before a commercial release |
 
-Before a commercial release, verify each texture's license. The Solar System Scope maps
-(solarsystemscope.com/textures, CC BY 4.0, up to 8k) are a good drop-in upgrade with clear licensing.
+The night sky is not a texture: it is drawn from the real HYG star catalogue (CC BY-SA 4.0) and the engine's
+Milky Way model. Before a commercial release, check each licence's attribution/share-alike terms.
