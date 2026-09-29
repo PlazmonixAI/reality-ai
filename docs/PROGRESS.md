@@ -171,3 +171,11 @@
 - Verified: ISS node drift −5.0°/day (numerical within 1 %), 800 km sun-synchronous inclination 98.6° with exactly 360°/year drift, frozen perigee at 63.4°, polar orbits don't precess, constant-density decay matches the closed form √a(t) = √a₀ − kt/2; water melts at 273.15 K at 1 atm with slope −13.5 MPa/K, vapour pressure at 25 °C within 2 % of steam tables, CO₂ sublimes at 194.7 K (ΔH_sub ≈ 26.1 kJ/mol); 559 tests passing
 - Every roadmap item is now ticked: 108 tools, 75 simulations
 - **Next ideas:** 2D heat equation, multi-planet solar-system view, streaming `/ask` answers, more substances for phase diagrams
+
+## 2026-09-29 — Phase 9: Solar System 3D, Spaceflight Lab, AI analyst on every sim
+- Engine: `solar_system` (JPL Standish elements 1800–2050, Moon series, IAU rotation/pole models, facts, orbit paths, time tracks), `rocket_parts`, `rocket_design`, `rocket_launch_state`, `rocket_flight` (2D flight with gravity, pressure-dependent thrust, rotating-atmosphere drag, staging, parachute, landing/crash, orbit prediction) — 23 new tests incl. Horizons positions, axial tilts, a scripted launch that reaches orbit, terminal velocity and parachute landings
+- Solar System 3D sim: three.js r170 vendored (MIT) with an import map; NASA-derived Earth maps (4K day/night/clouds), planet textures from public repos (see `frontend/assets/textures/CREDITS.md`); positions/spin/tilt all from the engine, browser interpolates between engine samples
+- Spaceflight Lab sim: builder (palette, stacking, templates, stage Δv/TWR) and flight (HUD, throttle, rotate/SAS, stage, chute, time warp, map)
+- AI analyst panel on every simulation: recent engine calls are compacted in `api.js` and sent as context to `/ask`; the sim's own tools are always offered to the model
+- LLM providers: `LLM_PROVIDER=nim|groq|xai` with pooled keys; `/llm/status` (never exposes keys). Groq is ready to switch on once keys are added
+- **Known issues:** proxy blocked the Solar System Scope texture site, so some planet maps are 1K; replacing files in `frontend/assets/textures` with 2K–8K maps upgrades them. Spaceflight is 2D and single-body (no transfers yet)

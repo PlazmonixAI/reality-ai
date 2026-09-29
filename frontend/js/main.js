@@ -3,6 +3,8 @@ import { SIMS, DOMAINS } from "./sims/index.js";
 import { el } from "./core/ui.js";
 import { health } from "./core/api.js";
 import { mountAsk } from "./ask.js";
+import { mountAiPanel } from "./core/aichat.js";
+import { clearRecentCalls } from "./core/api.js";
 
 const app = document.getElementById("app");
 const crumb = document.getElementById("crumb");
@@ -56,8 +58,11 @@ async function openSim(sim) {
   const page = el("div", { class: "sim-page" });
   app.append(page);
   try {
+    clearRecentCalls();
     const mod = await sim.load();
-    cleanup = mod.default.mount(page) || null;
+    const simCleanup = mod.default.mount(page) || null;
+    const aiCleanup = mountAiPanel(page, sim);
+    cleanup = () => { aiCleanup(); simCleanup?.(); };
   } catch (err) {
     console.error(err);
     page.append(el("p", { class: "empty" }, `Could not load this simulation: ${err.message}`));

@@ -225,3 +225,45 @@ def test_ask_endpoint_without_keys_is_503():
         app.dependency_overrides.clear()
     assert r.status_code == 503 and "NIM_API_KEYS" in r.json()["detail"]
     assert TestClient(app).post("/ask", json={"question": ""}).status_code == 422
+
+
+# --- providers and simulation context -------------------------------------------------------
+
+def test_provider_settings(monkeypatch):
+    from app.config import Settings
+    s = Settings(llm_provider="groq", groq_api_keys="g1, g2", _env_file=None)
+    assert s.base_url == "https://api.groq.com/openai/v1" and s.model == "llama-3.3-70b-versatile"
+    assert s.key_list == ["g1", "g2"] and s.keys_env == "GROQ_API_KEYS"
+    x = Settings(llm_provider="xai", xai_api_keys="k", llm_model="grok-custom", _env_file=None)
+    assert x.base_url == "https://api.x.ai/v1" and x.model == "grok-custom"
+    n = Settings(_env_file=None)
+    assert n.provider == "nim" and n.key_list == []
+    with pytest.raises(ValueError):
+        _ = Settings(llm_provider="gemini", _env_file=None).provider
+
+
+def test_llm_status_never_leaks_keys():
+    body = TestClient(app).get("/llm/status").json()
+    assert {"provider", "model", "configured"} <= set(body) and not any("nvapi" in str(v) or "gsk_" in str(v) for v in body.values())
+
+
+def test_context_reaches_the_model_and_adds_the_sims_tools():
+    llm = ScriptedLLM([{"role": "assistant", "content": "The rocket is in orbit."}])
+    ctx = {"sim_id": "spaceflight", "title": "Spaceflight Lab",
+           "recent": [{"domain": "physics", "name": "rocket_flight", "args": {"throttle": 1}, "result": {"telemetry": {"altitude": 185000.0, "speed": list(range(50))}}}]}
+    out = ask("What is happening?", llm, context=ctx)
+    assert out["answer"] == "The rocket is in orbit."
+    msgs = llm.sent[0]["messages"]
+    assert msgs[1]["role"] == "system" and "Spaceflight Lab" in msgs[1]["content"] and "185000" in msgs[1]["content"]
+    assert '"n": 50' in msgs[1]["content"]  # long arrays are summarised
+    assert "physics__rocket_flight" in [t["function"]["name"] for t in llm.sent[0]["tools"]]
+
+
+def test_ask_endpoint_accepts_context():
+    llm = ScriptedLLM([{"role": "assistant", "content": "ok"}])
+    app.dependency_overrides[get_llm_client] = lambda: llm
+    try:
+        r = TestClient(app).post("/ask", json={"question": "Explain", "context": {"title": "Solar System 3D", "recent": []}})
+    finally:
+        app.dependency_overrides.clear()
+    assert r.status_code == 200 and "Solar System 3D" in llm.sent[0]["messages"][1]["content"]

@@ -51,14 +51,20 @@ curl -s localhost:8000/simulate -H 'content-type: application/json' \
   -d '{"domain":"chemistry","name":"galvanic_cell","args":{"anode":"Zn","cathode":"Cu","anode_concentration":0.01}}'
 ```
 
+## Flagship sims
+- **Solar System 3D** (`#/sim/solarsystem`) — the real Solar System on any date 1800–2050: JPL-element positions, IAU spin and pole orientation, realistic textures (Earth day/night shader, clouds, atmosphere glow, Saturn's rings), time controls and facts.
+- **Spaceflight Lab** (`#/sim/spaceflight`) — build a rocket from engines, tanks, decouplers, capsules, parachutes and legs (engine-computed Δv/TWR per stage), then fly it on Earth, the Moon or Mars with throttle, attitude/SAS, staging, time warp and a map view of the predicted orbit.
+- **AI analyst** on every simulation — a side panel that explains what's on screen using the sim's latest engine data.
+
 ## Ask the AI representative
 Open **http://localhost:8000/#/ask** (or `POST /ask`). The representative (NVIDIA NIM, tool-calling) picks the relevant
 engine tools, runs them and explains the result; each answer lists the tool calls and their computed outputs.
 
 ```bash
-# .env — comma-separated keys are pooled and rotated (429/5xx cool a key down, 401/403 disable it)
-NIM_API_KEYS=nvapi-...,nvapi-...
-NIM_MODEL=meta/llama-3.1-70b-instruct
+# .env — pick a provider; comma-separated keys are pooled and rotated (429/5xx cool a key down, 401/403 disable it)
+LLM_PROVIDER=groq            # nim | groq | xai
+GROQ_API_KEYS=gsk_...,gsk_...
+# LLM_MODEL=llama-3.3-70b-versatile   (optional override)
 
 curl -s localhost:8000/ask -H 'content-type: application/json' \
   -d '{"question": "How much delta-v to go from a 300 km LEO to GEO?"}'

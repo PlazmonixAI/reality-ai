@@ -1,10 +1,10 @@
-"""NVIDIA NIM chat client (OpenAI-compatible) with multi-key pooling and rotation.
+"""OpenAI-compatible chat client (NVIDIA NIM, Groq or xAI) with multi-key pooling and rotation.
 
-- Keys come from NIM_API_KEYS (comma-separated). Requests start from the next key in round-robin order.
+- Keys come from the provider's *_API_KEYS variable (comma-separated). Requests start from the next key in round-robin order.
 - 429, 5xx, timeouts and network errors put that key on a cool-down (honouring Retry-After) and the request
   moves on to the next key, with exponential backoff once every key has been tried.
 - 401/403 disable a key for the life of the process. Other 4xx errors are the caller's fault and are raised.
-- Only NVIDIA NIM is supported; no other providers.
+- Providers are configured in app/config.py (LLM_PROVIDER); all speak the OpenAI chat-completions API.
 """
 from __future__ import annotations
 
@@ -39,7 +39,9 @@ class NIMClient:
         transport: httpx.BaseTransport | None = None,
         sleep: Callable[[float], None] = time.sleep,
         clock: Callable[[], float] = time.monotonic,
+        keys_env: str = "NIM_API_KEYS",
     ):
+        self.keys_env = keys_env
         self.keys = [k for k in keys if k]
         self.base_url = base_url.rstrip("/")
         self.model = model
@@ -58,7 +60,7 @@ class NIMClient:
         with self._lock:
             live = [i for i in range(len(self.keys)) if i not in self._disabled]
             if not live:
-                raise NoKeysError("no usable NIM API keys (set NIM_API_KEYS; rejected keys are disabled)")
+                raise NoKeysError(f"no usable API keys (set {self.keys_env}; rejected keys are disabled)")
             now = self._clock()
             order = [(self._next + j) % len(self.keys) for j in range(len(self.keys))]
             order = [i for i in order if i in live]
@@ -87,7 +89,7 @@ class NIMClient:
     ) -> dict[str, Any]:
         """Return the assistant message dict ({role, content, tool_calls?}) of the first choice."""
         if not self.keys:
-            raise NoKeysError("the AI representative is not configured: set NIM_API_KEYS")
+            raise NoKeysError(f"the AI representative is not configured: set {self.keys_env}")
         payload: dict[str, Any] = {"model": self.model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
         if tools:
             payload["tools"] = tools
@@ -109,7 +111,7 @@ class NIMClient:
                 try:
                     return r.json()["choices"][0]["message"]
                 except (ValueError, KeyError, IndexError) as exc:
-                    raise LLMError(f"unexpected NIM response: {exc}") from None
+                    raise LLMError(f"unexpected LLM response: {exc}") from None
             if r.status_code in (401, 403):
                 with self._lock:
                     self._disabled.add(i)
@@ -119,8 +121,8 @@ class NIMClient:
                 last = f"HTTP {r.status_code}"
                 self._cool(i, self._retry_after(r) or self._delay(attempt))
                 continue
-            raise LLMError(f"NIM request failed with HTTP {r.status_code}: {r.text[:300]}")
-        raise LLMError(f"NIM request failed after {self.max_attempts} attempts ({last})")
+            raise LLMError(f"LLM request failed with HTTP {r.status_code}: {r.text[:300]}")
+        raise LLMError(f"LLM request failed after {self.max_attempts} attempts ({last})")
 
     def _delay(self, attempt: int) -> float:
         return min(self.max_backoff, self.backoff * 2 ** (attempt // max(1, len(self.keys))))
@@ -134,3 +136,6 @@ class NIMClient:
 
     def close(self) -> None:
         self._http.close()
+
+
+OpenAICompatibleClient = NIMClient  # the same client serves every configured provider

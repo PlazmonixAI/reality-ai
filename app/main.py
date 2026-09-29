@@ -52,6 +52,7 @@ def simulate(req: SimulateRequest):
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
     history: list[dict[str, str]] = Field(default_factory=list, max_length=20)
+    context: dict[str, Any] | None = None  # snapshot of the simulation on screen (sim id, title, recent engine calls)
 
 
 _client: NIMClient | None = None
@@ -61,15 +62,25 @@ def get_llm_client() -> NIMClient:
     """One shared NIM client so the key rotation state is kept across requests."""
     global _client
     if _client is None:
-        _client = NIMClient(settings.key_list, settings.nim_base_url, settings.nim_model)
+        _client = NIMClient(settings.key_list, settings.base_url, settings.model, keys_env=settings.keys_env)
     return _client
+
+
+@app.get("/llm/status")
+def llm_status():
+    """Which LLM provider/model the AI representative uses and whether keys are configured (never the keys)."""
+    try:
+        return {"provider": settings.provider, "model": settings.model, "configured": bool(settings.key_list),
+                "keys": len(settings.key_list), "keys_env": settings.keys_env}
+    except ValueError as e:
+        return {"provider": settings.llm_provider, "configured": False, "error": str(e)}
 
 
 @app.post("/ask")
 def ask(req: AskRequest, client=Depends(get_llm_client)):
     """Answer a research question in natural language using the engine's tools (NVIDIA NIM)."""
     try:
-        return representative.ask(req.question, client, history=req.history)
+        return representative.ask(req.question, client, history=req.history, context=req.context)
     except NoKeysError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except LLMError as e:

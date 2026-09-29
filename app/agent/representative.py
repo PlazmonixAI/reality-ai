@@ -75,13 +75,36 @@ def run_tool(name: str, raw_args: str | dict | None) -> tuple[str | None, dict[s
         return t.key, args, {"error": str(exc)}
 
 
+def context_prompt(context: dict[str, Any]) -> str:
+    """Describe the simulation the user is looking at, from the engine calls it made (compacted)."""
+    title = str(context.get("title") or context.get("sim_id") or "a simulation")[:120]
+    lines = [f"The user is looking at the Reality ASM simulation \"{title}\" and may ask you to analyse it."]
+    if context.get("blurb"):
+        lines.append(f"What it shows: {str(context['blurb'])[:300]}")
+    calls = context.get("recent") or []
+    if calls:
+        lines.append("Latest engine calls made by the simulation (inputs and compacted outputs, newest last). "
+                     "Treat these numbers as engine results you may quote; call tools to compute anything else:")
+        for c in calls[-8:]:
+            lines.append(json.dumps(compact(c), ensure_ascii=False)[:1800])
+    return "\n".join(lines)
+
+
 def ask(question: str, client: ChatClient, history: list[dict[str, str]] | None = None,
-        max_rounds: int = 4, n_tools: int = 12) -> dict[str, Any]:
+        max_rounds: int = 4, n_tools: int = 12, context: dict[str, Any] | None = None) -> dict[str, Any]:
     question = question.strip()
     if not question:
         raise ValueError("question is empty")
-    tools = [tool_schema(t) for t in select_tools(question, n_tools)]
+    chosen = select_tools(question, n_tools)
+    if context:  # the tools the simulation itself uses are always offered
+        for c in (context.get("recent") or [])[-8:]:
+            t = tool_for_function(f"{c.get('domain')}__{c.get('name')}")
+            if t and t not in chosen:
+                chosen.append(t)
+    tools = [tool_schema(t) for t in chosen]
     messages: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM_PROMPT}]
+    if context:
+        messages.append({"role": "system", "content": context_prompt(context)})
     for h in history or []:
         if h.get("role") in ("user", "assistant") and isinstance(h.get("content"), str):
             messages.append({"role": h["role"], "content": h["content"]})

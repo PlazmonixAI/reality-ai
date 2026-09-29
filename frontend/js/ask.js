@@ -11,7 +11,7 @@ const EXAMPLES = [
   "Integrate x^2 sin(x) from 0 to pi.",
 ];
 
-function show(v) {
+export function show(v) {
   if (typeof v === "number") return fmt(v, 5);
   if (Array.isArray(v)) return `[${v.slice(0, 6).map(show).join(", ")}${v.length > 6 ? ", …" : ""}]`;
   if (v && typeof v === "object") {
@@ -21,7 +21,7 @@ function show(v) {
   return String(v);
 }
 
-function toolCard(step) {
+export function toolCard(step) {
   const r = step.result || {};
   const main = "error" in r ? el("p", { class: "tool-error" }, r.error)
     : el("p", {}, el("b", {}, "result: "), show(r.result), r.units ? el("span", { class: "tool-units" }, `  (${r.units})`) : "");
@@ -57,7 +57,7 @@ export function mountAsk(root) {
       const body = await res.json().catch(() => ({}));
       wait.remove();
       if (!res.ok) {
-        const msg = res.status === 503 ? "The AI representative isn't configured on this server yet (it needs NVIDIA NIM API keys in NIM_API_KEYS). The simulations still work." : (body.detail || `Request failed (${res.status})`);
+        const msg = res.status === 503 ? "The AI representative isn't configured on this server yet (set LLM_PROVIDER and that provider's API keys, e.g. GROQ_API_KEYS, in .env). The simulations still work." : (body.detail || `Request failed (${res.status})`);
         bubble("bot error", typeof msg === "string" ? msg : JSON.stringify(msg));
         return;
       }

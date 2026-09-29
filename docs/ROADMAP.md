@@ -132,3 +132,14 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] README examples for every domain
 - [x] Full test pass + coverage check (93 % line coverage)
 - [x] Time limits for open-ended symbolic tools (forked child process, killed after `TOOL_TIMEOUT_S`)
+
+## Phase 9 — Flagship simulators & AI analyst
+- [x] Ephemeris tool: real planet/Moon positions for any date (JPL elements), IAU spin and pole orientation
+- [x] Solar System 3D (three.js): realistic textures, Earth day/night shader, clouds, atmospheres, rings, time controls, info panel
+- [x] Rocketry engine: parts catalogue, staged design analysis, 2D flight integrator (thrust, drag, staging, landing, orbits)
+- [x] Spaceflight Lab: rocket builder + flight view with HUD, throttle, SAS, staging, time warp and map view
+- [x] AI analyst panel on every simulation (sim context sent to `/ask`)
+- [x] Multi-provider LLM config (NVIDIA NIM, Groq, xAI) with key rotation; `/llm/status`
+- [ ] Connect real Groq keys and tune the prompts with live answers
+- [ ] Moons of Jupiter/Saturn, asteroid belt and comets in the 3D view
+- [ ] Rocket flight in 3D / transfers between bodies (Earth → Moon) in Spaceflight Lab

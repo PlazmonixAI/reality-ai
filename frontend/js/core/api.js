@@ -2,6 +2,38 @@
 
 export class EngineError extends Error {}
 
+// The latest engine calls of the open simulation (compacted), so the AI analyst can see what is on screen.
+const RECENT = [];
+function compactValue(v, depth = 0) {
+  if (typeof v === "number") return Number.isFinite(v) ? +v.toPrecision(6) : v;
+  if (Array.isArray(v)) {
+    if (v.length > 12) {
+      const nums = v.filter((x) => typeof x === "number");
+      if (nums.length === v.length) return { n: v.length, first: compactValue(v[0]), last: compactValue(v[v.length - 1]), min: compactValue(Math.min(...nums)), max: compactValue(Math.max(...nums)) };
+      return [...v.slice(0, 4).map((x) => compactValue(x, depth + 1)), `… ${v.length - 4} more`];
+    }
+    return v.map((x) => compactValue(x, depth + 1));
+  }
+  if (v && typeof v === "object") {
+    if (depth > 4) return "{…}";
+    const out = {};
+    for (const [k, x] of Object.entries(v)) if (k !== "image") out[k] = compactValue(x, depth + 1);
+    return out;
+  }
+  if (typeof v === "string" && v.length > 300) return v.slice(0, 300) + "…";
+  return v;
+}
+function remember(domain, name, args, data) {
+  // Keep the newest call per tool (a sim may call the same tool many times a second)
+  const i = RECENT.findIndex((c) => c.domain === domain && c.name === name);
+  if (i >= 0) RECENT.splice(i, 1);
+  const { tool, ...rest } = data;
+  RECENT.push({ domain, name, args: compactValue(args), result: compactValue(rest), at: new Date().toISOString() });
+  while (RECENT.length > 8) RECENT.shift();
+}
+export const recentCalls = () => RECENT.slice();
+export const clearRecentCalls = () => { RECENT.length = 0; };
+
 export async function simulate(domain, name, args = {}, signal) {
   let response;
   try {
@@ -23,6 +55,7 @@ export async function simulate(domain, name, args = {}, signal) {
       : response.statusText;
     throw new EngineError(message);
   }
+  try { remember(domain, name, args, data); } catch { /* never break a sim over bookkeeping */ }
   return data;
 }
 
