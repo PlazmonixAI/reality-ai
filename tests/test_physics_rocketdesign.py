@@ -154,3 +154,23 @@ def test_custom_part_validation():
         rocket_design([{"part": "custom_x"}], custom_parts={"custom_x": {"category": "engine", "mass": 1}})
     with pytest.raises(ValueError):
         rocket_design([{"part": "probe"}], custom_parts={"bad id": {"category": "satellite", "mass": 1, "height": 1, "width": 1}})
+
+
+def test_start_in_parking_orbit_spends_the_ascent_budget():
+    parts = [P for P in ([{"part": "engine_methalox", "count": 5}, {"part": "tank_xl"}, {"part": "tank_xl"}, {"part": "tank_xl"},
+                          {"part": "interstage"}, {"part": "decoupler"}, {"part": "engine_vacuum"}, {"part": "tank_l"}, {"part": "tank_l"},
+                          {"part": "decoupler"}, {"part": "sat_lunar"}, {"part": "fairing"}])]
+    d = rocket_design(parts)["result"]
+    st = rocket_launch_state(parts, start="orbit")["result"]
+    assert st["stage"] == 1 and not st["fairing"] and not st["landed"]
+    tel = rocket_flight(st, parts, dt=1)["result"]["telemetry"]
+    assert tel["status"] == "orbit" and tel["periapsis_alt"] == pytest.approx(200e3, abs=500)
+    # stage 2 keeps what the ascent did not use; the satellite then flies without the 1 t fairing around it
+    g0, sat = 9.80665, 650 + 900
+    upper = 490 + 150 + 2 * 5000 + sat
+    stage2 = 348 * g0 * math.log((upper + st["props"][1]) / upper)
+    with_fairing = 348 * g0 * math.log((upper + 1000 + st["props"][1]) / (upper + 1000))  # during the ascent it was still on
+    assert d["stages"][0]["delta_v_vac"] + d["stages"][1]["delta_v_vac"] - with_fairing == pytest.approx(9400, rel=1e-6)
+    assert tel["delta_v_remaining"] == pytest.approx(stage2 + 318 * g0 * math.log(sat / 650), rel=1e-3)
+    with pytest.raises(ValueError):
+        rocket_launch_state([{"part": "engine_lander"}, {"part": "tank_s"}, {"part": "probe"}], start="orbit")

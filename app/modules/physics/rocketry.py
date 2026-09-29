@@ -26,11 +26,13 @@ PARTS: dict[str, dict] = {
     "sat_cubesat": {"name": "CubeSat 6U", "category": "satellite", "mass": 12, "height": 0.4, "width": 0.3},
     "sat_earthobs": {"name": "Earth-observation satellite", "category": "satellite", "mass": 1100, "height": 3.2, "width": 2.0},
     "sat_nav": {"name": "Navigation satellite", "category": "satellite", "mass": 2200, "height": 2.6, "width": 2.4},
-    "sat_comms": {"name": "Geostationary comsat", "category": "satellite", "mass": 4500, "height": 5.0, "width": 3.0},
+    "sat_comms": {"name": "Geostationary comsat (apogee engine)", "category": "satellite", "mass": 2500, "prop": 3000, "height": 5.0,
+                  "width": 3.0, "thrust_sl": 200.0, "thrust_vac": 450.0, "isp_sl": 140, "isp_vac": 318},
     "sat_telescope": {"name": "Space telescope", "category": "satellite", "mass": 11000, "height": 13.0, "width": 4.2},
     "sat_lunar": {"name": "Lunar orbiter (with engine)", "category": "satellite", "mass": 650, "prop": 900, "height": 2.4,
                   "width": 2.2, "thrust_sl": 200.0, "thrust_vac": 450.0, "isp_sl": 140, "isp_vac": 318},
     # tanks
+    "tank_xs": {"name": "Fuel tank XS", "category": "tank", "mass": 400, "prop": 4000, "height": 2.2, "width": 1.3},
     "tank_s": {"name": "Fuel tank S", "category": "tank", "mass": 1200, "prop": 12000, "height": 3.0, "width": 3.2},
     "tank_m": {"name": "Fuel tank M", "category": "tank", "mass": 2500, "prop": 30000, "height": 6.0, "width": 3.2},
     "tank_l": {"name": "Fuel tank L", "category": "tank", "mass": 5000, "prop": 70000, "height": 12.0, "width": 3.2},
@@ -63,14 +65,16 @@ PARTS: dict[str, dict] = {
                   "thrust_sl": 6770e3, "thrust_vac": 7825e3, "isp_sl": 263, "isp_vac": 304},
     # structure and aerodynamics
     "decoupler": {"name": "Stage decoupler", "category": "structural", "mass": 150, "height": 0.5, "width": 3.2},
+    "interstage_s": {"name": "Interstage S", "category": "structural", "mass": 80, "height": 0.8, "width": 1.3},
     "interstage": {"name": "Interstage (covers the upper-stage engine)", "category": "structural", "mass": 600, "height": 1.5, "width": 3.7},
     "nose": {"name": "Nose cone", "category": "aero", "mass": 300, "height": 3.0, "width": 3.2},
+    "fairing_s": {"name": "Payload fairing S", "category": "aero", "mass": 50, "height": 1.6, "width": 1.4},
     "fairing": {"name": "Payload fairing", "category": "aero", "mass": 1000, "height": 4.0, "width": 3.8},
     "fairing_xl": {"name": "Payload fairing XL", "category": "aero", "mass": 2000, "height": 6.0, "width": 5.2},
     "parachute": {"name": "Parachute", "category": "recovery", "mass": 120, "height": 0.6, "width": 1.6},
     "legs": {"name": "Landing legs", "category": "recovery", "mass": 250, "height": 0.6, "width": 3.6},
 }
-FAIRINGS = {"fairing", "fairing_xl"}
+FAIRINGS = {"fairing_s", "fairing", "fairing_xl"}
 ENGINE_CLASSES = (("small", 100e3), ("medium", 500e3), ("large", 1500e3), ("heavy", float("inf")))
 
 
@@ -181,7 +185,7 @@ def _stages(parts: list[dict]) -> list[dict]:
             "width": max(p["width"] for p in s),
             "nose": any(p["id"] == "nose" for p in s),
             "fairing_mass": sum(p["mass"] for p in s if p["id"] in FAIRINGS),
-            "interstage": any(p["id"] == "interstage" for p in s),
+            "interstage": any(p["id"].startswith("interstage") for p in s),
             "bottom_engine": i > 0 and bool(s[0].get("thrust_vac")),  # an upper-stage engine at the separation plane
             "satellites": [p["name"] for p in s if p["category"] == "satellite"],
             "chute": any(p["id"] == "parachute" for p in s),
@@ -189,7 +193,8 @@ def _stages(parts: list[dict]) -> list[dict]:
             "command": any(p["category"] in ("command", "satellite") for p in s),
         })
     for i in range(1, len(out)):
-        out[i]["exposed_engine"] = out[i]["bottom_engine"] and not out[i - 1]["interstage"]
+        # an engine at the bottom of an upper stage is shielded by an interstage below it or a fairing around it
+        out[i]["exposed_engine"] = out[i]["bottom_engine"] and not out[i - 1]["interstage"] and not out[i]["fairing_mass"]
     if out:
         out[0]["exposed_engine"] = False
     return out
@@ -366,8 +371,11 @@ def _on_moon(theta0: float, t: float, phi: float) -> list[float]:
         "measured from the pad direction), so trans-lunar flights, lunar orbits and landings can be flown."
     ),
 )
-def rocket_launch_state(parts: list, body: str = "earth", custom_parts: dict | None = None, moon_phase_deg: float = -30.0) -> dict:
+def rocket_launch_state(parts: list, body: str = "earth", custom_parts: dict | None = None, moon_phase_deg: float = -30.0,
+                        start: str = "pad") -> dict:
     b = _body(body)
+    if start not in ("pad", "orbit"):
+        raise ValueError("start must be 'pad' or 'orbit'")
     ps = _parse(parts, custom_parts)
     stages = _stages(ps)
     R = b["radius"]
@@ -375,9 +383,39 @@ def rocket_launch_state(parts: list, body: str = "earth", custom_parts: dict | N
              "props": [s["prop"] for s in stages], "landed": True, "crashed": False, "chute": False, "body": body,
              "landed_on": body, "fairing": any(p["id"] in FAIRINGS for p in ps),
              "moon_theta0": math.pi / 2 + math.radians(moon_phase_deg) if body == "earth" else None}
+    assumptions = ["The pad rotates with the planet, so the rocket starts with the surface speed",
+                   "Earth flights include the Moon on a circular 384,400 km orbit in the flight plane"]
+    if start == "orbit":
+        # Spend the ascent Δv budget (with typical losses) from the bottom stage up, then place what is left in a
+        # circular prograde parking orbit. The fairing is gone by then.
+        alt = 200e3 if body == "earth" else 50e3
+        need = {"earth": 9400.0, "moon": 1870.0, "mars": 4100.0}[body]
+        props, k = list(state["props"]), 0
+        for j, st_ in enumerate(stages):
+            if need <= 0:
+                break
+            m0 = sum(s_["dry"] for s_ in stages[j:]) + sum(props[j:])  # the fairing rides along during the ascent
+            if not st_["mdot"] or props[j] <= 0:
+                k = j + 1
+                continue
+            ve = st_["isp_vac"] * G0
+            used = m0 * (1 - math.exp(-need / ve))
+            if used >= props[j]:
+                need -= ve * math.log(m0 / (m0 - props[j]))
+                props[j] = 0.0
+                k = j + 1
+            else:
+                props[j] -= used
+                need, k = 0.0, j
+        if need > 0 or k >= len(stages):
+            raise ValueError("this rocket does not have the Δv to reach orbit, so it cannot start there")
+        r = R + alt
+        v = math.sqrt(b["mu"] / r)
+        state.update(x=0.0, y=r, vx=v, vy=0.0, angle=0.0, stage=k, props=props, landed=False, landed_on=None, fairing=False)
+        assumptions.append(f"Started in a circular {alt / 1e3:.0f} km orbit after spending {({'earth': 9400, 'moon': 1870, 'mars': 4100})[body]} m/s "
+                           "(ascent including gravity and drag losses) from the lowest stages")
     return {"result": state, "units": "SI (m, m/s, kg, rad, s); planet-centred inertial frame, pad at (0, R)",
-            "assumptions": ["The pad rotates with the planet, so the rocket starts with the surface speed",
-                            "Earth flights include the Moon on a circular 384,400 km orbit in the flight plane"]}
+            "assumptions": assumptions}
 
 
 def _ref_frame(b, moon_on, theta0, t, x, y, vx, vy, landed_on):
@@ -433,12 +471,14 @@ def _predict_nbody(b, theta0, t0, x, y, vx, vy, horizon, n=400):
         mx, my, _, _ = moon_state(theta0, t0 + tt)
         d = math.hypot(st[0] - mx, st[1] - my)
         if d < MOON_SOI and (encounter is None or d < encounter["closest_distance"]):
-            encounter = {"time_from_now": float(tt), "closest_distance": d, "periselene_alt": d - MOON_RADIUS}
+            encounter = {"time_from_now": float(tt), "closest_distance": d, "periselene_alt": d - MOON_RADIUS,
+                         "moon_position": [mx, my], "craft_position": [float(st[0]), float(st[1])]}
     if len(sol.t_events[1]):
         tt = float(sol.t_events[1][0])
-        encounter = {"time_from_now": tt, "closest_distance": MOON_RADIUS, "periselene_alt": 0.0, "impact": True}
         st = sol.y_events[1][0]
         mx, my, _, _ = moon_state(theta0, t0 + tt)
+        encounter = {"time_from_now": tt, "closest_distance": MOON_RADIUS, "periselene_alt": 0.0, "impact": True,
+                     "moon_position": [mx, my], "craft_position": [float(st[0]), float(st[1])]}
         pts.append([st[0], st[1]])
         rel.append([st[0] - mx, st[1] - my])
     return pts, rel, encounter
@@ -737,8 +777,9 @@ def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, e
                 horizon = min(12 * 86400.0, el["period"] * 1.05) if bound and el["period"] else 4 * 86400.0
             else:
                 horizon = min(12 * 86400.0, el["period"] * 1.02) if bound else 8 * 86400.0
-            pts, rel, enc = _predict_nbody(b, theta0, t, x, y, vx, vy, max(horizon, 600.0))
-            out["trajectory"], out["trajectory_moon"] = pts, rel
+            horizon = max(horizon, 600.0)
+            pts, rel, enc = _predict_nbody(b, theta0, t, x, y, vx, vy, horizon)
+            out["trajectory"], out["trajectory_moon"], out["trajectory_dt"] = pts, rel, horizon / 399
             if enc:
                 telemetry["encounter"] = enc
         else:

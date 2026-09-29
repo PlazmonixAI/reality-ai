@@ -188,3 +188,13 @@
 - NASA web sites (nasa.gov, ssd.jpl.nasa.gov) are blocked by this environment's network policy; data came from NASA's GitHub mirror, Celestia and HYG instead
 - **Next:** constellation lines, exoplanets in the Stars view, Earth→Moon transfers in Spaceflight Lab, connect real Groq keys
 - **Known issues:** moon and small-body orbits are fixed ellipses (no perturbations), so Phobos/Deimos phases and comets far from their element epochs drift; the galaxy catalogue stops at ~2 billion ly; comet tail length/brightness is a visual cue only; `sun`, `pluto` and `uranus` textures have unverified licences
+
+## 2026-09-29 — Phase 9c: rocketry v2 (engines, designers, fairings, the Moon)
+- Parts: 11 engines in four size classes modelled on real engines (small: Spark, Hopper, Nudge; medium: Sparrow, Cryo-V; large: Kestrel, Kestrel-V, Cryo-2; heavy: Condor, Titan, Colossus), tank XS, payload fairings S/M/XL, interstages S/M, six example satellites (CubeSat, Earth observation, navigation, GEO comsat with apogee engine, space telescope, lunar orbiter)
+- New tools: `rocket_engine_design` (ideal-rocket nozzle model with calibrated propellant data: Merlin, RD-180, RS-25, Raptor, RL10 and Aestus Isp within 3 %; flow separation, sizes, mass, nozzle contour), `satellite_design` (mass, Δv, power, eclipse, battery depth of discharge), `lunar_transfer` (patched conics: TLI 3.13 km/s, 4.98 days, 114° lead, LOI, landing)
+- `rocket_design`/`rocket_flight` accept `custom_parts` (user-designed engines and satellites), warn about missing fairings/interstages and vacuum nozzles at sea level, and give a mission Δv budget (LEO, GEO, lunar orbit, Moon landing, Mars)
+- Flight: Earth flights include the moving Moon (restricted three-body in the Earth frame), telemetry switches to the Moon inside its sphere of influence, lunar landings/lift-offs, fairing jettison, exposed-engine drag, a trans-lunar-injection window planner, numerical trajectory prediction with the closest lunar pass, and a "start in low orbit" option. Tests fly a full LEO → lunar orbit mission (~2.5 days) through the tool
+- Spaceflight Lab UI: palette by engine class, engine designer (live nozzle drawing, thrust vs altitude) and satellite designer saving to "My designs", fairing cutaway in the builder and peel-away on jettison, interstage shrouds, map view with the Moon, its sphere of influence and a ghost Moon at the predicted encounter, HUD with TLI window and encounter, drag-to-pan
+- 618 tests passing (123 tools, 78 simulations)
+- **Next:** 3D flight view, Mars transfers with the Sun's gravity, a manoeuvre-node planner, docking
+- **Known issues:** flight is planar (no inclination changes); tanks are propellant-agnostic; the Moon's orbit is circular and coplanar

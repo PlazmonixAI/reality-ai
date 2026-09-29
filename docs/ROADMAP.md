@@ -146,4 +146,7 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Universe scale ladder: real stars (HYG), Milky Way model with rotation curve, ~11,000 real galaxies, ΛCDM observable universe (`star_catalog`, `milky_way`, `galaxy_catalog`, `cosmology`)
 - [ ] Constellation lines and exoplanet systems in the Stars view
 - [ ] Deeper-survey galaxies (beyond ~2 billion ly) if an openly licensed catalogue can be bundled
-- [ ] Rocket flight in 3D / transfers between bodies (Earth → Moon) in Spaceflight Lab
+- [x] Transfers between bodies: the Moon moves and pulls in Earth flights (restricted three-body), lunar orbit, landing and lift-off, TLI window planner
+- [x] Engine classes (small/medium/large/heavy), payload fairings, interstages, example satellites
+- [x] Engine designer (`rocket_engine_design`) and satellite designer (`satellite_design`) whose designs fly as custom parts
+- [ ] Rocket flight in 3D; Mars transfers with the Sun's gravity
