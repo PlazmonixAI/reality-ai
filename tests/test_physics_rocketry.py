@@ -4,7 +4,7 @@ import pytest
 
 from app.modules.physics.rocketry import BODIES, G0, PARTS, rocket_design, rocket_flight, rocket_launch_state
 
-TWO_STAGE = [{"part": "engine_booster", "count": 9}, {"part": "tank_xl"}, {"part": "decoupler"},
+TWO_STAGE = [{"part": "engine_booster", "count": 9}, {"part": "tank_xl"}, {"part": "interstage"}, {"part": "decoupler"},
              {"part": "engine_vacuum"}, {"part": "tank_l"}, {"part": "capsule"}, {"part": "nose"}]
 
 
@@ -98,7 +98,7 @@ def test_parachute_landing_and_crash():
 def test_staging_and_burnout_events():
     st = rocket_launch_state(TWO_STAGE)["result"]
     out = rocket_flight(st, TWO_STAGE, throttle=1, angle=math.pi / 2, dt=80)["result"]
-    assert "lift-off" in out["events"] and "stage 0 out of fuel" in out["events"]
+    assert "lift-off" in out["events"] and "stage 1 out of fuel" in out["events"]
     staged = rocket_flight(out["state"], TWO_STAGE, dt=0.1, stage=True)["result"]
     dry0 = rocket_design(TWO_STAGE)["result"]["stages"][0]["mass_end"] - rocket_design(TWO_STAGE)["result"]["stages"][1]["mass_start"]
     assert staged["state"]["stage"] == 1 and staged["telemetry"]["mass"] == pytest.approx(out["telemetry"]["mass"] - dry0)
