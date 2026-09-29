@@ -191,3 +191,41 @@ table.ice thead th { color: var(--text-2); font-weight: 600; }
 .chat-input { flex: 1; resize: vertical; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font: inherit; background: var(--surface); }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 0 20px; font-weight: 600; cursor: pointer; }
 .btn.primary:disabled { opacity: .5; cursor: wait; }
+
+/* ---------- Solar System 3D ---------- */
+.ss-root { position: relative; flex: 1; min-height: 0; background: #000; overflow: hidden; color: #e8ecf2; font-family: system-ui, sans-serif; }
+.ss-view, .ss-view canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ss-labels { position: absolute; inset: 0; pointer-events: none; }
+.ss-label { position: absolute; left: 0; top: 0; pointer-events: auto; background: none; border: 0; color: #fff; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; padding: 2px 4px; text-shadow: 0 0 4px #000; }
+.ss-label::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--c); margin-right: 5px; vertical-align: middle; }
+.ss-label:hover { color: var(--c); }
+.ss-top { position: absolute; top: 14px; left: 76px; pointer-events: none; }
+.ss-brand { font-size: 11px; letter-spacing: .3em; color: #9fb3cc; }
+.ss-brand b { color: #ffcc55; }
+.ss-date { font-size: 26px; font-weight: 300; letter-spacing: .02em; }
+.ss-time { font-size: 12px; color: #9fb3cc; }
+.ss-toolbar { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; padding: 8px; border-radius: 14px; background: rgba(10,18,32,.72); border: 1px solid rgba(120,160,220,.25); backdrop-filter: blur(6px); }
+.ss-tool { width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(120,160,220,.3); background: rgba(30,50,80,.6); color: #dbe7f7; font-size: 16px; cursor: pointer; }
+.ss-tool:hover { background: rgba(60,100,160,.7); }
+.ss-tool.off { opacity: .4; } .ss-tool.on { background: #2a78d6; }
+.ss-timebar { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: rgba(10,18,32,.78); border: 1px solid rgba(120,160,220,.25); backdrop-filter: blur(6px); white-space: nowrap; }
+.ss-btn { min-width: 38px; height: 34px; border-radius: 999px; border: 1px solid rgba(120,160,220,.3); background: rgba(30,50,80,.6); color: #fff; cursor: pointer; font-size: 13px; }
+.ss-btn.text { padding: 0 14px; } .ss-btn.on { background: #eb6834; }
+.ss-speed-text { min-width: 92px; text-align: center; font-size: 13px; color: #ffcc55; }
+.ss-dateinput { background: rgba(30,50,80,.6); color: #fff; border: 1px solid rgba(120,160,220,.3); border-radius: 8px; padding: 5px 8px; color-scheme: dark; }
+.ss-info { position: absolute; right: 16px; top: 16px; width: 280px; max-height: calc(100% - 110px); overflow: auto; padding: 16px; border-radius: 14px; background: rgba(8,14,26,.82); border: 1px solid rgba(120,160,220,.25); backdrop-filter: blur(8px); }
+.ss-info.hidden, .ss-list.hidden { display: none; }
+.ss-info-name { font-size: 24px; font-weight: 300; letter-spacing: .12em; text-transform: uppercase; border-bottom: 2px solid var(--c); padding-bottom: 6px; margin-bottom: 10px; }
+.ss-fact { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px solid rgba(120,160,220,.12); font-size: 13px; }
+.ss-fact span { color: #9fb3cc; } .ss-fact b { font-weight: 600; text-align: right; }
+.ss-note { font-size: 11px; color: #7b8fa8; margin: 10px 0 0; }
+.ss-close { position: absolute; right: 10px; top: 8px; background: none; border: 0; color: #9fb3cc; font-size: 22px; cursor: pointer; }
+.ss-list { position: absolute; left: 76px; top: 90px; width: 230px; padding: 10px; border-radius: 14px; background: rgba(8,14,26,.86); border: 1px solid rgba(120,160,220,.25); backdrop-filter: blur(8px); }
+.ss-list-title { font-size: 11px; letter-spacing: .25em; color: #9fb3cc; margin: 2px 6px 8px; text-transform: uppercase; }
+.ss-list-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; border: 0; background: none; color: #fff; cursor: pointer; border-radius: 8px; text-align: left; }
+.ss-list-item:hover { background: rgba(60,100,160,.45); }
+.ss-list-item .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.ss-list-item small { margin-left: auto; color: #7b8fa8; font-size: 11px; }
+.ss-status { position: absolute; inset: 0; display: grid; place-items: center; font-size: 16px; color: #9fb3cc; pointer-events: none; }
+.ss-credit { position: absolute; right: 14px; bottom: 8px; font-size: 10px; color: #5f7390; }
+@media (max-width: 720px) { .ss-info { width: auto; left: 70px; top: auto; bottom: 80px; max-height: 40%; } .ss-date { font-size: 18px; } .ss-dateinput { display: none; } }

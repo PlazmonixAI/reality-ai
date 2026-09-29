@@ -584,4 +584,12 @@ export const SIMS = [
       <path d="M90 80 L80 8" fill="none" stroke="#eb6834" stroke-width="3"/><circle cx="90" cy="80" r="4" fill="#16202c"/><circle cx="200" cy="20" r="4" fill="#16202c"/>
       <text x="30" y="40" font-size="12" font-family="system-ui" fill="#7b8796">SOLID</text><text x="120" y="40" font-size="12" font-family="system-ui" fill="#7b8796">LIQUID</text><text x="150" y="105" font-size="12" font-family="system-ui" fill="#7b8796">GAS</text>`),
   },
+  {
+    id: "solarsystem", domain: "physics", title: "Solar System 3D",
+    blurb: "Fly through the real Solar System on any date: true planet positions, spin and tilt, with realistic textures.",
+    load: () => import("./solarsystem.js"),
+    art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="40" cy="64" r="26" fill="#ffb640"/><circle cx="40" cy="64" r="34" fill="#ffb640" fill-opacity=".2"/>
+      <ellipse cx="40" cy="64" rx="80" ry="22" fill="none" stroke="#4f8fe0" stroke-opacity=".5"/><ellipse cx="40" cy="64" rx="150" ry="44" fill="none" stroke="#d6a77a" stroke-opacity=".4"/>
+      <circle cx="118" cy="70" r="6" fill="#4f8fe0"/><circle cx="186" cy="92" r="12" fill="#d6a77a"/><ellipse cx="186" cy="92" rx="22" ry="5" fill="none" stroke="#e3cf96" stroke-width="2"/>`),
+  },
 ];
