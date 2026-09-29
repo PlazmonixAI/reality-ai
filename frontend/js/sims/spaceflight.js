@@ -31,6 +31,9 @@ const GROUND = { earth: ["#3d7a3a", "#2c5e2a"], mars: ["#b5643b", "#8e4a2b"], mo
 const OMEGA = { earth: -7.2921159e-5, moon: -2.6617e-6, mars: -7.088218e-5 };
 const CLASS_TONE = { small: "#8a93a3", medium: "#6b7280", large: "#5b6270", heavy: "#474d57" };
 const STORE = "reality-asm.spaceflight.custom-parts";
+const SITES = [[-52.77, "Kourou (Guiana)"], [80.23, "Sriharikota (India)"], [-80.6, "Cape Canaveral (USA)"], [63.3, "Baikonur (Kazakhstan)"], [110.95, "Wenchang (China)"]];
+const takeStored = (key) => { try { const v = localStorage.getItem(key); localStorage.removeItem(key); return v; } catch { return null; } };
+const putStored = (key, v) => { try { localStorage.setItem(key, v); } catch { /* storage unavailable */ } };
 const loadCustom = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
 const saveCustom = (c) => { try { localStorage.setItem(STORE, JSON.stringify(c)); } catch { /* storage unavailable */ } };
 const isFairing = (p) => p.id?.startsWith("fairing");
@@ -187,11 +190,16 @@ export default {
       el("option", { value: "" }, "Templates…"), ...Object.entries(TEMPLATES).map(([k, t]) => el("option", { value: k }, t.name)));
     const bodySel = el("select", { class: "sf-select", "aria-label": "Launch from", onchange: () => { body = bodySel.value; refresh(); } },
       el("option", { value: "earth" }, "Launch from Earth"), el("option", { value: "moon" }, "Launch from the Moon"), el("option", { value: "mars" }, "Launch from Mars"));
+    const handoff = takeStored("reality-asm.mission-date"); // set by the Solar System's "launch on this date" button
+    const dateIn = el("input", { class: "sf-select sf-date", type: "datetime-local", "aria-label": "Launch date (UTC)", title: "Launch date and time (UTC): sets the real Moon, Sun and Earth rotation",
+      value: (handoff ? new Date(handoff) : new Date()).toISOString().slice(0, 16) });
+    const siteSel = el("select", { class: "sf-select", "aria-label": "Launch site", title: "Launch site (flights are planar, so the site is projected onto the equator)" },
+      ...SITES.map(([lon, name]) => el("option", { value: lon }, name)));
     const startSel = el("select", { class: "sf-select", "aria-label": "Start" }, el("option", { value: "pad" }, "Start on the launch pad"), el("option", { value: "orbit" }, "Start in low orbit (skip ascent)"));
     const launchBtn = el("button", { class: "sf-launch", type: "button", onclick: () => startFlight() }, "LAUNCH ▶");
     const clearBtn = el("button", { class: "sf-small", type: "button", onclick: () => { stack = []; selected = -1; refresh(); } }, "Clear");
     const buildView = el("div", { class: "sf-build" },
-      el("div", { class: "sf-build-top" }, el("span", { class: "sf-title" }, "ROCKET BUILDER"), tplSel, bodySel, startSel, clearBtn,
+      el("div", { class: "sf-build-top" }, el("span", { class: "sf-title" }, "ROCKET BUILDER"), tplSel, bodySel, siteSel, dateIn, startSel, clearBtn,
         el("button", { class: "sf-small accent", type: "button", onclick: () => openEngineDesigner() }, "⚙ Engine designer"),
         el("button", { class: "sf-small accent", type: "button", onclick: () => openSatDesigner() }, "🛰 Satellite designer"),
         el("span", { class: "sf-spacer" }), launchBtn),
@@ -413,10 +421,23 @@ export default {
     const hold = (dirn) => { const b = el("button", { class: "sf-rot", type: "button", "aria-label": dirn < 0 ? "Rotate left" : "Rotate right" }, dirn < 0 ? "⟲" : "⟳");
       b.addEventListener("pointerdown", () => { rotating = dirn; setSas("free"); }); ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, () => { rotating = 0; })); return b; };
     const fairingBtn = el("button", { class: "sf-fairbtn", type: "button", onclick: () => { fairingReq = true; } }, "FAIRING");
+    const btn3d = el("button", { class: "sf-btn wide accent", type: "button", title: "See the flight in 3D over the real Earth and Moon", onclick: () => show3d(!view3dOn) }, "3D");
+    let f3d = null, view3dOn = false;
+    async function show3d(on) {
+      view3dOn = on; btn3d.classList.toggle("on", on);
+      if (on && !f3d) {
+        const { createFlight3D } = await import("../space/flight3d.js");
+        f3d = createFlight3D(flightView, { rocketHeight: flight.parts.reduce((a, q) => a + q.height, 0),
+          onSolarSystem: (jd) => { putStored("reality-asm.solar-date", new Date((jd - 2440587.5) * 86400000).toISOString()); location.hash = "#/sim/solarsystem"; } });
+        if (flight.last) f3d.update(flight.last);
+      }
+      if (f3d) f3d.show(view3dOn);
+      if (on) mapView = false;
+    }
     const flightView = el("div", { class: "sf-flight hidden" }, fCanvas, hud, toast,
       el("div", { class: "sf-topright" },
         el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx - 1) }, "«"), warpLabel, el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx + 1) }, "»"),
-        el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapView = !mapView; } }, "MAP"), focusBtn,
+        el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapView = !mapView; show3d(false); } }, "MAP"), focusBtn, btn3d,
         el("button", { class: "sf-btn wide", type: "button", onclick: () => toBuild() }, "BUILD")),
       el("div", { class: "sf-throttle-box" }, el("div", { class: "sf-thr-title" }, "THROTTLE"), thr, thrLabel,
         el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(1) }, "Full"), el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(0) }, "Cut")),
@@ -438,17 +459,20 @@ export default {
       if (start === "pad" && (!design || design.warnings.some((w) => w.includes("cannot leave")))) { if (!confirm("This rocket probably can't lift off. Launch anyway?")) return; }
       const custom = usedCustom();
       let r;
-      try { r = await simulate("physics", "rocket_launch_state", { parts: stack, body, custom_parts: custom, start }); }
+      const when = body === "earth" ? { date: new Date((dateIn.value || new Date().toISOString().slice(0, 16)) + ":00Z").toISOString(), site_longitude_deg: +siteSel.value } : {};
+      try { r = await simulate("physics", "rocket_launch_state", { parts: stack, body, custom_parts: custom, start, ...when }); }
       catch (e) { statsBox.prepend(el("p", { class: "sf-warn" }, "⚠ " + e.message)); return; }
       const parts = stack.map(partOf);
       flight = { state: r.result, tel: null, traj: [], trajMoon: [], trajDt: 0, planet: null, local: null, moon: null, parts, stages: splitStages(parts), custom, ref: body, jettisonAt: 0 };
       prev = null; rel = 0; setThrottle(0); setWarp(0); mapView = false; log = []; ended = false; zoom = 1;
       fairingBtn.style.display = parts.some(isFairing) ? "" : "none";
+      btn3d.style.display = body === "earth" ? "" : "none"; show3d(false);
+      if (f3d) { f3d.dispose(); f3d = null; }
       mode = "flight"; buildView.classList.add("hidden"); flightView.classList.remove("hidden");
       say(start === "orbit" ? "In a circular parking orbit. Open the MAP (M); the HUD shows the next trans-lunar injection window." : `Ready on the pad — ${bodySel.selectedOptions[0].textContent.replace("Launch from ", "")}. Throttle up (Z) to lift off.`);
       step(0.05);
     }
-    function toBuild() { mode = "build"; flightView.classList.add("hidden"); buildView.classList.remove("hidden"); refresh(); }
+    function toBuild() { show3d(false); mode = "build"; flightView.classList.add("hidden"); buildView.classList.remove("hidden"); refresh(); }
     function splitStages(parts) { const out = []; let cur = []; parts.forEach((p) => { cur.push(p); if (p.id === "decoupler") { out.push(cur); cur = []; } }); if (cur.length) out.push(cur); return out; }
     function say(msg) { log.unshift({ msg, t: performance.now() }); log = log.slice(0, 4); }
 
@@ -472,7 +496,8 @@ export default {
       const wantStage = stageReq, wantChute = chuteReq, wantFairing = fairingReq; stageReq = chuteReq = fairingReq = false;
       try {
         const r = await simulate("physics", "rocket_flight", { state: s, parts: stack, throttle: ended ? 0 : throttle, angle: commandAngle(), dt, stage: wantStage, deploy_chute: wantChute,
-          jettison_fairing: wantFairing, custom_parts: flight.custom, predict: mapView || warpIdx > 0 || Math.random() < 0.2 });
+          jettison_fairing: wantFairing, custom_parts: flight.custom, predict: mapView || view3dOn || warpIdx > 0 || Math.random() < 0.2 });
+        flight.last = r; if (f3d) f3d.update(r);
         prev = { ...flight.state, local: flight.local }; flight.state = r.result.state; flight.tel = r.result.telemetry; flight.planet = r.planet; flight.local = r.local; flight.moon = r.moon || null;
         if (r.trajectory.length) { flight.traj = r.trajectory; flight.trajMoon = r.trajectory_moon || []; flight.trajDt = r.trajectory_dt || 0; }
         for (const e of r.result.events) { say(e.charAt(0).toUpperCase() + e.slice(1)); if (e.startsWith("fairing jettisoned")) flight.jettisonAt = performance.now(); }
@@ -494,7 +519,8 @@ export default {
       if (!down) return;
       if (k === "z") setThrottle(1); if (k === "x") setThrottle(0);
       if (k === "shift") setThrottle(Math.min(1, throttle + 0.1)); if (k === "control") setThrottle(Math.max(0, throttle - 0.1));
-      if (k === " ") { stageReq = true; e.preventDefault(); } if (k === "m") mapView = !mapView; if (k === "f") fairingReq = true;
+      if (k === " ") { stageReq = true; e.preventDefault(); } if (k === "m") { mapView = !mapView; show3d(false); } if (k === "f") fairingReq = true;
+      if (k === "v" && body === "earth") show3d(!view3dOn);
       if (k === "." || k === ">") setWarp(warpIdx + 1); if (k === "," || k === "<") setWarp(warpIdx - 1);
     };
     const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
@@ -526,7 +552,8 @@ export default {
         const maxWarp = (throttle > 0 && !ended) || inAir ? 5 : Infinity;
         if (WARPS[warpIdx] > maxWarp) setWarp(WARPS.findIndex((w) => w >= maxWarp));
         if (!busy && performance.now() - stepStart >= stepLen * 1000 * 0.9) step(Math.min(0.1 * WARPS[warpIdx], 86400 * 30));
-        drawFlight();
+        if (view3dOn && f3d) { f3d.render(Math.min(1, (performance.now() - stepStart) / 1000 / stepLen)); drawHud(flight.tel, flight.state); }
+        else drawFlight();
       }
     }
 
@@ -691,6 +718,6 @@ export default {
       renderPalette(); refresh();
     });
     raf = requestAnimationFrame(frame);
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); };
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); f3d?.dispose(); window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); };
   },
 };

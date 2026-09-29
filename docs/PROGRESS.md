@@ -198,3 +198,11 @@
 - 618 tests passing (123 tools, 78 simulations)
 - **Next:** 3D flight view, Mars transfers with the Sun's gravity, a manoeuvre-node planner, docking
 - **Known issues:** flight is planar (no inclination changes); tanks are propellant-agnostic; the Moon's orbit is circular and coplanar
+
+## 2026-09-29 — Phase 9d: Spaceflight Lab joins the Solar System
+- `rocket_launch_state(date, site_longitude_deg)`: Earth flights are tied to the real sky — the pad sits at a real spaceport (Kourou, Sriharikota, Cape Canaveral, Baikonur, Wenchang; projected onto the equatorial flight plane), the model Moon starts at the real Moon's right ascension (JPL elements), and Earth's rotation follows the IAU prime meridian
+- `rocket_flight` returns `view3d` (equatorial J2000): craft, pointing, Moon, predicted path, lunar encounter, Earth rotation angle and Sun direction at mission time; a test checks the pad, the Moon and the rotation against the ephemeris
+- New 3D flight view (`frontend/js/space/flight3d.js`, shared sky in `space/sky.js`): the Solar System's textured Earth (day/night, clouds, atmosphere) and normal-mapped Moon at true scale, real star sky and Milky Way, the rocket with its flown trail and predicted trajectory, the Moon's sphere of influence and a ghost Moon at the predicted pass; camera focus on rocket, Earth or Moon
+- Links: 🚀 in the Solar System launches a mission on the date it shows; ☉ SOLAR SYSTEM in the 3D flight view opens the Solar System on the mission date
+- 619 tests passing
+- **Known issues:** flights stay in the equatorial plane (real sites are projected onto the equator; the Moon's ±28° declination is flattened)

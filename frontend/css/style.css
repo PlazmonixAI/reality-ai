@@ -354,3 +354,13 @@ table.ice thead th { color: var(--text-2); font-weight: 600; }
 .sf-status.lunar-orbit { color: #d8d8ff; } .sf-status.lunar-flyby { color: #b58cff; }
 @media (max-width: 900px) { .sf-design-body { grid-template-columns: 1fr; } .sf-design-view { grid-template-columns: 1fr; } }
 .sf-alt { margin-bottom: 22px; } .sf-alt i { position: relative; } .sf-alt em { position: absolute; bottom: -17px; left: 50%; transform: translateX(-50%); font-style: normal; font-size: 9.5px; color: #9cc0ea; white-space: nowrap; }
+.sf-btn.accent { background: #2a78d6; border-color: #5aa0f0; } .sf-btn.accent.on, .sf3d .sf-btn.on { background: #eb6834; border-color: #ffb08a; }
+.sf-date { width: 190px; color-scheme: dark; }
+.sf3d { position: absolute; inset: 0; z-index: 0; background: #000; }
+.sf3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sf3d-labels { position: absolute; inset: 0; pointer-events: none; }
+.sf3d-label { pointer-events: none; }
+.sf3d-bar { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; gap: 6px; }
+.sf3d-date { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); font-size: 20px; font-weight: 300; letter-spacing: .03em; color: #e8ecf2; text-shadow: 0 0 6px #000; }
+.sf3d-note { position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); font-size: 11px; color: #7b8fa8; white-space: nowrap; }
+.sf-flight > .sf-hud, .sf-flight > .sf-toast, .sf-flight > .sf-topright, .sf-flight > .sf-throttle-box, .sf-flight > .sf-bottomleft, .sf-flight > .sf-bottomright { z-index: 2; }

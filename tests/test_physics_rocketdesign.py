@@ -174,3 +174,26 @@ def test_start_in_parking_orbit_spends_the_ascent_budget():
     assert tel["delta_v_remaining"] == pytest.approx(stage2 + 318 * g0 * math.log(sat / 650), rel=1e-3)
     with pytest.raises(ValueError):
         rocket_launch_state([{"part": "engine_lander"}, {"part": "tank_s"}, {"part": "probe"}], start="orbit")
+
+
+def test_real_sky_launch_and_3d_view():
+    """With a date, the pad sits at the site's real longitude, the model Moon at the real Moon's right ascension,
+    and the 3D view turns with the Earth exactly as the flight model's pad does."""
+    import numpy as np
+    from app.modules.physics.ephemeris import julian_date, moon_geocentric
+    from app.modules.physics.rocketry import _ecl_to_eq, _earth_rotation_deg
+    parts = [{"part": "engine_booster"}, {"part": "tank_m"}, {"part": "probe"}]
+    st = rocket_launch_state(parts, date="2026-09-29T12:00:00Z", site_longitude_deg=-80.6)["result"]
+    v = rocket_flight(st, parts, dt=0.1)["view3d"]
+    jd = julian_date("2026-09-29T12:00:00Z")
+    pad_ra = math.degrees(math.atan2(v["craft"][1], v["craft"][0]))
+    assert (pad_ra - (_earth_rotation_deg(jd) - 80.6) + 180) % 360 - 180 == pytest.approx(0, abs=0.01)
+    m = _ecl_to_eq(moon_geocentric(np.array([jd]))[:, 0])
+    real_ra = math.degrees(math.atan2(m[1], m[0]))
+    model_ra = math.degrees(math.atan2(v["moon"][1], v["moon"][0]))
+    assert (model_ra - real_ra + 180) % 360 - 180 == pytest.approx(0, abs=0.01)
+    assert np.linalg.norm(v["sun_direction"]) == pytest.approx(1)
+    # six hours on the pad: the pad and Greenwich both turn by the same angle in the 3D frame
+    later = rocket_flight(st, parts, dt=6 * 3600)["view3d"]
+    turn = lambda a, b: (math.degrees(math.atan2(b[1], b[0]) - math.atan2(a[1], a[0])) + 180) % 360 - 180
+    assert turn(v["craft"], later["craft"]) == pytest.approx((later["earth_rotation_deg"] - v["earth_rotation_deg"] + 180) % 360 - 180, abs=0.01)

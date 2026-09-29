@@ -8,6 +8,7 @@ import { el } from "../core/ui.js";
 import { fmt } from "../core/format.js";
 import { planetMaterial, atmosphereMaterial, ringMaterial, sunMaterial, glowTexture, pointsMaterial, hexToRgb, tailMaterial } from "../space/shaders.js";
 import { createUniverseLevels } from "../space/universe.js";
+import { buildSky } from "../space/sky.js";
 
 const TEX = "assets/textures/";
 const COLORS = { sun: "#ffcc55", mercury: "#9c8f86", venus: "#d8b27a", earth: "#4f8fe0", moon: "#b9b9b9", mars: "#d0643b",
@@ -117,6 +118,10 @@ export function mountAt(root, startLevel = 0) {
   const status = el("div", { class: "ss-status" }, "Loading the Solar System…");
   const fade = el("div", { class: "ss-fade" });
   let simJd = dateToJd(new Date()), window_ = null, loading = false, firstLoad = true;
+  try { // arriving from a Spaceflight Lab mission: open on its date
+    const d = localStorage.getItem("reality-asm.solar-date");
+    if (d) { localStorage.removeItem("reality-asm.solar-date"); simJd = dateToJd(new Date(d)); }
+  } catch { /* storage unavailable */ }
   let speedIdx = 5, playing = true, showOrbits = true, showLabels = true, realScale = false, showMinor = true, showBelts = true;
   const tool = (icon, title, onclick) => el("button", { class: "ss-tool", type: "button", title, "aria-label": title, onclick }, icon);
   const bOrbits = tool("◯", "Orbits", () => { showOrbits = !showOrbits; bOrbits.classList.toggle("off", !showOrbits); orbitsGroup.visible = showOrbits; });
@@ -125,6 +130,10 @@ export function mountAt(root, startLevel = 0) {
   const bMinor = tool("☄", "Dwarf planets, asteroids and comets", () => { showMinor = !showMinor; bMinor.classList.toggle("off", !showMinor); minorGroup.visible = showMinor; minorOrbits.visible = showMinor; });
   const bBelts = tool("⁘", "Asteroid belt, trojans and Kuiper belt", () => { showBelts = !showBelts; bBelts.classList.toggle("off", !showBelts); beltPoints.visible = showBelts; });
   const bList = tool("☰", "All bodies", () => list.classList.toggle("hidden"));
+  const bLaunch = tool("🚀", "Launch a rocket on this date (Spaceflight Lab)", () => {
+    try { localStorage.setItem("reality-asm.mission-date", jdToDate(simJd).toISOString()); } catch { /* storage unavailable */ }
+    location.hash = "#/sim/spaceflight";
+  });
   const bHome = tool("⌂", "Whole Solar System", () => select(null));
   const bPlay = el("button", { class: "ss-btn", type: "button", "aria-label": "Play or pause", onclick: () => { playing = !playing; bPlay.textContent = playing ? "❚❚" : "▶"; } }, "❚❚");
   const slower = el("button", { class: "ss-btn", type: "button", "aria-label": "Slower", onclick: () => setSpeed(speedIdx - 1) }, "◀◀");
@@ -132,7 +141,7 @@ export function mountAt(root, startLevel = 0) {
   const reverse = el("button", { class: "ss-btn", type: "button", title: "Run time backwards", onclick: () => { dir = -dir; reverse.classList.toggle("on", dir < 0); window_ = null; } }, "⇆");
   const today = el("button", { class: "ss-btn text", type: "button", onclick: () => { simJd = dateToJd(new Date()); window_ = null; } }, "Today");
   const dateInput = el("input", { class: "ss-dateinput", type: "date", min: "1800-01-01", max: "2050-12-31", "aria-label": "Jump to date", onchange: () => { if (dateInput.value) { simJd = dateToJd(new Date(dateInput.value + "T12:00:00Z")); window_ = null; } } });
-  const toolbar = el("div", { class: "ss-toolbar" }, bList, bHome, bOrbits, bLabels, bMinor, bBelts, bScale);
+  const toolbar = el("div", { class: "ss-toolbar" }, bList, bHome, bOrbits, bLabels, bMinor, bBelts, bScale, bLaunch);
   const timebar = el("div", { class: "ss-timebar" }, reverse, slower, bPlay, faster, speedText, today, dateInput);
   const ladder = el("nav", { class: "ss-ladder", "aria-label": "Scale" });
   const credit = el("div", { class: "ss-credit" }, "Engine: JPL elements, HYG stars, Celestia catalogues, ΛCDM · textures: NASA/JPL, USGS, Celestia — see CREDITS");
@@ -261,7 +270,7 @@ export function mountAt(root, startLevel = 0) {
     for (const m of moonsData) { bodies[m.id] = makeBody(m, "natural satellite"); }
     belts = belt.result;
     buildBelts();
-    buildSky(stars.result, mw.result);
+    sky.add(buildSky(stars.result, mw.result, mw.result.galactic_to_ecliptic, toScene));
     universe.setData({ stars: stars.result, milkyWay: mw.result });
     rebuildScale();
     for (const m of moonsData) buildMoonOrbit(m.id);
@@ -289,38 +298,6 @@ export function mountAt(root, startLevel = 0) {
     }
     beltPoints.geometry.attributes.position.needsUpdate = true;
   }
-  function buildSky(stars, mw) {
-    const R = 60000;
-    const bright = stars.apparent_magnitude.map((m, i) => [m, i]).filter(([m]) => m <= 6.5);
-    const pos = new Float32Array(bright.length * 3), col = new Float32Array(bright.length * 3), size = new Float32Array(bright.length);
-    bright.forEach(([m, i], k) => {
-      const d = stars.distance_ly[i], v = toScene([stars.x_ly[i] / d, stars.y_ly[i] / d, stars.z_ly[i] / d]).multiplyScalar(R);
-      pos.set([v.x, v.y, v.z], k * 3);
-      const glow = Math.min(1, 0.22 + 0.78 * Math.pow(10, -0.4 * (m - 1.5)));
-      col.set(hexToRgb(stars.color[i]).map((c) => c * glow), k * 3);
-      size[k] = 1.1 + 6.5 * Math.pow(10, -0.2 * (m + 1.46));
-    });
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(pos, 3)); g.setAttribute("color", new THREE.BufferAttribute(col, 3)); g.setAttribute("size", new THREE.BufferAttribute(size, 1));
-    const starPts = new THREE.Points(g, pointsMaterial({ minSize: 1.0, maxSize: 10 }));
-    // Milky Way band: the engine's Galaxy model seen from the Sun, rotated from galactic to ecliptic coordinates
-    const M = mw.galactic_to_ecliptic, sun = mw.sun_position_kpc, P = mw.points, n = P.x_kpc.length;
-    const mpos = new Float32Array(n * 3), mcol = new Float32Array(n * 3), msize = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      const gx = P.x_kpc[i] - sun[0], gy = P.y_kpc[i] - sun[1], gz = P.z_kpc[i] - sun[2], d = Math.hypot(gx, gy, gz) || 1;
-      const e = [0, 1, 2].map((r) => (M[r][0] * gx + M[r][1] * gy + M[r][2] * gz) / d);
-      const v = toScene(e).multiplyScalar(R * 1.02);
-      mpos.set([v.x, v.y, v.z], i * 3);
-      const w = 0.05 + 0.1 * Math.min(1, 3 / d);
-      mcol.set(hexToRgb(P.color[i]).map((c) => c * w), i * 3);
-      msize[i] = 6 + 10 * Math.min(1, 2 / d);
-    }
-    const mg = new THREE.BufferGeometry();
-    mg.setAttribute("position", new THREE.BufferAttribute(mpos, 3)); mg.setAttribute("color", new THREE.BufferAttribute(mcol, 3)); mg.setAttribute("size", new THREE.BufferAttribute(msize, 1));
-    const band = new THREE.Points(mg, pointsMaterial({ minSize: 4, maxSize: 26, opacity: 0.55 }));
-    for (const o of [band, starPts]) { o.frustumCulled = false; o.renderOrder = -1; sky.add(o); }
-  }
-
   // A window of positions around the current time (planets + small bodies, with tracks for interpolation)
   async function loadWindow(startJd) {
     if (loading) return;

@@ -306,6 +306,7 @@ def milky_way(n_points: int = 30000, seed: int = 7) -> dict:
         "result": {
             "sun_position_kpc": [-R0_KPC, 0.0, Z0_KPC], "sun_distance_kpc": R0_KPC,
             "galactic_to_ecliptic": (EQ_TO_ECL @ EQ_TO_GAL.T).round(10).tolist(),
+            "galactic_to_equatorial": EQ_TO_GAL.T.round(10).tolist(),
             "sun_distance_ly": R0_KPC * 1000 * PC_LY, "circular_speed_at_sun_km_s": v0,
             "galactic_year_myr": year_myr,
             "mass_within_sun_orbit_msun": m_enclosed(R0_KPC), "mass_within_50kpc_msun": m_enclosed(50.0),

@@ -11,6 +11,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from app.core.registry import tool
+from app.modules.physics.ephemeris import J2000_JD, OBLIQUITY, ROTATION, heliocentric, julian_date, moon_geocentric
 
 G0 = 9.80665
 
@@ -347,6 +348,35 @@ def _predict(b: dict, x, y, vx, vy, n=240) -> list:
     return pts
 
 
+def _earth_rotation_deg(jd: float) -> float:
+    """Earth's prime-meridian angle W (IAU): the right ascension of Greenwich, degrees."""
+    w0, rate = ROTATION["earth"][2:]
+    return (w0 + rate * (jd - J2000_JD)) % 360.0
+
+
+def _ecl_to_eq(v) -> np.ndarray:
+    c, s_ = math.cos(OBLIQUITY), math.sin(OBLIQUITY)
+    return np.array([v[0], c * v[1] - s_ * v[2], s_ * v[1] + c * v[2]])
+
+
+def view3d(state: dict, x: float, y: float, angle: float, moon_xy, traj: list) -> dict:
+    """Map the planar flight onto the real sky (equatorial J2000, metres) for a 3D view: craft, pointing, Moon,
+    trajectory, Earth's rotation angle and the Sun's direction at the current mission time."""
+    c0 = float(state["site_ra"]) + math.pi / 2
+    cc, ss = math.cos(c0), math.sin(c0)
+    to_eq = lambda px, py: [cc * px + ss * py, ss * px - cc * py, 0.0]
+    jd = float(state["epoch_jd"]) + float(state["t"]) / 86400.0
+    sun = -_ecl_to_eq(heliocentric("earth", np.array([jd]))[:, 0])
+    return {
+        "julian_date": jd, "earth_rotation_deg": _earth_rotation_deg(jd),
+        "sun_direction": (sun / np.linalg.norm(sun)).tolist(),
+        "craft": to_eq(x, y), "pointing": to_eq(math.cos(angle), math.sin(angle)),
+        "moon": to_eq(*moon_xy) if moon_xy else None,
+        "trajectory": [to_eq(px, py) for px, py in traj],
+        "frame": "equatorial J2000, Earth-centred, metres",
+    }
+
+
 def moon_state(theta0: float, t: float) -> tuple[float, float, float, float]:
     """Position and velocity of the Moon (Earth-centred, m and m/s) at mission time t."""
     th = theta0 + MOON_RATE * t
@@ -372,10 +402,12 @@ def _on_moon(theta0: float, t: float, phi: float) -> list[float]:
     ),
 )
 def rocket_launch_state(parts: list, body: str = "earth", custom_parts: dict | None = None, moon_phase_deg: float = -30.0,
-                        start: str = "pad") -> dict:
+                        start: str = "pad", date: str | None = None, site_longitude_deg: float = -52.77) -> dict:
     b = _body(body)
     if start not in ("pad", "orbit"):
         raise ValueError("start must be 'pad' or 'orbit'")
+    if not -180 <= site_longitude_deg <= 360:
+        raise ValueError("site_longitude_deg must be between -180 and 360")
     ps = _parse(parts, custom_parts)
     stages = _stages(ps)
     R = b["radius"]
@@ -385,6 +417,19 @@ def rocket_launch_state(parts: list, body: str = "earth", custom_parts: dict | N
              "moon_theta0": math.pi / 2 + math.radians(moon_phase_deg) if body == "earth" else None}
     assumptions = ["The pad rotates with the planet, so the rocket starts with the surface speed",
                    "Earth flights include the Moon on a circular 384,400 km orbit in the flight plane"]
+    if date is not None and body == "earth":
+        # Tie the flight to the real sky: the flight plane is Earth's equator, the pad sits at the site's longitude
+        # and the model Moon starts at the real Moon's right ascension on that date (JPL/IAU ephemeris).
+        jd = julian_date(date)
+        if not 2378496.5 <= jd <= 2469807.5:
+            raise ValueError("date must be between 1800 and 2050")
+        site_ra = math.radians(_earth_rotation_deg(jd) + site_longitude_deg)
+        m = _ecl_to_eq(moon_geocentric(np.array([jd]))[:, 0])
+        moon_ra = math.atan2(m[1], m[0])
+        state.update(epoch_jd=jd, site_ra=site_ra, site_longitude_deg=site_longitude_deg,
+                     moon_theta0=math.pi / 2 - (moon_ra - site_ra))  # the flight frame is the equator seen from the south
+        assumptions.append(f"Real sky for {date}: launch site at longitude {site_longitude_deg}°, Moon placed at its real right "
+                           "ascension (its ±28° declination is flattened into the equatorial flight plane)")
     if start == "orbit":
         # Spend the ascent Δv budget (with typical losses) from the bottom stage up, then place what is left in a
         # circular prograde parking orbit. The fairing is gone by then.
@@ -586,7 +631,8 @@ def rocket_flight(
 
     def finish(tt, xx, yy, vxx, vyy, landed_, crashed_, lo, ph):
         return _result(b, stages, tt, xx, yy, vxx, vyy, ang, k, props, landed_, crashed_, chute, events, throttle, dry, st,
-                       cda, predict, moon_on, theta0, lo, ph, fairing)
+                       cda, predict, moon_on, theta0, lo, ph, fairing,
+                       {k_: state[k_] for k_ in ("epoch_jd", "site_ra", "site_longitude_deg") if state.get(k_) is not None})
 
     # On the ground: stay put (moving with the surface) unless thrust beats weight
     if landed and not crashed:
@@ -711,7 +757,8 @@ def _tli_window(mu, t_x, t_y, t_vx, t_vy, theta0, t):
 
 
 def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, events, throttle, dry, st, cda, predict,
-            moon_on=False, theta0=0.0, landed_on=None, phi=0.0, fairing=False):
+            moon_on=False, theta0=0.0, landed_on=None, phi=0.0, fairing=False, extra=None):
+    extra = extra or {}
     ref, rb, (lx, ly, lvx, lvy) = _ref_frame(b, moon_on, theta0, t, x, y, vx, vy, landed_on)
     R, mu, om = rb["radius"], rb["mu"], rb["omega"]
     r = math.hypot(lx, ly)
@@ -747,6 +794,9 @@ def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, e
              "landed": landed, "crashed": crashed, "chute": chute, "body": [n for n, v in BODIES.items() if v is b][0],
              "landed_on": landed_on, "surface_angle": phi, "fairing": fairing,
              "moon_theta0": theta0 if moon_on else None}
+    for key in ("epoch_jd", "site_ra", "site_longitude_deg"):
+        if key in extra:
+            state[key] = extra[key]
     speed_surface = math.hypot(rvx, rvy)
     telemetry = {
         "reference": ref, "altitude": alt, "speed": math.hypot(lvx, lvy), "surface_speed": speed_surface,
@@ -784,6 +834,13 @@ def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, e
                 telemetry["encounter"] = enc
         else:
             out["trajectory"] = _predict(b, x, y, vx, vy)
+    if "epoch_jd" in state and "site_ra" in state:
+        out["view3d"] = view3d(state, x, y, ang, (out["moon"]["x"], out["moon"]["y"]) if moon_on else None, out["trajectory"])
+        enc = telemetry.get("encounter")
+        if enc:
+            v0 = view3d(state, enc["craft_position"][0], enc["craft_position"][1], 0.0, enc["moon_position"], [])
+            out["view3d"]["encounter"] = {"craft": v0["craft"], "moon": v0["moon"], "periselene_alt": enc["periselene_alt"],
+                                          "impact": bool(enc.get("impact")), "time_from_now": enc["time_from_now"]}
     out["units"] = "SI: m, m/s, kg, N, s, Pa, kg/m³; angles in radians unless noted"
     out["assumptions"] = ["2D point-mass flight in the planet's equatorial plane; attitude is set by the pilot",
                           "Exponential atmosphere co-rotating with the planet; Cd 0.3 with a nose cone or fairing, 0.75 "
