@@ -592,4 +592,12 @@ export const SIMS = [
       <ellipse cx="40" cy="64" rx="80" ry="22" fill="none" stroke="#4f8fe0" stroke-opacity=".5"/><ellipse cx="40" cy="64" rx="150" ry="44" fill="none" stroke="#d6a77a" stroke-opacity=".4"/>
       <circle cx="118" cy="70" r="6" fill="#4f8fe0"/><circle cx="186" cy="92" r="12" fill="#d6a77a"/><ellipse cx="186" cy="92" rx="22" ry="5" fill="none" stroke="#e3cf96" stroke-width="2"/>`),
   },
+  {
+    id: "spaceflight", domain: "physics", title: "Spaceflight Lab",
+    blurb: "Build a rocket from engines, tanks and capsules, then fly it to orbit — or land it on the Moon and Mars.",
+    load: () => import("./spaceflight.js"),
+    art: sky(`<rect width="240" height="128" fill="#1f4f86"/>${Array.from({ length: 10 }, (_, i) => `<line x1="${i * 24}" y1="0" x2="${i * 24}" y2="128" stroke="#fff" stroke-opacity=".08"/>`).join("")}
+      <path d="M112 16 Q120 4 128 16 L128 30 L112 30 Z" fill="#f4f6f9"/><rect x="112" y="30" width="16" height="16" fill="#c8ced8"/><rect x="110" y="48" width="20" height="44" fill="#f4f6f9"/><rect x="110" y="46" width="20" height="3" fill="#f2c230"/>
+      <path d="M110 92 L130 92 L134 104 L106 104 Z" fill="#30353d"/><path d="M110 104 Q120 128 130 104 Z" fill="#ffb640"/>`),
+  },
 ];
