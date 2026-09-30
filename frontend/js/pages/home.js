@@ -4,12 +4,13 @@ import { api, currentUser, history, when } from "../core/session.js";
 import { openLink, KIND_LABEL } from "./history.js";
 
 const PLACES = [
+  ["#/teach", "ASM Teach", "Class 9 to 12 physics, chemistry and maths as live simulations, with a whiteboard and practice.", "book"],
+  ["#/sims", "All simulations", "78 research simulations across physics, chemistry and mathematics.", "grid"],
+  ["#/ask", "Ask the AI", "Ask a question in plain words; it runs the engine and explains the answer.", "chat"],
+  ["#/sim/solarsystem", "Solar System", "Every planet and moon on any date, out to the stars and galaxies.", "planet"],
   ["#/sim/spaceflight", "Spaceflight Lab", "Build a rocket from parts or pick a real one, and fly it to orbit or the Moon.", "rocket"],
   ["#/company", "Mission Control", "Your space company: launch satellites, keep them flying, take pictures, send probes.", "sat"],
-  ["#/sim/solarsystem", "Solar System", "Every planet and moon on any date, out to the stars and galaxies.", "planet"],
   ["#/challenges", "Challenges", "Set missions checked by the engine, from the Kármán line to Jupiter.", "flag"],
-  ["#/sims", "All simulations", "78 simulations across physics, chemistry and mathematics.", "grid"],
-  ["#/ask", "Ask the AI", "Ask a question in plain words; it runs the engine and explains the answer.", "chat"],
 ];
 const ICON = {
   rocket: '<path d="M12 2c3 2 5 6 5 10l-2 3H9l-2-3c0-4 2-8 5-10z"/><circle cx="12" cy="9" r="1.6"/><path d="M9 15l-2 4 3-1M15 15l2 4-3-1"/>',
@@ -18,6 +19,7 @@ const ICON = {
   flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   grid: '<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',
   chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+  book: '<path d="M4 5c3-1.5 6-1.5 8 0v14c-2-1.5-5-1.5-8 0zM12 5c2-1.5 5-1.5 8 0v14c-3-1.5-6-1.5-8 0"/>',
 };
 export const icon = (name) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[name] || ""}</svg>`;
 

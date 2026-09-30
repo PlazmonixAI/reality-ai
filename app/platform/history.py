@@ -12,7 +12,7 @@ from app.platform.auth import current_user
 
 router = APIRouter(prefix="/api/history", tags=["history"])
 
-KINDS = {"flight", "design", "mission", "sim", "space_view", "photo", "ask", "challenge"}
+KINDS = {"flight", "design", "mission", "sim", "space_view", "photo", "ask", "challenge", "lesson"}
 MAX_PAYLOAD = 600_000  # bytes of JSON per entry
 MAX_ENTRIES = 3000
 

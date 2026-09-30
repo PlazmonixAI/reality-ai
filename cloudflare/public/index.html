@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Reality ASM · Real physics you can fly</title>
-  <meta name="description" content="Build real rockets, run your own space company and explore the Solar System. Every number is computed by a physics engine, not guessed.">
+  <title>Reality ASM · Physics, chemistry and maths you can see</title>
+  <meta name="description" content="A simulation engine for physics, chemistry and maths, and ASM Teach: every Class 9 to 12 derivation and practical as a live simulation. Every number is computed, not guessed.">
   <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/site.css">
   <link rel="stylesheet" href="/static/prelaunch.css">
   <meta property="og:title" content="Reality ASM">
-  <meta property="og:description" content="Fly real rockets, run your own space company and explore physics, chemistry and maths with a real simulation engine.">
+  <meta property="og:description" content="From atoms to galaxies: physics, chemistry and maths simulated by a real engine, with ASM Teach for Class 9 to 12 classrooms.">
   <meta property="og:image" content="/static/img/ss_saturn.jpg">
 </head>
 <body>
@@ -17,10 +17,10 @@
     <div class="wrap">
       <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
       <nav class="nav-links" aria-label="Sections">
-        <a href="#spaceflight">Spaceflight</a>
-        <a href="#company">Space company</a>
-        <a href="#explore">Solar System</a>
+        <a href="#teach">ASM Teach</a>
         <a href="#sims">Simulations</a>
+        <a href="#explore">Solar System</a>
+        <a href="#spaceflight">Spaceflight</a>
         <a href="#science">How it works</a>
       </nav>
       <span class="grow"></span>
@@ -35,12 +35,13 @@
       <div class="wrap">
         <div>
           <span class="eyebrow">Public beta</span>
-          <h1>Fly real rockets. Run a space company. Get real numbers.</h1>
-          <p class="lede">Reality ASM is a simulation engine for physics, chemistry and maths. Stack PSLV or Falcon 9 from real stages,
-            launch from Sriharikota, put a satellite in orbit and watch it sink over the months unless you boost it.</p>
+          <h1>From atoms to galaxies. Physics you can see move.</h1>
+          <p class="lede">Reality ASM is a simulation engine for physics, chemistry and maths. Ask a question or move a slider, and a
+            tested engine does the real calculation: pendulums and lenses, titrations and cell potentials, orbits and quantum wells.
+            With ASM Teach, every Class 9 to 12 derivation and practical runs live in the classroom.</p>
           <div class="cta">
             <a class="btn btn-primary" href="#waitlist">Join the waitlist</a>
-            <a class="btn btn-ghost" href="#spaceflight">See what's inside</a>
+            <a class="btn btn-ghost" href="#teach">See ASM Teach</a>
           </div>
           <p class="hero-note">The public beta opens soon. Leave your email and we'll let you know first.</p>
         </div>
@@ -53,12 +54,34 @@
 
     <div class="facts">
       <div class="wrap">
-        <div class="fact"><b class="mono">130+</b><span>engine tools, each with tests</span></div>
-        <div class="fact"><b class="mono">78</b><span>interactive simulations</span></div>
-        <div class="fact"><b class="mono">13</b><span>real launch vehicles, 5 agencies</span></div>
-        <div class="fact"><b class="mono">690+</b><span>checks against textbook values</span></div>
+        <div class="fact"><b class="mono">280+</b><span>Class 9 to 12 simulations in ASM Teach</span></div>
+        <div class="fact"><b class="mono">78</b><span>research simulations</span></div>
+        <div class="fact"><b class="mono">136</b><span>engine tools across three sciences</span></div>
+        <div class="fact"><b class="mono">760+</b><span>checks against textbook values</span></div>
       </div>
     </div>
+
+    <section id="teach">
+      <div class="wrap">
+        <span class="tag">ASM Teach</span>
+        <h2>Every derivation and practical, live in class</h2>
+        <p class="sub">Physics, chemistry and maths from Class 9 to 12, chapter by chapter. Chapters follow NCERT, and CBSE, ICSE and state
+          board topics are mapped. Built for the teacher at the board.</p>
+        <div class="feature">
+          <div class="feature-text">
+            <h3>A whiteboard beside every experiment</h3>
+            <p>Draw, write and annotate next to the simulation or right on top of it. Write an equation like T = 2π√(L/g) and the board
+              reads it, opens the matching experiment and rearranges it for any quantity.</p>
+            <h3>The equations and the derivation, one click away</h3>
+            <p>Every experiment shows the formulas behind each number on screen and the derivation step by step, ready to put on the board.</p>
+            <h3>Practice with answers the engine has checked</h3>
+            <p>Fresh numbers every time, four answer choices, worked solutions, and an observation table for practicals. An AI co-teacher
+              explains, suggests questions and lists common mistakes.</p>
+          </div>
+          <div class="shot"><img src="/static/img/teach_room.jpg" alt="ASM Teach: a convex lens experiment with a ray diagram, a graph, a whiteboard with the derivation and the engine's results" loading="lazy" width="1440" height="860"></div>
+        </div>
+      </div>
+    </section>
 
     <section id="spaceflight">
       <div class="wrap">
@@ -153,9 +176,9 @@
         <p class="sub">Every number you see comes from a tested server-side tool built on NumPy, SciPy and SymPy. Your browser only
           animates the results. A few of the checks it has to pass:</p>
         <div class="proof">
-          <div><b>−5.0°/day</b><span>How fast the ISS's orbital plane turns, from Earth's oblateness. Matches the observed drift.</span></div>
+          <div><b>pH 2.88</b><span>0.1 M acetic acid, from its Ka by solving the equilibrium exactly, not with the small-x shortcut.</span></div>
           <div><b>C3 ≈ 9 km²/s²</b><span>The best Earth to Mars departure in November 2026, found by solving Lambert's problem.</span></div>
-          <div><b>3.89 km/s</b><span>LEO to geostationary by Hohmann transfer, the classic textbook figure.</span></div>
+          <div><b>2.007 s</b><span>Period of a 1 m pendulum with g = 9.8 m/s², the Class 11 practical value.</span></div>
         </div>
       </div>
     </section>

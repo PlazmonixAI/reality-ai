@@ -67,3 +67,4 @@ from app.modules.physics import rocketdesign  # noqa: F401
 from app.modules.physics import vehicles  # noqa: F401
 from app.modules.physics import fleet  # noqa: F401
 from app.modules.physics import interplanetary  # noqa: F401
+from app.modules.teach import lab  # noqa: F401

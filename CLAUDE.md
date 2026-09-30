@@ -35,6 +35,10 @@ Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anyt
 
 See `app/modules/mathematics/algebra.py` for the reference example.
 
+## ASM Teach (classroom product)
+- Curriculum experiments live in `app/modules/teach/catalog_*.py` as `X(...)` entries (formulas as strings; see `core.py` for the format). Every entry needs equations, derivation steps and finite outputs at its defaults; `tests/test_teach.py` checks all of them and a set of textbook values.
+- The UI is `frontend/js/pages/teach.js` with `frontend/js/teach/scenes.js` (pictures) and `board.js` (whiteboard). Scenes draw only engine outputs and scene roles.
+
 ## How to add an interactive simulation
 1. Make sure the backend tools it needs exist and are tested (add them first if not).
 2. Create `frontend/js/sims/<name>.js` exporting `default { mount(root) { ...; return cleanup; } }`. Use the shared kit in `frontend/js/core/` (`simLayout`, controls in `ui.js`, `createStage`/`View` in `stage.js`, `LineGraph`, `Player`, `liveRequest`/`simulate` in `api.js`).

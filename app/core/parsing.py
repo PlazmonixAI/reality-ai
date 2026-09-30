@@ -26,7 +26,7 @@ _FUNCTIONS = (
 ).split()
 _GLOBALS: dict = {name: getattr(sp, name) for name in _FUNCTIONS}
 _GLOBALS.update({
-    "ln": sp.log, "abs": sp.Abs,
+    "ln": sp.log, "abs": sp.Abs, "log10": lambda x: sp.log(x, 10),
     "pi": sp.pi, "E": sp.E, "I": sp.I, "oo": sp.oo, "inf": sp.oo,
     # Constructors emitted by sympy's parser itself.
     "Integer": sp.Integer, "Float": sp.Float, "Rational": sp.Rational,

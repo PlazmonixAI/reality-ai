@@ -17,6 +17,7 @@ let query = "";
 
 const PAGES = {
   home: () => import("./pages/home.js"),
+  teach: () => import("./pages/teach.js"),
   company: () => import("./pages/company.js"),
   challenges: () => import("./pages/challenges.js"),
   history: () => import("./pages/history.js"),

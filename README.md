@@ -40,6 +40,17 @@ actually produced.
 
 **Storage:** a single SQLite file (`DATABASE_PATH`). Back it up by copying the file.
 
+## ASM Teach
+The classroom part of the app, at `/app/#/teach`: 281 Class 9 to 12 physics, chemistry and maths experiments (derivations, laws,
+practicals and graphs), mapped to NCERT, CBSE, ICSE and state boards. Each one has a live picture, a graph, the equations and
+derivation, an observation table, practice questions with engine-computed answers, an AI co-teacher and a whiteboard that reads
+typed equations. Lessons save to the history. Engine tools: `teach.catalog`, `teach.experiment`, `teach.practice`, `teach.recognize`.
+
+```bash
+curl -b cookies.txt -X POST localhost:8000/simulate -H 'Content-Type: application/json' \
+  -d '{"domain":"teach","name":"experiment","args":{"experiment_id":"p11-pendulum","values":{"L":1}}}'
+```
+
 ## Pre-launch site on Cloudflare
 
 `cloudflare/` holds a static version of the landing page for Cloudflare Pages: only the main page is live, every other

@@ -14,20 +14,20 @@ const QUICK = [
 let statusPromise = null;
 const llmStatus = () => (statusPromise ||= fetch("/llm/status").then((r) => r.json()).catch(() => ({ configured: false })));
 
-export function mountAiPanel(page, sim) {
+export function mountAiPanel(page, sim, { label = "AI analyst", quick = QUICK } = {}) {
   const history = [];
   const log = el("div", { class: "ai-log", role: "log", "aria-live": "polite" });
-  const input = el("textarea", { class: "ai-input", rows: 2, placeholder: `Ask about ${sim.title}…`, "aria-label": "Ask the AI analyst" });
+  const input = el("textarea", { class: "ai-input", rows: 2, placeholder: `Ask about ${sim.title}…`, "aria-label": `Ask the ${label}` });
   const send = el("button", { class: "ai-send", type: "submit" }, "Send");
   const note = el("div", { class: "ai-note" });
-  const panel = el("aside", { class: "ai-panel", "aria-label": "AI analyst" },
-    el("div", { class: "ai-head" }, el("div", {}, el("b", {}, "AI analyst"), el("small", {}, sim.title)),
-      el("button", { class: "ai-x", type: "button", "aria-label": "Close AI analyst", onclick: () => toggle(false) }, "×")),
+  const panel = el("aside", { class: "ai-panel", "aria-label": label },
+    el("div", { class: "ai-head" }, el("div", {}, el("b", {}, label), el("small", {}, sim.title)),
+      el("button", { class: "ai-x", type: "button", "aria-label": `Close ${label}`, onclick: () => toggle(false) }, "×")),
     note,
-    el("div", { class: "ai-quick" }, QUICK.map(([label, q]) => el("button", { class: "ai-chip", type: "button", onclick: () => askIt(q, label) }, label))),
+    el("div", { class: "ai-quick" }, quick.map(([label, q]) => el("button", { class: "ai-chip", type: "button", onclick: () => askIt(q, label) }, label))),
     log,
     el("form", { class: "ai-form", onsubmit: (e) => { e.preventDefault(); askIt(input.value.trim()); } }, input, send));
-  const tab = el("button", { class: "ai-tab", type: "button", onclick: () => toggle(), title: "Open the AI analyst" }, "AI ANALYST");
+  const tab = el("button", { class: "ai-tab", type: "button", onclick: () => toggle(), title: `Open the ${label}` }, label.toUpperCase());
   page.append(panel, tab);
   input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askIt(input.value.trim()); } });
 

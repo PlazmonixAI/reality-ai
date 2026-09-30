@@ -3,8 +3,8 @@ import { el } from "../core/ui.js";
 import { history, when, toast, confirmBox, promptBox } from "../core/session.js";
 
 export const KIND_LABEL = { flight: "Flight", design: "Rocket design", mission: "Mission", photo: "Photo", sim: "Simulation",
-  space_view: "Space view", ask: "Question", challenge: "Challenge" };
-const TABS = [["", "All"], ["flight", "Flights"], ["design", "Designs"], ["mission", "Missions"], ["photo", "Photos"],
+  space_view: "Space view", ask: "Question", challenge: "Challenge", lesson: "Lesson" };
+const TABS = [["", "All"], ["lesson", "Lessons"], ["flight", "Flights"], ["design", "Designs"], ["mission", "Missions"], ["photo", "Photos"],
   ["sim", "Simulations"], ["challenge", "Challenges"], ["ask", "Questions"]];
 
 export function openLink(r) {
@@ -15,11 +15,12 @@ export function openLink(r) {
     case "photo": return `#/company?run=${r.id}`;
     case "challenge": return "#/challenges";
     case "ask": return `#/ask?saved=${r.id}`;
+    case "lesson": return `#/teach/${r.sim_id}?lesson=${r.id}`;
     case "space_view": return `#/sim/solarsystem?view=${r.id}`;
     default: return r.sim_id ? `#/sim/${r.sim_id}?snapshot=${r.id}` : "#/history";
   }
 }
-const ACTION = { flight: "Continue", design: "Open", mission: "Open", photo: "View", sim: "Open", ask: "Open", challenge: "View", space_view: "Open" };
+const ACTION = { lesson: "Open", flight: "Continue", design: "Open", mission: "Open", photo: "View", sim: "Open", ask: "Open", challenge: "View", space_view: "Open" };
 
 function summaryText(r) {
   const s = r.summary || {};
@@ -31,6 +32,8 @@ function summaryText(r) {
   if (s.resolution !== undefined) bits.push(`${s.resolution < 10 ? s.resolution.toFixed(2) : Math.round(s.resolution)} m resolution`);
   if (s.c3 !== undefined) bits.push(`C3 ${s.c3.toFixed(1)} km²/s²`);
   if (s.message) bits.push(s.message);
+  if (s.chapter) bits.push(`Class ${s.class} · ${s.chapter}`);
+  if (s.readings) bits.push(`${s.readings} readings`);
   if (s.tools) bits.push(s.tools.map((t) => t.replace(/_/g, " ")).join(", "));
   return bits.join(" · ");
 }

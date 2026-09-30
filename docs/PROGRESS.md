@@ -227,3 +227,12 @@
 ## 2026-09-30 (evening): pre-launch site for Cloudflare
 - `cloudflare/`: static site for Cloudflare Pages built from the real landing page by `scripts/build_cloudflare_site.py`. Only `/` is live; every other address serves a "Coming soon" page (Cloudflare's 404.html); all "Join" buttons go to a waitlist form (placeholder until `waitlist_endpoint` is set); `/test` is guarded by a Pages Function asking for `TEST_USERNAME`/`TEST_PASSWORD`. Checked with wrangler: `/` 200, other paths show Coming soon, `/test` 401 without and 200 with the right password.
 - Backend: `POST /api/waitlist` (form or JSON, CORS only for `WAITLIST_ORIGINS`, rate limited, stored in a `waitlist` table and listed on the admin page with "Copy all emails"); optional private-testing gate for the whole Render app (`TEST_GATE_USERNAME`/`TEST_GATE_PASSWORD`, `/health` stays open).
+
+## 2026-09-30 (night): ASM Teach
+- New part of the app at `#/teach`: 281 Class 9 to 12 experiments (140 physics, 64 chemistry, 77 maths), each a derivation, law, practical or graph from the syllabus. Chapters follow NCERT; CBSE, ICSE and state boards are mapped and ICSE-only topics (machines, calorimetry, banking, mole concept) are tagged.
+- Engine (`app/modules/teach/`): experiments are data (inputs, formulas, graphs, equations, steps) parsed with the shared safe parser and compiled with numpy. Tools: `teach.catalog`, `teach.experiment`, `teach.practice`, `teach.recognize` (symbolic, time-limited). `log10` added to the shared parser.
+- Classroom view: 20 kinds of picture (ray diagrams, circuits, pendulum, spring, waves, gas, pH beaker, Bohr atom, vectors, incline, decay, prism, lever, solids and more), graph, results, equations, derivation, readings table, practice with checked answers, AI co-teacher with teaching prompts, projector mode, whiteboard beside or over the experiment, lessons saved to the history.
+- Home and landing page now lead with physics and ASM Teach; spaceflight is one feature among several. Cloudflare pre-launch site rebuilt.
+- 761 tests passing (58 new, including 36 textbook values); the library and 34 classroom scenes open in the browser without console errors.
+- **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
+- **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
