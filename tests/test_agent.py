@@ -211,7 +211,7 @@ def test_ask_endpoint_with_mocked_llm():
     try:
         r = TestClient(app).post("/ask", json={"question": "Earth escape velocity?"})
     finally:
-        app.dependency_overrides.clear()
+        app.dependency_overrides.pop(get_llm_client, None)
     assert r.status_code == 200
     body = r.json()
     assert body["answer"] == "11.2 km/s" and body["tool_calls"][0]["tool"] == "physics.escape_velocity"
@@ -222,7 +222,7 @@ def test_ask_endpoint_without_keys_is_503():
     try:
         r = TestClient(app).post("/ask", json={"question": "hi"})
     finally:
-        app.dependency_overrides.clear()
+        app.dependency_overrides.pop(get_llm_client, None)
     assert r.status_code == 503 and "NIM_API_KEYS" in r.json()["detail"]
     assert TestClient(app).post("/ask", json={"question": ""}).status_code == 422
 
@@ -265,5 +265,5 @@ def test_ask_endpoint_accepts_context():
     try:
         r = TestClient(app).post("/ask", json={"question": "Explain", "context": {"title": "Solar System 3D", "recent": []}})
     finally:
-        app.dependency_overrides.clear()
+        app.dependency_overrides.pop(get_llm_client, None)
     assert r.status_code == 200 and "Solar System 3D" in llm.sent[0]["messages"][1]["content"]

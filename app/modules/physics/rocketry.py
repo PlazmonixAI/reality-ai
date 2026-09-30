@@ -12,6 +12,7 @@ from scipy.integrate import solve_ivp
 
 from app.core.registry import tool
 from app.modules.physics.ephemeris import J2000_JD, OBLIQUITY, ROTATION, heliocentric, julian_date, moon_geocentric
+from app.modules.physics.vehicle_data import VEHICLE_PARTS
 
 G0 = 9.80665
 
@@ -76,6 +77,14 @@ PARTS: dict[str, dict] = {
     "legs": {"name": "Landing legs", "category": "recovery", "mass": 250, "height": 0.6, "width": 3.6},
 }
 FAIRINGS = {"fairing_s", "fairing", "fairing_xl"}
+
+
+def is_fairing(p: dict) -> bool:
+    return p["id"].startswith("fairing")
+
+
+def is_decoupler(p: dict) -> bool:
+    return p["id"].startswith("decoupler")
 ENGINE_CLASSES = (("small", 100e3), ("medium", 500e3), ("large", 1500e3), ("heavy", float("inf")))
 
 
@@ -146,15 +155,15 @@ def _parse(parts: list, custom_parts: dict | None = None) -> list[dict]:
         raise ValueError("parts must be a non-empty list, bottom to top, e.g. [{'part': 'engine_booster', 'count': 9}, {'part': 'tank_l'}]")
     if len(parts) > 60:
         raise ValueError("at most 60 parts")
-    catalogue = {**PARTS, **_custom(custom_parts)}
+    catalogue = {**PARTS, **VEHICLE_PARTS, **_custom(custom_parts)}
     out = []
     for p in parts:
         pid = p.get("part") if isinstance(p, dict) else p
         count = int(p.get("count", 1)) if isinstance(p, dict) else 1
         if pid not in catalogue:
-            raise ValueError(f"unknown part {pid!r}; choose from {', '.join(PARTS)} or a custom part")
-        if not 1 <= count <= 9 or (count > 1 and catalogue[pid]["category"] != "engine"):
-            raise ValueError("count must be 1..9 and only engines can be clustered")
+            raise ValueError(f"unknown part {pid!r}; choose from {', '.join(PARTS)}, a real vehicle's parts or a custom part")
+        if not 1 <= count <= 9 or (count > 1 and catalogue[pid]["category"] not in ("engine", "booster")):
+            raise ValueError("count must be 1..9 and only engines (clusters) and strap-on boosters can have a count")
         out.append({**catalogue[pid], "id": pid, "count": count})
     return out
 
@@ -164,34 +173,45 @@ def _stages(parts: list[dict]) -> list[dict]:
     stages, cur = [], []
     for p in parts:
         cur.append(p)
-        if p["id"] == "decoupler":
+        if is_decoupler(p):
             stages.append(cur)
             cur = []
     if cur:
         stages.append(cur)
     out = []
-    for i, s in enumerate(stages):
+    for i, s_all in enumerate(stages):
+        boosters = [p for p in s_all if p["category"] == "booster"]
+        s = [p for p in s_all if p["category"] != "booster"] or s_all[:0]
         engines = [p for p in s if p.get("thrust_vac")]
         thrust_vac = sum(p["thrust_vac"] * p["count"] for p in engines)
         thrust_sl = sum(p["thrust_sl"] * p["count"] for p in engines)
         flow = sum(p["thrust_vac"] * p["count"] / (p["isp_vac"] * G0) for p in engines)  # kg/s at full throttle
+        b_tvac = sum(p["thrust_vac"] * p["count"] for p in boosters)
+        b_tsl = sum(p["thrust_sl"] * p["count"] for p in boosters)
+        b_mdot = sum(p["thrust_vac"] * p["count"] / (p["isp_vac"] * G0) for p in boosters)
         out.append({
-            "parts": [p["id"] for p in s],
+            "parts": [p["id"] for p in s_all],
+            "boosters": {"count": sum(p["count"] for p in boosters), "dry": sum(p["mass"] * p["count"] for p in boosters),
+                         "prop": sum(p["prop"] * p["count"] for p in boosters), "thrust_vac": b_tvac, "thrust_sl": b_tsl,
+                         "mdot": b_mdot, "solid": any(p.get("solid") for p in boosters), "width": max(p["width"] for p in boosters),
+                         "names": [p["name"] for p in boosters]} if boosters else None,
             "dry": sum(p["mass"] * p["count"] for p in s),
             "prop": sum(p.get("prop", 0) for p in s),
             "thrust_vac": thrust_vac, "thrust_sl": thrust_sl, "mdot": flow,
             "isp_vac": thrust_vac / (flow * G0) if flow else 0.0,
             "isp_sl": thrust_sl / (flow * G0) if flow else 0.0,
             "height": sum(p["height"] for p in s),
-            "width": max(p["width"] for p in s),
+            "width": max([p["width"] for p in s] + [0.1]),
+            "span": max([p["width"] for p in s] + [0.1]) + sum(2 * p["width"] for p in boosters[:1]),
             "nose": any(p["id"] == "nose" for p in s),
-            "fairing_mass": sum(p["mass"] for p in s if p["id"] in FAIRINGS),
+            "fairing_mass": sum(p["mass"] for p in s if is_fairing(p)),
             "interstage": any(p["id"].startswith("interstage") for p in s),
-            "bottom_engine": i > 0 and bool(s[0].get("thrust_vac")),  # an upper-stage engine at the separation plane
+            "bottom_engine": i > 0 and bool(s and s[0].get("thrust_vac")) and not s[0].get("shrouded"),  # an upper-stage engine at the separation plane
             "satellites": [p["name"] for p in s if p["category"] == "satellite"],
             "chute": any(p["id"] == "parachute" for p in s),
             "legs": any(p["id"] == "legs" for p in s),
             "command": any(p["category"] in ("command", "satellite") for p in s),
+            "stage_modules": any(p["category"] == "stage" for p in s),
         })
     for i in range(1, len(out)):
         # an engine at the bottom of an upper stage is shielded by an interstage below it or a fairing around it
@@ -199,6 +219,48 @@ def _stages(parts: list[dict]) -> list[dict]:
     if out:
         out[0]["exposed_engine"] = False
     return out
+
+
+def stage_mass(s: dict, prop: float | None = None, bprop: float | None = None, boosters_on: bool = True) -> float:
+    """Mass of one stage: core dry + core propellant + strap-on boosters (dry + propellant) while attached."""
+    b = s.get("boosters")
+    m = s["dry"] + (s["prop"] if prop is None else prop)
+    if b and boosters_on:
+        m += b["dry"] + (b["prop"] if bprop is None else bprop)
+    return m
+
+
+def burn_phases(s: dict, m0: float, prop: float, bprop: float, boosters_on: bool = True, throttle: float = 1.0) -> dict:
+    """Burn a stage to depletion at full throttle, core and strap-on boosters together (parallel staging).
+    Boosters are dropped when they run dry. Returns vacuum and sea-level Δv, burn time and the final mass."""
+    b = s.get("boosters") if boosters_on else None
+    m, dv_vac, dv_sl, t = m0, 0.0, 0.0, 0.0
+    core = [prop, s["mdot"] * throttle, s["thrust_vac"] * throttle, s["thrust_sl"] * throttle]
+    boost = [bprop, b["mdot"], b["thrust_vac"], b["thrust_sl"]] if b else [0.0, 0.0, 0.0, 0.0]
+    attached = bool(b)
+    for _ in range(4):
+        srcs = [x for x in (core, boost) if x[0] > 1e-9 and x[1] > 0]
+        if not srcs:
+            break
+        dt = min(x[0] / x[1] for x in srcs)
+        flow = sum(x[1] for x in srcs)
+        dm = flow * dt
+        tv, ts = sum(x[2] for x in srcs), sum(x[3] for x in srcs)
+        if m - dm <= 0:
+            break
+        dv_vac += tv / flow * math.log(m / (m - dm))
+        dv_sl += ts / flow * math.log(m / (m - dm))
+        m -= dm
+        t += dt
+        for x in srcs:
+            x[0] = max(0.0, x[0] - x[1] * dt)
+        if attached and boost[0] <= 1e-9:
+            m -= b["dry"]
+            attached = False
+    if attached and b and boost[0] <= 1e-9:
+        m -= b["dry"]
+    return {"delta_v_vac": dv_vac, "delta_v_sl": dv_sl, "burn_time": t, "mass_end": m,
+            "booster_burn_time": (bprop / b["mdot"]) if b and b["mdot"] else None}
 
 
 def mission_budget() -> dict:
@@ -245,24 +307,28 @@ def rocket_design(parts: list, body: str = "earth", custom_parts: dict | None = 
     rows, warnings = [], []
     total_vac = total_sl = 0.0
     for k, s in enumerate(stages):
-        m0 = sum(x["dry"] + x["prop"] for x in stages[k:])
-        m1 = m0 - s["prop"]
-        dv_vac = s["isp_vac"] * G0 * math.log(m0 / m1) if s["mdot"] and s["prop"] else 0.0
-        dv_sl = s["isp_sl"] * G0 * math.log(m0 / m1) if s["mdot"] and s["prop"] else 0.0
+        m0 = sum(stage_mass(x) for x in stages[k:])
+        bst = s.get("boosters")
+        ph = burn_phases(s, m0, s["prop"], bst["prop"] if bst else 0.0)
+        dv_vac, dv_sl = ph["delta_v_vac"], ph["delta_v_sl"]
+        t_sl = s["thrust_sl"] + (bst["thrust_sl"] if bst else 0.0)
+        t_vac = s["thrust_vac"] + (bst["thrust_vac"] if bst else 0.0)
         rows.append({
-            "stage": k, "parts": s["parts"], "mass_start": m0, "mass_end": m1, "propellant": s["prop"],
-            "thrust_sl": s["thrust_sl"], "thrust_vac": s["thrust_vac"], "isp_sl": s["isp_sl"], "isp_vac": s["isp_vac"],
+            "stage": k, "parts": s["parts"], "mass_start": m0, "mass_end": ph["mass_end"], "propellant": s["prop"],
+            "thrust_sl": t_sl, "thrust_vac": t_vac, "isp_sl": s["isp_sl"], "isp_vac": s["isp_vac"],
             "delta_v_vac": dv_vac, "delta_v_sl": dv_sl,
-            "twr_surface": s["thrust_sl"] / (m0 * g) if b["rho0"] > 0 else s["thrust_vac"] / (m0 * g),
-            "twr_vac": s["thrust_vac"] / (m0 * g),
-            "burn_time": s["prop"] / s["mdot"] if s["mdot"] else None,
+            "twr_surface": t_sl / (m0 * g) if b["rho0"] > 0 else t_vac / (m0 * g),
+            "twr_vac": t_vac / (m0 * g),
+            "burn_time": ph["burn_time"] if (s["mdot"] or bst) else None,
             "has_fairing": s["fairing_mass"] > 0, "interstage": s["interstage"],
+            "boosters": {"count": bst["count"], "propellant": bst["prop"], "thrust_sl": bst["thrust_sl"],
+                         "thrust_vac": bst["thrust_vac"], "burn_time": ph["booster_burn_time"], "solid": bst["solid"]} if bst else None,
         })
         total_vac += dv_vac
         total_sl += dv_sl
         if s["prop"] and not s["mdot"]:
             warnings.append(f"stage {k + 1} carries propellant but has no engine")
-        if s["mdot"] and not s["prop"]:
+        if s["mdot"] and not s["prop"] and not bst:
             warnings.append(f"stage {k + 1} has engines but no fuel tank")
         if s["exposed_engine"]:
             warnings.append(f"stage {k + 1}'s engine is exposed to the airflow: add an interstage below its decoupler")
@@ -279,9 +345,11 @@ def rocket_design(parts: list, body: str = "earth", custom_parts: dict | None = 
     return {
         "result": {
             "stages": rows,
-            "total_mass": sum(s["dry"] + s["prop"] for s in stages),
+            "total_mass": sum(stage_mass(s) for s in stages),
             "total_delta_v_vac": total_vac, "total_delta_v_sl": total_sl,
-            "height": sum(p["height"] for p in ps), "width": max(p["width"] for p in ps),
+            "height": sum(p["height"] for p in ps if p["category"] != "booster"),
+            "width": max(p["width"] for p in ps if p["category"] != "booster"),
+            "span": max(s["span"] for s in stages),
             "reference_orbit_speed": orbit_v,
             "delta_v_to_orbit_estimate": {"earth": 9400.0, "moon": 1870.0, "mars": 4100.0}[body],
             "mission_delta_v": budget,
@@ -289,7 +357,8 @@ def rocket_design(parts: list, body: str = "earth", custom_parts: dict | None = 
             "warnings": warnings,
         },
         "units": "masses in kg, thrust in N, Isp in s, Δv and speeds in m/s, time in s, sizes in m",
-        "assumptions": ["Tsiolkovsky Δv per stage with all upper stages as payload",
+        "assumptions": ["Tsiolkovsky Δv per stage with all upper stages as payload; strap-on boosters burn with the core "
+                        "stage and are dropped when empty (parallel staging)",
                         "Clustered engines of different types combine by thrust-weighted Isp",
                         "Δv to orbit estimates include typical gravity and drag losses; beyond orbit the budget is "
                         "patched-conic (Hohmann to GEO, Hohmann-like trans-lunar injection, 100 km lunar orbit)"],
@@ -413,7 +482,9 @@ def rocket_launch_state(parts: list, body: str = "earth", custom_parts: dict | N
     R = b["radius"]
     state = {"t": 0.0, "x": 0.0, "y": R, "vx": -b["omega"] * R, "vy": 0.0, "angle": math.pi / 2, "stage": 0,
              "props": [s["prop"] for s in stages], "landed": True, "crashed": False, "chute": False, "body": body,
-             "landed_on": body, "fairing": any(p["id"] in FAIRINGS for p in ps),
+             "bprops": [s["boosters"]["prop"] if s["boosters"] else 0.0 for s in stages],
+             "boosters_on": [bool(s["boosters"]) for s in stages], "boosters_lit": [False for _ in stages],
+             "landed_on": body, "fairing": any(is_fairing(p) for p in ps),
              "moon_theta0": math.pi / 2 + math.radians(moon_phase_deg) if body == "earth" else None}
     assumptions = ["The pad rotates with the planet, so the rocket starts with the surface speed",
                    "Earth flights include the Moon on a circular 384,400 km orbit in the flight plane"]
@@ -435,28 +506,39 @@ def rocket_launch_state(parts: list, body: str = "earth", custom_parts: dict | N
         # circular prograde parking orbit. The fairing is gone by then.
         alt = 200e3 if body == "earth" else 50e3
         need = {"earth": 9400.0, "moon": 1870.0, "mars": 4100.0}[body]
-        props, k = list(state["props"]), 0
+        props, bprops, k = list(state["props"]), list(state["bprops"]), 0
+        on = list(state["boosters_on"])
         for j, st_ in enumerate(stages):
             if need <= 0:
                 break
-            m0 = sum(s_["dry"] for s_ in stages[j:]) + sum(props[j:])  # the fairing rides along during the ascent
-            if not st_["mdot"] or props[j] <= 0:
+            m0 = sum(stage_mass(s_, props[i_], bprops[i_], on[i_]) for i_, s_ in enumerate(stages) if i_ >= j)
+            if not (st_["mdot"] or st_["boosters"]) or (props[j] <= 0 and bprops[j] <= 0):
                 k = j + 1
                 continue
-            ve = st_["isp_vac"] * G0
-            used = m0 * (1 - math.exp(-need / ve))
-            if used >= props[j]:
-                need -= ve * math.log(m0 / (m0 - props[j]))
-                props[j] = 0.0
+            full = burn_phases(st_, m0, props[j], bprops[j], on[j])
+            if full["delta_v_vac"] <= need:
+                need -= full["delta_v_vac"]
+                props[j], bprops[j], on[j] = 0.0, 0.0, False
                 k = j + 1
-            else:
-                props[j] -= used
+            else:  # burn part of this stage: find the fraction of its propellant that gives the Δv still needed
+                lo, hi = 0.0, 1.0
+                for _ in range(50):
+                    f = (lo + hi) / 2
+                    got = burn_phases({**st_, "prop": props[j] * f,
+                                       "boosters": st_["boosters"] and {**st_["boosters"], "prop": bprops[j] * f}},
+                                      m0, props[j] * f, bprops[j] * f, on[j])["delta_v_vac"]
+                    lo, hi = (f, hi) if got < need else (lo, f)
+                props[j] *= 1 - lo
+                bprops[j] *= 1 - lo
+                if on[j] and bprops[j] < 1.0:
+                    on[j], bprops[j] = False, 0.0
                 need, k = 0.0, j
         if need > 0 or k >= len(stages):
             raise ValueError("this rocket does not have the Δv to reach orbit, so it cannot start there")
         r = R + alt
         v = math.sqrt(b["mu"] / r)
-        state.update(x=0.0, y=r, vx=v, vy=0.0, angle=0.0, stage=k, props=props, landed=False, landed_on=None, fairing=False)
+        state.update(x=0.0, y=r, vx=v, vy=0.0, angle=0.0, stage=k, props=props, bprops=bprops, boosters_on=on, landed=False,
+                     landed_on=None, fairing=False)
         assumptions.append(f"Started in a circular {alt / 1e3:.0f} km orbit after spending {({'earth': 9400, 'moon': 1870, 'mars': 4100})[body]} m/s "
                            "(ascent including gravity and drag losses) from the lowest stages")
     return {"result": state, "units": "SI (m, m/s, kg, rad, s); planet-centred inertial frame, pad at (0, R)",
@@ -564,10 +646,16 @@ def rocket_flight(
         t, x, y, vx, vy = (float(state[k]) for k in ("t", "x", "y", "vx", "vy"))
         k = int(state["stage"])
         props = [float(v) for v in state["props"]]
+        n_st = len(stages)
+        bprops = [float(v) for v in (state.get("bprops") or [s["boosters"]["prop"] if s["boosters"] else 0.0 for s in stages])]
+        on = [bool(v) for v in (state.get("boosters_on") or [bool(s["boosters"]) for s in stages])]
+        lit = [bool(v) for v in (state.get("boosters_lit") or [False] * n_st)]
     except (KeyError, TypeError, ValueError):
         raise ValueError("state is missing fields; start from rocket_launch_state") from None
-    if len(props) != len(stages) or not 0 <= k < len(stages):
+    if len(props) != len(stages) or not 0 <= k < len(stages) or not len(bprops) == len(on) == len(lit) == len(stages):
         raise ValueError("state does not match this rocket (different number of stages)")
+    for j, s_ in enumerate(stages):
+        on[j] = on[j] and bool(s_["boosters"])
     body_name = [n for n, v in BODIES.items() if v is b][0]
     moon_on = body_name == "earth" and state.get("moon_theta0") is not None
     theta0 = float(state["moon_theta0"]) if moon_on else 0.0
@@ -593,19 +681,49 @@ def rocket_flight(
         chute = True
         events.append("parachute deployed")
     st = stages[k]
+    bst = st["boosters"] if on[k] else None
+    if bst and throttle > 0 and bprops[k] > 0 and not crashed and not lit[k]:
+        lit[k] = True
+        events.append(f"{bst['count']} strap-on booster{'s' if bst['count'] > 1 else ''} ignited")
     fairing_mass = sum(s["fairing_mass"] for s in upper)
-    dry = sum(s["dry"] for s in upper) + sum(props[j] for j in range(k + 1, len(stages))) - (0.0 if fairing else fairing_mass)
+    cfg = {"dry": st["dry"] + (bst["dry"] if bst else 0.0) + sum(stage_mass(stages[j], props[j], bprops[j], on[j]) for j in range(k + 1, len(stages)))
+           - (0.0 if fairing else fairing_mass), "bst": bst}
     width = max(s["width"] for s in upper)
     pointy = any(s["nose"] for s in upper) or (fairing and fairing_mass > 0)
     exposed = sum(1 for s in upper[1:] if s["exposed_engine"])
     cd = (0.3 if pointy else 0.75) + 0.15 * exposed
-    cda = cd * math.pi * (width / 2) ** 2 + (CHUTE_CDA if chute else 0.0)
+
+    def drag_area():
+        area = math.pi * (width / 2) ** 2
+        if cfg["bst"]:
+            area += cfg["bst"]["count"] * math.pi * (cfg["bst"]["width"] / 2) ** 2
+        return cd * area + (CHUTE_CDA if chute else 0.0)
+
+    cfg["cda"] = drag_area()
     legs = any(s["legs"] for s in upper)
     burning = throttle > 0 and st["mdot"] > 0 and props[k] > 0 and not crashed
 
-    def accel(tt, xx, yy, vxx, vyy, mprop, on):
+    def b_throttle():
+        """Solid boosters burn flat out once lit; liquid boosters follow the throttle."""
+        if not cfg["bst"] or crashed or not lit[k]:
+            return 0.0
+        return 1.0 if cfg["bst"]["solid"] else throttle
+
+    b_burning = b_throttle() > 0 and bprops[k] > 0
+
+    def thrust_at(rho, mprop, mbprop, on_core, on_boost):
+        frac = rho / b["rho0"] if b["rho0"] > 0 else 0.0
+        f = 0.0
+        if on_core and mprop > 0:
+            f += throttle * (st["thrust_vac"] - (st["thrust_vac"] - st["thrust_sl"]) * frac)
+        if on_boost and mbprop > 0 and cfg["bst"]:
+            bb = cfg["bst"]
+            f += b_throttle() * (bb["thrust_vac"] - (bb["thrust_vac"] - bb["thrust_sl"]) * frac)
+        return f
+
+    def accel(tt, xx, yy, vxx, vyy, mprop, mbprop, on_core, on_boost):
         r = math.hypot(xx, yy)
-        m = dry + mprop
+        m = cfg["dry"] + mprop + (mbprop if cfg["bst"] else 0.0)
         ax, ay = -mu * xx / r**3, -mu * yy / r**3
         if moon_on:
             mx, my, _, _ = moon_state(theta0, tt)
@@ -615,36 +733,45 @@ def rocket_flight(
             ay -= MU_MOON * (dy / d3 + my / MOON_DISTANCE**3)
         alt = r - R
         rho = _density(b, alt)
-        if on and mprop > 0:
-            frac = rho / b["rho0"] if b["rho0"] > 0 else 0.0
-            f = throttle * (st["thrust_vac"] - (st["thrust_vac"] - st["thrust_sl"]) * frac)
+        f = thrust_at(rho, mprop, mbprop, on_core, on_boost)
+        if f:
             ax += f / m * math.cos(ang)
             ay += f / m * math.sin(ang)
         if rho > 0:
             # velocity relative to the co-rotating air: v_air = ω × r
             rvx, rvy = vxx - (-om * yy), vyy - (om * xx)
             vrel = math.hypot(rvx, rvy)
-            dmag = 0.5 * rho * vrel * cda / m
+            dmag = 0.5 * rho * vrel * cfg["cda"] / m
             ax -= dmag * rvx
             ay -= dmag * rvy
         return ax, ay
 
     def finish(tt, xx, yy, vxx, vyy, landed_, crashed_, lo, ph):
-        return _result(b, stages, tt, xx, yy, vxx, vyy, ang, k, props, landed_, crashed_, chute, events, throttle, dry, st,
-                       cda, predict, moon_on, theta0, lo, ph, fairing,
-                       {k_: state[k_] for k_ in ("epoch_jd", "site_ra", "site_longitude_deg") if state.get(k_) is not None})
+        return _result(b, stages, tt, xx, yy, vxx, vyy, ang, k, props, landed_, crashed_, chute, events, throttle, cfg["dry"], st,
+                       cfg["cda"], predict, moon_on, theta0, lo, ph, fairing,
+                       {**{k_: state[k_] for k_ in ("epoch_jd", "site_ra", "site_longitude_deg") if state.get(k_) is not None},
+                        "bprops": bprops, "boosters_on": on, "boosters_lit": lit, "b_throttle": b_throttle()})
+
+    def drop_boosters():
+        if cfg["bst"]:
+            cfg["dry"] -= cfg["bst"]["dry"]
+            cfg["bst"] = None
+            on[k] = False
+            bprops[k] = 0.0
+            cfg["cda"] = drag_area()
+            events.append("strap-on boosters burned out and separated")
 
     # On the ground: stay put (moving with the surface) unless thrust beats weight
     if landed and not crashed:
         on_moon = landed_on == "moon" and moon_on
         if on_moon:
             mx, my, _, _ = moon_state(theta0, t)
-            cx_, cy_, g, mu_ref = x - mx, y - my, MU_MOON / MOON_RADIUS**2, MU_MOON
+            cx_, cy_, g = x - mx, y - my, MU_MOON / MOON_RADIUS**2
         else:
             cx_, cy_, g = x, y, mu / (x * x + y * y)
-        m = dry + props[k]
-        frac = _density(b, 0) / b["rho0"] if b["rho0"] > 0 and not on_moon else 0.0
-        f = throttle * (st["thrust_vac"] - (st["thrust_vac"] - st["thrust_sl"]) * frac) if burning else 0.0
+        m = cfg["dry"] + props[k] + (bprops[k] if cfg["bst"] else 0.0)
+        rho0 = 0.0 if on_moon else _density(b, 0)
+        f = thrust_at(rho0, props[k], bprops[k], burning, b_burning)
         radial = f * ((cx_ * math.cos(ang) + cy_ * math.sin(ang)) / math.hypot(cx_, cy_))
         if radial <= m * g:
             if on_moon:
@@ -656,42 +783,51 @@ def rocket_flight(
                 vx, vy = -om * y, om * x
             if burning:
                 props[k] -= min(props[k], throttle * st["mdot"] * dt)
+            if b_burning:
+                bprops[k] -= min(bprops[k], b_throttle() * cfg["bst"]["mdot"] * dt)
+                if bprops[k] <= 0:
+                    drop_boosters()
             return finish(t + dt, x, y, vx, vy, True, False, landed_on, phi)
         landed = False
         events.append("lift-off" + (" from the Moon" if on_moon else ""))
 
-    def rhs(tt, s):
-        ax, ay = accel(t + tt, s[0], s[1], s[2], s[3], s[4], burning)
-        dm = -throttle * st["mdot"] if burning and s[4] > 0 else 0.0
-        return [s[2], s[3], ax, ay, dm]
+    def rhs(tt, s_):
+        ax, ay = accel(t + tt, s_[0], s_[1], s_[2], s_[3], s_[4], s_[5], burning, b_burning)
+        dm = -throttle * st["mdot"] if burning and s_[4] > 0 else 0.0
+        dmb = -b_throttle() * cfg["bst"]["mdot"] if b_burning and cfg["bst"] and s_[5] > 0 else 0.0
+        return [s_[2], s_[3], ax, ay, dm, dmb]
 
-    def ground(_t, s):
-        return math.hypot(s[0], s[1]) - R
+    def ground(_t, s_):
+        return math.hypot(s_[0], s_[1]) - R
     ground.terminal, ground.direction = True, -1
 
     seg = [0.0]  # time already integrated in this step (events see solver-local time)
 
-    def moon_ground(a, s):
-        mx, my, _, _ = moon_state(theta0, t + seg[0] + a)
-        return math.hypot(s[0] - mx, s[1] - my) - MOON_RADIUS
+    def moon_ground(a_, s_):
+        mx, my, _, _ = moon_state(theta0, t + seg[0] + a_)
+        return math.hypot(s_[0] - mx, s_[1] - my) - MOON_RADIUS
     moon_ground.terminal, moon_ground.direction = True, -1
 
-    def empty(_t, s):
-        return s[4]
+    def empty(_t, s_):
+        return s_[4]
     empty.terminal, empty.direction = True, -1
 
-    y0 = [x, y, vx, vy, props[k]]
+    def b_empty(_t, s_):
+        return s_[5]
+    b_empty.terminal, b_empty.direction = True, -1
+
+    y0 = [x, y, vx, vy, props[k], bprops[k] if cfg["bst"] else 0.0]
     remaining, tt = dt, 0.0
     alt0 = math.hypot(x, y) - R
     near_moon = moon_on and math.hypot(x - moon_state(theta0, t)[0], y - moon_state(theta0, t)[1]) < MOON_SOI
-    fine = burning or (b["top"] > 0 and alt0 < b["top"] * 1.2) or alt0 < 5_000
+    fine = burning or b_burning or (b["top"] > 0 and alt0 < b["top"] * 1.2) or alt0 < 5_000
     max_step = 0.25 if fine else max(1.0, dt / 200)
-    if near_moon and not burning:
+    if near_moon and not (burning or b_burning):
         max_step = min(max_step, 60.0)
     while remaining > 1e-9:
-        evs = [ground] + ([moon_ground] if moon_on else []) + ([empty] if burning else [])
+        evs = [ground] + ([moon_ground] if moon_on else []) + ([empty] if burning else []) + ([b_empty] if b_burning else [])
         seg[0] = tt
-        sol = solve_ivp(lambda a, s_: rhs(seg[0] + a, s_), (0, remaining), y0, method="DOP853" if not fine else "RK45",
+        sol = solve_ivp(lambda a_, s_: rhs(seg[0] + a_, s_), (0, remaining), y0, method="DOP853" if not fine else "RK45",
                         rtol=1e-9, atol=1e-6, max_step=max_step, events=evs)
         y0 = list(sol.y[:, -1])
         tt += sol.t[-1]
@@ -729,12 +865,20 @@ def rocket_flight(
                 y0[2], y0[3] = -om * y0[1], om * y0[0]
             remaining = 0
             break
-        if sol.status == 1 and burning and len(sol.t_events[-1]):
-            y0[4] = 0.0
-            burning = False
-            events.append(f"stage {k + 1} out of fuel")
-    x, y, vx, vy, props[k] = y0
+        if sol.status == 1:
+            i_core = 1 + int(moon_on)
+            if burning and len(sol.t_events[i_core]) and y0[4] <= 1e-6:
+                y0[4] = 0.0
+                burning = False
+                events.append(f"stage {k + 1} out of fuel")
+            if b_burning and y0[5] <= 1e-6:
+                y0[5] = 0.0
+                b_burning = False
+                drop_boosters()
+    x, y, vx, vy, props[k] = y0[:5]
     props[k] = max(0.0, props[k])
+    if cfg["bst"]:
+        bprops[k] = max(0.0, y0[5])
     return finish(t + tt, x, y, vx, vy, landed, crashed, landed_on if landed or crashed else None, phi)
 
 
@@ -765,10 +909,17 @@ def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, e
     alt = r - R
     ux, uy = lx / r, ly / r
     rvx, rvy = lvx - (-om * ly), lvy - (om * lx)
-    m = dry + props[k]
+    n_st = len(stages)
+    bprops = extra.get("bprops") or [0.0] * n_st
+    on = extra.get("boosters_on") or [False] * n_st
+    lit = extra.get("boosters_lit") or [False] * n_st
+    bst = stages[k]["boosters"] if on[k] else None
+    m = dry + props[k] + (bprops[k] if bst else 0.0)
     rho = _density(rb, alt)
     frac = rho / rb["rho0"] if rb["rho0"] > 0 else 0.0
     thrust = throttle * (st["thrust_vac"] - (st["thrust_vac"] - st["thrust_sl"]) * frac) if props[k] > 0 and st["mdot"] > 0 and not crashed else 0.0
+    if bst and bprops[k] > 0 and not crashed:
+        thrust += extra.get("b_throttle", 0.0) * (bst["thrust_vac"] - (bst["thrust_vac"] - bst["thrust_sl"]) * frac)
     el = _elements(rb, lx, ly, lvx, lvy)
     top = rb["top"] if ref != "moon" else 0.0
     if crashed:
@@ -785,15 +936,15 @@ def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, e
     dv_left, mass_above = 0.0, 0.0
     for j in range(len(stages) - 1, k - 1, -1):
         s = stages[j]
-        m_start = mass_above + s["dry"] + props[j] - (0.0 if fairing else s["fairing_mass"])
-        if s["mdot"] and props[j] > 0:
-            dv_left += s["isp_vac"] * G0 * math.log(m_start / (m_start - props[j]))
+        m_start = mass_above + stage_mass(s, props[j], bprops[j], on[j]) - (0.0 if fairing else s["fairing_mass"])
+        if (s["mdot"] and props[j] > 0) or (on[j] and bprops[j] > 0):
+            dv_left += burn_phases(s, m_start, props[j], bprops[j], on[j])["delta_v_vac"]
         mass_above = m_start
     q = 0.5 * rho * (rvx * rvx + rvy * rvy)
     state = {"t": t, "x": x, "y": y, "vx": vx, "vy": vy, "angle": ang, "stage": k, "props": props,
              "landed": landed, "crashed": crashed, "chute": chute, "body": [n for n, v in BODIES.items() if v is b][0],
              "landed_on": landed_on, "surface_angle": phi, "fairing": fairing,
-             "moon_theta0": theta0 if moon_on else None}
+             "moon_theta0": theta0 if moon_on else None, "bprops": bprops, "boosters_on": on, "boosters_lit": lit}
     for key in ("epoch_jd", "site_ra", "site_longitude_deg"):
         if key in extra:
             state[key] = extra[key]
@@ -809,6 +960,8 @@ def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, e
         "delta_v_remaining": dv_left, "status": status, "fairing_attached": fairing,
         "apoapsis_alt": el["apoapsis_alt"], "periapsis_alt": el["periapsis_alt"], "eccentricity": el["eccentricity"],
         "period": el["period"], "stages_left": len(stages) - k,
+        "boosters": {"attached": True, "count": bst["count"], "fuel_fraction": bprops[k] / bst["prop"] if bst["prop"] else 0.0,
+                     "solid": bst["solid"], "lit": lit[k]} if bst else None,
     }
     out = {"result": {"state": state, "telemetry": telemetry, "events": events}, "trajectory": [],
            "local": {"x": lx, "y": ly, "vx": lvx, "vy": lvy, "radius": R, "atmosphere_top": top, "body": ref},

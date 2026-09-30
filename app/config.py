@@ -21,6 +21,29 @@ class Settings(BaseSettings):
     nim_model: str = "meta/llama-3.1-70b-instruct"
     tool_timeout_s: float = 20.0  # time limit for symbolic tools (solve, integrate, limits, series)
 
+    # Web app platform (accounts, history, space company)
+    secret_key: str = ""  # signs sessions and flight states; generated and kept next to the database if empty
+    database_path: str = "data/reality.db"
+    cookie_secure: bool = False  # set true behind HTTPS
+    session_days: int = 30
+    public_base_url: str = ""  # e.g. https://reality.plazmonix.ai (links in emails, Google sign-in callback)
+    beta_invite_codes: str = ""  # comma separated; when set, sign-up needs one of them
+    contact_email: str = "support@plazmonix.ai"
+    enable_api_docs: bool = False  # /docs and /openapi.json stay off in production
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    simulate_rate_per_s: float = 25.0  # engine calls per user per second (burst of 4 s)
+    ask_rate_per_min: float = 12.0
+
+    @property
+    def invite_codes(self) -> set[str]:
+        return {c.strip() for c in self.beta_invite_codes.split(",") if c.strip()}
+
     @property
     def provider(self) -> str:
         p = self.llm_provider.strip().lower()
