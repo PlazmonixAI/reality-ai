@@ -50,11 +50,11 @@ export default {
         box = { x0, x1, y0, y1, span, lu: lenUnit(span) };
         data = { ...r, tu };
         const x = r.result;
-        out.set("w", x.cyclotron_frequency ? `${fmt(x.cyclotron_frequency, 4)} rad/s (${fmt(x.cyclotron_frequency_hz / 1e6, 4)} MHz)` : "— (no B)");
+        out.set("w", x.cyclotron_frequency ? `${fmt(x.cyclotron_frequency, 4)} rad/s (${fmt(x.cyclotron_frequency_hz / 1e6, 4)} MHz)` : "no B");
         const lu = lenUnit(x.larmor_radius || span);
-        out.set("r", x.larmor_radius !== null ? `${fmt(x.larmor_radius * lu[0], 4)} ${lu[1]}` : "—");
+        out.set("r", x.larmor_radius !== null ? `${fmt(x.larmor_radius * lu[0], 4)} ${lu[1]}` : "–");
         const pu = x.period ? timeUnit(x.period) : null;
-        out.set("T", x.period ? `${fmt(x.period * pu[0], 4)} ${pu[1]}` : "—");
+        out.set("T", x.period ? `${fmt(x.period * pu[0], 4)} ${pu[1]}` : "–");
         out.set("d", `${fmt(x.drift_speed / 1000, 4)} km/s`); out.set("ke", `${fmt(x.initial_kinetic_energy_ev, 4)} eV`);
         graph.opts.xLabel = `time (${tu[1]})`;
         graph.setSeries([{ name: "speed", color: c2, x: tr.t.map((t) => t * tu[0]), y: tr.speed.map((v) => v / 1000) }]);

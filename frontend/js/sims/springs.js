@@ -42,7 +42,7 @@ export default {
         data = res;
         const r = res.result;
         out.set("w0", `${fmt(r.natural_frequency, 4)} rad/s (${fmt(r.natural_frequency_hz, 3)} Hz)`);
-        out.set("period", r.period ? fmtUnit(r.period, "s") : "— (no oscillation)");
+        out.set("period", r.period ? fmtUnit(r.period, "s") : "no oscillation");
         out.set("zeta", fmt(r.damping_ratio, 3)); out.set("regime", r.regime);
         out.set("q", r.quality_factor ? fmt(r.quality_factor, 3) : "∞");
         graph.setSeries([{ name: "x", color: c1, x: res.trajectory.t, y: res.trajectory.x }]);

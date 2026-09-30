@@ -42,7 +42,7 @@ export default {
     }
     L.side.append(
       panel("Curve", preset.root, kind.root, rIn.root, xIn.root, yIn.root, end.root, a.root, b.root, el("p", { class: "note" }, "Use a and b in the formulas; they follow the sliders.")),
-      panel("Measurements (from the engine)", out.root, el("p", { class: "note" }, "Area is ½∮(x dy − y dx) (polar: ½∫r² dθ) — overlapping loops count more than once.")),
+      panel("Measurements (from the engine)", out.root, el("p", { class: "note" }, "Area is ½∮(x dy − y dx) (polar: ½∫r² dθ), overlapping loops count more than once.")),
     );
     const player = new Player(L.bottom, (t) => { frac = t; draw(); }, { speeds: [0.5, 1, 2], loop: false, timeFormat: (v) => `${fmt(v * end.value, 3)}π` });
 

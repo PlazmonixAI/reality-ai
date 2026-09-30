@@ -12,7 +12,7 @@ export const DOMAINS = [
 export const SIMS = [
   {
     id: "projectile", domain: "physics", title: "Projectile Motion",
-    blurb: "Fire cannonballs, baseballs and more — with or without air resistance, on Earth or the Moon.",
+    blurb: "Fire cannonballs, baseballs and more, with or without air resistance, on Earth or the Moon.",
     load: () => import("./projectile.js"),
     art: sky(`<rect width="240" height="128" fill="#bfe3ff"/><rect y="104" width="240" height="24" fill="#6cbf5b"/>
       <path d="M30 100 Q120 -10 210 104" fill="none" stroke="#2a78d6" stroke-width="3" stroke-dasharray="7 5"/>
@@ -29,7 +29,7 @@ export const SIMS = [
   },
   {
     id: "hohmann", domain: "physics", title: "Hohmann Transfer",
-    blurb: "Plan the classic two-burn transfer between circular orbits — from LEO to GEO or Earth to Mars.",
+    blurb: "Plan the classic two-burn transfer between circular orbits, from LEO to GEO or Earth to Mars.",
     load: () => import("./hohmann.js"),
     art: sky(`<rect width="240" height="128" fill="#081228"/><circle cx="110" cy="64" r="26" fill="none" stroke="#86b6ef" stroke-dasharray="4 4"/>
       <circle cx="110" cy="64" r="56" fill="none" stroke="#86b6ef" stroke-dasharray="4 4"/><path d="M136 64 A41 32 0 0 0 54 64" fill="none" stroke="#eb6834" stroke-width="3"/>
@@ -281,7 +281,7 @@ export const SIMS = [
   },
   {
     id: "probability", domain: "mathematics", title: "Probability & the CLT",
-    blurb: "Explore normal, binomial, Poisson and more — then watch sample means become a bell curve.",
+    blurb: "Explore normal, binomial, Poisson and more, then watch sample means become a bell curve.",
     load: () => import("./probability.js"),
     art: sky(`<rect width="240" height="128" fill="#fff"/>${[4, 12, 26, 44, 60, 66, 60, 44, 26, 12, 4].map((hh, i) => `<rect x="${32 + i * 16}" y="${110 - hh * 1.4}" width="12" height="${hh * 1.4}" fill="#2a78d6" opacity=".45"/>`).join("")}
       <path d="M26 110 C80 110 90 14 122 14 C154 14 164 110 218 110" fill="none" stroke="#eb6834" stroke-width="3"/>`),
@@ -317,7 +317,7 @@ export const SIMS = [
   },
   {
     id: "newton", domain: "mathematics", title: "Newton's Method",
-    blurb: "Slide down tangent lines to a root — and see when Newton's method cycles or runs away.",
+    blurb: "Slide down tangent lines to a root, and see when Newton's method cycles or runs away.",
     load: () => import("./newton.js"),
     art: sky(`<rect width="240" height="128" fill="#fff"/><line x1="0" y1="90" x2="240" y2="90" stroke="#7b8796"/>
       <path d="M20 120 C80 110 140 70 220 8" fill="none" stroke="#2a78d6" stroke-width="3"/><line x1="100" y1="128" x2="230" y2="20" stroke="#eb6834" stroke-width="2"/>
@@ -449,7 +449,7 @@ export const SIMS = [
   },
   {
     id: "curves", domain: "mathematics", title: "Parametric & Polar Curves",
-    blurb: "Trace roses, cardioids, spirals, Lissajous figures and cycloids — with their exact arc length and area.",
+    blurb: "Trace roses, cardioids, spirals, Lissajous figures and cycloids, with their exact arc length and area.",
     load: () => import("./curves.js"),
     art: sky(`<rect width="240" height="128" fill="#fff"/><path d="${Array.from({ length: 121 }, (_, i) => { const t = (i / 120) * Math.PI, r = 55 * Math.cos(3 * t); return `${i ? "L" : "M"}${(120 + r * Math.cos(t)).toFixed(1)} ${(64 - r * Math.sin(t)).toFixed(1)}`; }).join(" ")}" fill="#2a78d6" fill-opacity=".15" stroke="#2a78d6" stroke-width="2.5"/>`),
   },
@@ -461,7 +461,7 @@ export const SIMS = [
   },
   {
     id: "montecarlo", domain: "mathematics", title: "Monte Carlo",
-    blurb: "Throw random darts to estimate π or any integral — and watch the error shrink like 1/√N.",
+    blurb: "Throw random darts to estimate π or any integral, and watch the error shrink like 1/√N.",
     load: () => import("./montecarlo.js"),
     art: sky(`<rect width="240" height="128" fill="#fff"/><rect x="66" y="8" width="112" height="112" fill="none" stroke="#39424e" stroke-width="2"/><path d="M66 8 A112 112 0 0 1 178 120" fill="none" stroke="#16202c" stroke-width="2"/>
       ${Array.from({ length: 70 }, (_, i) => { const x = (i * 37) % 112, y = (i * 61) % 112; return `<circle cx="${66 + x}" cy="${8 + y}" r="2.5" fill="${x * x + (112 - y) ** 2 <= 112 * 112 ? "#2a78d6" : "#eb6834"}"/>`; }).join("")}`),
@@ -495,14 +495,14 @@ export const SIMS = [
   },
   {
     id: "bernoulli", domain: "physics", title: "Fluid Flow (Bernoulli)",
-    blurb: "Squeeze a pipe and the water speeds up while its pressure drops — continuity and Bernoulli's equation.",
+    blurb: "Squeeze a pipe and the water speeds up while its pressure drops: continuity and Bernoulli's equation.",
     load: () => import("./bernoulli.js"),
     art: sky(`<rect width="240" height="128" fill="#f7f9fc"/><path d="M10 60 H80 C100 60 100 76 120 76 C140 76 140 60 160 60 H230 V112 H160 C140 112 140 96 120 96 C100 96 100 112 80 112 H10 Z" fill="#2a78d6" fill-opacity=".25" stroke="#39424e" stroke-width="3"/>
       <rect x="40" y="16" width="10" height="44" fill="#2a78d6" fill-opacity=".6"/><rect x="115" y="46" width="10" height="30" fill="#2a78d6" fill-opacity=".6"/><rect x="190" y="16" width="10" height="44" fill="#2a78d6" fill-opacity=".6"/>`),
   },
   {
     id: "heat", domain: "physics", title: "Heat Conduction",
-    blurb: "Heat a rod at one end and watch temperature spread by the heat equation — copper vs glass vs wood.",
+    blurb: "Heat a rod at one end and watch temperature spread by the heat equation: copper vs glass vs wood.",
     load: () => import("./heat.js"),
     art: sky(`<defs><linearGradient id="hg"><stop offset="0" stop-color="#e34948"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#2a78d6"/></linearGradient></defs><rect width="240" height="128" fill="#f7f9fc"/>
       <rect x="30" y="48" width="180" height="32" fill="url(#hg)" stroke="#39424e" stroke-width="2"/><rect x="10" y="38" width="20" height="52" fill="#e34948"/><rect x="210" y="38" width="20" height="52" fill="#2a78d6"/>`),
@@ -516,14 +516,14 @@ export const SIMS = [
   },
   {
     id: "tunnelling", domain: "physics", title: "Quantum Tunnelling",
-    blurb: "Fire electrons at a barrier they can't climb — and watch some of the wave leak through anyway.",
+    blurb: "Fire electrons at a barrier they can't climb, and watch some of the wave leak through anyway.",
     load: () => import("./tunnelling.js"),
     art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><rect x="105" y="40" width="30" height="80" fill="#eb6834" fill-opacity=".3" stroke="#eb6834" stroke-width="2"/>
       <path d="M10 60 Q25 30 40 60 T70 60 T100 60 Q115 80 135 92 Q150 96 165 96 T195 96 T225 96" fill="none" stroke="#2a78d6" stroke-width="3"/>`),
   },
   {
     id: "kepler", domain: "physics", title: "Kepler's Laws",
-    blurb: "Ellipses, equal areas in equal times and T² ∝ a³ — for Mercury, Mars, Jupiter or Halley's Comet.",
+    blurb: "Ellipses, equal areas in equal times and T² ∝ a³, for Mercury, Mars, Jupiter or Halley's Comet.",
     load: () => import("./kepler.js"),
     art: sky(`<rect width="240" height="128" fill="#0b1426"/><ellipse cx="120" cy="64" rx="100" ry="50" fill="none" stroke="#c9ced6" stroke-opacity=".6"/>
       <path d="M60 64 L220 64 A100 50 0 0 0 210 40 Z" fill="#eb6834" fill-opacity=".35"/><path d="M60 64 L40 96 A100 50 0 0 1 20 64 Z" fill="#2a78d6" fill-opacity=".35"/><circle cx="60" cy="64" r="8" fill="#ffd479"/><circle cx="210" cy="40" r="5" fill="#2a78d6"/>`),
@@ -564,7 +564,7 @@ export const SIMS = [
   },
   {
     id: "precession", domain: "physics", title: "J2 Precession",
-    blurb: "Earth's bulge slowly swings orbit planes around — and sun-synchronous satellites use it to follow the Sun.",
+    blurb: "Earth's bulge slowly swings orbit planes around, and sun-synchronous satellites use it to follow the Sun.",
     load: () => import("./precession.js"),
     art: sky(`<rect width="240" height="128" fill="#0b1426"/><ellipse cx="120" cy="64" rx="100" ry="30" fill="none" stroke="#2a78d6" stroke-width="3" transform="rotate(-20 120 64)"/>
       <ellipse cx="120" cy="64" rx="100" ry="30" fill="none" stroke="#2a78d6" stroke-opacity=".35" stroke-width="2" transform="rotate(10 120 64)"/><circle cx="120" cy="64" r="34" fill="#1d4f8f"/><circle cx="218" cy="22" r="9" fill="#ffd479"/>`),
@@ -586,7 +586,7 @@ export const SIMS = [
   },
   {
     id: "solarsystem", domain: "physics", title: "Solar System 3D",
-    blurb: "The real Solar System on any date: planets, 29 moons, dwarf planets, asteroids, comets and belts — then zoom out to the stars and galaxies.",
+    blurb: "The real Solar System on any date: planets, 29 moons, dwarf planets, asteroids, comets and belts, then zoom out to the stars and galaxies.",
     load: () => import("./solarsystem.js"),
     art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="40" cy="64" r="26" fill="#ffb640"/><circle cx="40" cy="64" r="34" fill="#ffb640" fill-opacity=".2"/>
       <ellipse cx="40" cy="64" rx="80" ry="22" fill="none" stroke="#4f8fe0" stroke-opacity=".5"/><ellipse cx="40" cy="64" rx="150" ry="44" fill="none" stroke="#d6a77a" stroke-opacity=".4"/>
@@ -601,7 +601,7 @@ export const SIMS = [
   },
   {
     id: "spaceflight", domain: "physics", title: "Spaceflight Lab",
-    blurb: "Build a rocket from engines, tanks and capsules, then fly it to orbit — or land it on the Moon and Mars.",
+    blurb: "Build a rocket from engines, tanks and capsules, then fly it to orbit, or land it on the Moon and Mars.",
     load: () => import("./spaceflight.js"),
     art: sky(`<rect width="240" height="128" fill="#1f4f86"/>${Array.from({ length: 10 }, (_, i) => `<line x1="${i * 24}" y1="0" x2="${i * 24}" y2="128" stroke="#fff" stroke-opacity=".08"/>`).join("")}
       <path d="M112 16 Q120 4 128 16 L128 30 L112 30 Z" fill="#f4f6f9"/><rect x="112" y="30" width="16" height="16" fill="#c8ced8"/><rect x="110" y="48" width="20" height="44" fill="#f4f6f9"/><rect x="110" y="46" width="20" height="3" fill="#f2c230"/>

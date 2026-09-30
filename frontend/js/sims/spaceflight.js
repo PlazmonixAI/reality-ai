@@ -377,7 +377,7 @@ export default {
         control("Nozzle shape", sel("nozzle", [["bell", "Bell (80 %)"], ["cone", "15° cone"]])),
         el("p", { class: "sf-hint small" }, "Sea-level engines use expansion ratios of ~10–40; vacuum engines 80–300. Higher chamber pressure means a smaller, more efficient engine."));
       modal.replaceChildren(el("div", { class: "sf-design" },
-        el("div", { class: "sf-design-head" }, el("b", {}, "ENGINE DESIGNER"), el("small", {}, "physics.rocket_engine_design — ideal-rocket nozzle theory calibrated on real engines"),
+        el("div", { class: "sf-design-head" }, el("b", {}, "ENGINE DESIGNER"), el("small", {}, "Ideal-rocket nozzle theory, calibrated on real engines"),
           el("button", { class: "sf-close", type: "button", "aria-label": "Close", onclick: closeModal }, "×")),
         el("div", { class: "sf-design-body" }, controls, el("div", { class: "sf-design-view" }, canvas, stats)),
         el("div", { class: "sf-design-foot" }, addBtn)));
@@ -429,7 +429,7 @@ export default {
         control("Orbit altitude (km)", ...sl("altitude_km", 200, 36000, true)),
         el("p", { class: "sf-hint small" }, "LEO ≈ 400–800 km · navigation ≈ 20,200 km · geostationary = 35,786 km."));
       modal.replaceChildren(el("div", { class: "sf-design" },
-        el("div", { class: "sf-design-head" }, el("b", {}, "SATELLITE DESIGNER"), el("small", {}, "physics.satellite_design — mass, Δv, power and eclipse budget"),
+        el("div", { class: "sf-design-head" }, el("b", {}, "SATELLITE DESIGNER"), el("small", {}, "Mass, Δv, power and eclipse budget"),
           el("button", { class: "sf-close", type: "button", "aria-label": "Close", onclick: closeModal }, "×")),
         el("div", { class: "sf-design-body" }, controls, el("div", { class: "sf-design-view" }, canvas, stats)),
         el("div", { class: "sf-design-foot" }, addBtn)));
@@ -895,7 +895,7 @@ export default {
       const [rx, ry] = S(...craft);
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(-s.angle + Math.PI / 2);
       ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(6, 7); ctx.lineTo(-6, 7); ctx.closePath(); ctx.fill(); ctx.restore();
-      ctx.fillStyle = "#7b8fa8"; ctx.font = "12px system-ui"; ctx.fillText(`MAP (${focus === "moon" ? "Moon-centred" : "Earth-centred"}) — scroll to zoom, M to return`, 16, H - 16);
+      ctx.fillStyle = "#7b8fa8"; ctx.font = "12px system-ui"; ctx.fillText(`MAP (${focus === "moon" ? "Moon-centred" : "Earth-centred"}). Scroll to zoom, M to return`, 16, H - 16);
       drawHud(tel, s);
     }
 
@@ -907,8 +907,8 @@ export default {
       const refName = { earth: "Earth", moon: "Moon", mars: "Mars" }[tel.reference] || tel.reference;
       const rows = [
         ["Near", refName], ["Altitude", fmtAlt(tel.altitude)], ["Speed", `${fmt(tel.altitude < 30000 && tel.reference !== "moon" ? tel.surface_speed : tel.speed, 4)} m/s`],
-        ["Vertical", `${fmt(Math.abs(tel.vertical_speed) < 0.05 ? 0 : tel.vertical_speed, 3)} m/s`], ["Apoapsis", s.landed ? "—" : tel.apoapsis_alt === null ? "escape" : fmtAlt(tel.apoapsis_alt)],
-        ["Periapsis", s.landed ? "—" : tel.periapsis_alt < 0 ? "below surface" : fmtAlt(tel.periapsis_alt)], ["Δv left", `${fmt(tel.delta_v_remaining, 4)} m/s`],
+        ["Vertical", `${fmt(Math.abs(tel.vertical_speed) < 0.05 ? 0 : tel.vertical_speed, 3)} m/s`], ["Apoapsis", s.landed ? "–" : tel.apoapsis_alt === null ? "escape" : fmtAlt(tel.apoapsis_alt)],
+        ["Periapsis", s.landed ? "–" : tel.periapsis_alt < 0 ? "below surface" : fmtAlt(tel.periapsis_alt)], ["Δv left", `${fmt(tel.delta_v_remaining, 4)} m/s`],
         ["TWR", fmt(tel.twr, 3)], ["G-force", `${fmt(tel.acceleration_g, 3)} g`], ["Mission time", fmtT(s.t)],
       ];
       if (tel.mach) rows.splice(4, 0, ["Mach", fmt(tel.mach, 3)]);

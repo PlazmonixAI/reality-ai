@@ -67,8 +67,8 @@ export default {
         F = f.result; D = df.result; derivText = d.result; tangent = tan;
         area = integral && !integral.error ? { lo: Math.min(a.value, b.value), hi: Math.max(a.value, b.value), value: integral.numeric, exact: integral.result } : null;
         derivBox.textContent = derivText;
-        out.set("fx0", tan ? fmt(tan.y, 5) : "—"); out.set("slope", tan ? fmt(tan.m, 5) : "—");
-        out.set("area", integral ? (integral.error ? "diverges / undefined" : `${fmt(integral.numeric, 6)}${integral.result !== String(integral.numeric) && integral.result.length < 24 ? `  (= ${integral.result})` : ""}`) : "—");
+        out.set("fx0", tan ? fmt(tan.y, 5) : "–"); out.set("slope", tan ? fmt(tan.m, 5) : "–");
+        out.set("area", integral ? (integral.error ? "diverges / undefined" : `${fmt(integral.numeric, 6)}${integral.result !== String(integral.numeric) && integral.result.length < 24 ? `  (= ${integral.result})` : ""}`) : "–");
         draw();
       },
     });

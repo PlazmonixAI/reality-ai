@@ -24,7 +24,7 @@ export default {
     const table = el("div", { class: "note" });
     L.side.append(
       panel("Racers (up to 3)", ...picks.map((p) => p.root)),
-      panel("Ramp", ang.root, len.root, mu.root, el("p", { class: "note" }, "Same drop, same energy — but spinning takes a share. The more mass far from the axis, the slower it rolls.")),
+      panel("Ramp", ang.root, len.root, mu.root, el("p", { class: "note" }, "Same drop, same energy, but spinning takes a share. The more mass far from the axis, the slower it rolls.")),
       panel("Race (from the engine)", out.root, table),
     );
     const player = new Player(L.bottom, (t) => { simT = t; draw(); graph.setCursor(t); }, { speeds: [0.25, 0.5, 1] });

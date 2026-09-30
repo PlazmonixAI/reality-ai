@@ -36,7 +36,7 @@ export default {
         const x = r.result;
         out.set("v", x.section_speeds.map((v) => fmt(v, 3)).join(", ") + " m/s");
         out.set("p", x.section_pressures.map((p) => fmt(p / 1000, 3)).join(", ") + " kPa");
-        out.set("c", x.cavitation_risk ? "yes — pressure falls below water's vapour pressure" : "no");
+        out.set("c", x.cavitation_risk ? "yes: pressure falls below water's vapour pressure" : "no");
         pg.setSeries([{ name: "pressure", color: c1, x: r.profile.position, y: r.profile.pressure.map((p) => p / 1000) }]);
         vg.setSeries([{ name: "speed", color: c2, x: r.profile.position, y: r.profile.speed }]);
       },

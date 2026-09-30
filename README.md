@@ -1,7 +1,9 @@
-# Reality ASM — Advanced Simulation Machine
+# Reality ASM: Advanced Simulation Machine
 
-Reality ASM (Advanced Simulation Machine) is Plazmonix AI's research-simulation engine for Physics, Chemistry and Mathematics.
-An AI representative (LLM via NVIDIA NIM) understands a research question, routes it to the right simulation tool, runs it, and explains the result.
+Reality ASM is a research-simulation engine for physics, chemistry and mathematics, by Subham Agarwal and Plazmonix AI.
+It is now a full web app: public site, accounts, saved history, a space company that runs in real time, challenge
+missions, the Spaceflight Lab with real launch vehicles, the Solar System and 78 simulations. An AI analyst
+(NVIDIA NIM, Groq or xAI) explains results using the engine's tools.
 
 Built by Plazmonix AI (a Velostra Aerospace company).
 
@@ -10,12 +12,44 @@ Built by Plazmonix AI (a Velostra Aerospace company).
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # add NVIDIA NIM keys
+cp .env.example .env        # optional locally: add LLM keys, leave COOKIE_SECURE=false for http://localhost
 uvicorn app.main:app --reload
 pytest
 ```
 
-Open **http://localhost:8000** for the interactive simulator, or http://localhost:8000/docs for the API.
+Open **http://localhost:8000**, create an account, and you're in the app at `/app/`.
+
+## The web app
+
+| Where | What |
+|---|---|
+| `/` | Public landing page, sign in and sign up, Terms, Privacy, Cookies, Acceptable Use, About |
+| `/app/` | The app (signed-in users only): home, simulations, Spaceflight Lab, Mission Control, Challenges, History, Ask AI, Account |
+| `/api/auth/*`, `/api/account` | Sign up and in (email + password; Google if configured), sessions, password change and reset, data export, account deletion |
+| `/api/history` | Saved flights, designs, missions, photos, simulation snapshots (open, continue, star, rename, delete) |
+| `/api/company` | Space company: launch service on real rockets, fleet in real time (drag decay, J2), burns, camera photos, deep-space probes |
+| `/api/challenges` | Ten missions checked on the server |
+| `/simulate`, `/ask`, `/tools` | The engine and the AI analyst (signed-in users only, rate limited) |
+
+**Security:** passwords hashed with scrypt; sessions are random tokens in HttpOnly, SameSite=Lax cookies (only their
+hash is stored); JSON-only writes plus an Origin check against cross-site requests; strict Content Security Policy
+and security headers; rate limits on sign-in, sign-up, the engine and the AI; `/docs` and `/openapi.json` are off
+unless `ENABLE_API_DOCS=true`. The simulation code runs only on the server; the app's JavaScript is served only to
+signed-in users. Flight states are HMAC-signed, so challenges and fleet deployment only accept flights the engine
+actually produced.
+
+**Storage:** a single SQLite file (`DATABASE_PATH`). Back it up by copying the file.
+
+## Deploying on Render
+
+1. Create a Web Service from this repo (or use `render.yaml` as a Blueprint). Build: `pip install -r requirements.txt`.
+   Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips '*'`.
+2. Attach a **persistent disk** at `/var/data` and set `DATABASE_PATH=/var/data/reality.db`. Without a disk, Render
+   wipes the database on every deploy or restart.
+3. In **Environment**, set `SECRET_KEY` (long random), `COOKIE_SECURE=true`, `PUBLIC_BASE_URL`, `CONTACT_EMAIL`, and the
+   LLM keys (`LLM_PROVIDER` + `NIM_API_KEYS` / `GROQ_API_KEYS` / `XAI_API_KEYS`). Optional: `BETA_INVITE_CODES`,
+   `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `SMTP_*` for password-reset email. All variables are listed in `.env.example`.
+   No secrets live in the repository.
 
 ## Simulator
 PhET-style interactive simulations in `frontend/` (plain JavaScript + Canvas, no build step). Every number on screen comes from the engine's tools; the browser only animates the results.

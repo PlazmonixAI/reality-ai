@@ -25,7 +25,7 @@ export default {
       { key: "area", label: "Each sector's area" }, { key: "k3", label: "T² / a³" },
     ]);
     L.side.append(
-      panel("Orbit around the Sun", body.root, a.root, e.root, sectors.root, el("p", { class: "note" }, "1st law: ellipse with the Sun at a focus. 2nd: equal areas in equal times — fast when close. 3rd: T² ∝ a³.")),
+      panel("Orbit around the Sun", body.root, a.root, e.root, sectors.root, el("p", { class: "note" }, "1st law: ellipse with the Sun at a focus. 2nd: equal areas in equal times, fast when close. 3rd: T² ∝ a³.")),
       panel("Kepler's laws (from the engine)", out.root),
     );
     const player = new Player(L.bottom, (t) => { simT = t; draw(); graph.setCursor(t); }, { speeds: [0.5, 1, 2, 4], loop: true, timeFormat: (v) => `${fmt(v, 3)} years` });

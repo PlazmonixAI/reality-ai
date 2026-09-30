@@ -54,7 +54,7 @@ export default {
         out.set("p", `${fmt(s.pressure / 1e5, 4)} bar`); out.set("pi", `${fmt(s.ideal_pressure / 1e5, 4)} bar`);
         out.set("z", fmt(s.compressibility, 4));
         out.set("ph", s.vapour_fraction !== null ? `${s.phase} (${fmt(s.vapour_fraction * 100, 3)} % vapour)` : s.phase);
-        out.set("ps", x.saturation ? `${fmt(x.saturation.pressure / 1e5, 4)} bar` : "— (above Tc)");
+        out.set("ps", x.saturation ? `${fmt(x.saturation.pressure / 1e5, 4)} bar` : "above Tc");
         draw();
       },
     });

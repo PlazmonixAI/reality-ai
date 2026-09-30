@@ -38,9 +38,9 @@ export default {
       onResult: (r) => {
         L.clearError(); data = r;
         const x = r.result;
-        out.set("a", x.approaching_frequency ? `${fmt(x.approaching_frequency, 4)} Hz` : "— (supersonic: silent until the cone passes)");
+        out.set("a", x.approaching_frequency ? `${fmt(x.approaching_frequency, 4)} Hz` : "supersonic: silent until the cone passes");
         out.set("r", `${fmt(x.receding_frequency, 4)} Hz`);
-        out.set("s", x.pitch_drop_semitones ? `${fmt(x.pitch_drop_semitones, 3)} semitones` : "—");
+        out.set("s", x.pitch_drop_semitones ? `${fmt(x.pitch_drop_semitones, 3)} semitones` : "–");
         out.set("m", `${fmt(x.mach_number, 3)}${x.supersonic ? ` (cone half-angle ${fmt(x.mach_cone_half_angle_deg, 3)}°)` : ""}`);
         const db = r.drive_by, cap = (y) => Math.min(y, 6 * f.value);
         if (db.boom_index === null) {
@@ -65,7 +65,7 @@ export default {
       if (db.boom_index === null) {
         out.set("now", simT < db.arrival_time[0] ? "silence (sound not here yet)" : `${fmt(sampleAt(db.arrival_time, db.heard_frequency, simT), 4)} Hz`);
       } else if (simT < db.boom_time) {
-        out.set("now", "silence — the Mach cone hasn't arrived");
+        out.set("now", "silence: the Mach cone hasn't arrived yet");
       } else {
         out.set("now", Math.abs(simT - db.boom_time) < 0.05 ? "BOOM!" : `${fmt(sampleAt(db.arrival_time.slice(db.boom_index), db.heard_frequency.slice(db.boom_index), simT), 4)} Hz (plus the approach sound)`);
       }

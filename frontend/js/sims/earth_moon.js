@@ -29,7 +29,7 @@ export default {
 
     L.side.append(
       panel("Trans-lunar injection", alt.root, speed.root, phaseAng.root, days.root,
-        el("p", { class: "note" }, "The default (10,842 m/s at 235°) passes ~5,700 km above the Moon on day 3.7 and swings back toward Earth. A few m/s or degrees either way changes everything — try it.")),
+        el("p", { class: "note" }, "The default (10,842 m/s at 235°) passes ~5,700 km above the Moon on day 3.7 and swings back toward Earth. A few m/s or degrees either way changes everything. Try it.")),
       panel("Display", frame.root, button("Fit view", () => { autoFit = true; fitView(); draw(); })),
       panel("Result (from the engine)", out.root),
     );
@@ -55,7 +55,7 @@ export default {
         out.set("close", `${fmt((dM[k] - R_MOON) / 1000, 4)} km`); out.set("when", fmtTime(t[k]));
         out.set("end", `${fmt(dE[dE.length - 1] / 1000, 4)} km`);
         out.set("hit", res.result.collision ? `Yes, at ${fmtTime(res.result.final_time)}` : "None");
-        out.set("drift", res.relative_energy_drift != null ? fmt(res.relative_energy_drift, 2) : "—");
+        out.set("drift", res.relative_energy_drift != null ? fmt(res.relative_energy_drift, 2) : "–");
         const days = t.map((x) => x / 86400);
         graph.setSeries([
           { name: "to Earth", color: c1, x: days, y: dE.map((d) => d / 1e6) },

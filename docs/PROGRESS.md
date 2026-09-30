@@ -206,3 +206,13 @@
 - Links: 🚀 in the Solar System launches a mission on the date it shows; ☉ SOLAR SYSTEM in the 3D flight view opens the Solar System on the mission date
 - 619 tests passing
 - **Known issues:** flights stay in the equatorial plane (real sites are projected onto the equator; the Moon's ±28° declination is flattened)
+
+## 2026-09-30: Phase 10, the full-stack web app for the beta
+- Platform (`app/platform/`): SQLite storage, accounts and sessions (scrypt, HttpOnly cookies, Origin check, rate limits), history API, space company API, challenges API. `/simulate`, `/ask`, `/tools` and `/app/*` need a session; `/docs` is off unless enabled; CSP and security headers on every response. Flight states are HMAC-signed so challenge results and fleet deployments can be trusted.
+- Engine: parallel staging with strap-on boosters (design Δv and flight, solid boosters can't be throttled), 13 real vehicles and 10 real satellites (`vehicle_data.py`, `launch_vehicle_catalog`, `launch_vehicle_performance`, `launch_azimuth`), satellite orbits in real time (`satellite_track` with J2 and drag, `satellite_manoeuvre`, `satellite_imaging`, `orbit_from_parameters`), interplanetary missions (`interplanetary_porkchop`, `interplanetary_mission`: Lambert solver matches Curtis example 5.2; Mars 2026 window C3 ≈ 9 to 10 km²/s²), time to apoapsis and periapsis in flight telemetry.
+- Frontend: public site in `frontend/site/` (landing, auth pages, legal pages, 404, cookie notice); app at `/app/` with navigation, account menu, Home, History, Account, Challenges and Mission Control pages; Spaceflight Lab with real rockets, booster drawing and exhaust, autosave and resume, save design, deploy to fleet, challenge banner with automatic checks, pause, quick save and load, warp to apsides and a keyboard help panel; Save button on every simulation.
+- Brand from the new logo (SVG mark, favicon, light variant), IBM Plex fonts, em dashes and emojis removed from UI copy, AI analyst told to write plainly.
+- 697 tests passing; every simulation and app page opens in the browser without console errors.
+- **Fixed on the way:** Greenwich sidereal time in the fleet model (IAU W is measured from RA 90°, so GMST = W + 90°); signatures now survive the browser's number formatting.
+- **Known issues:** the Spaceflight Lab still flies in a plane (inclination is chosen when a satellite is deployed); satellite photos use NASA GIBS imagery in the browser (250 m at best), so very sharp cameras show their footprint and resolution correctly but the picture is limited by the imagery; the static atmosphere ignores solar activity; SQLite on Render needs a persistent disk.
+- **Next:** email verification, probes and fleet shown in the 3D Solar System, inclined ascents.

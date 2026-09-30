@@ -36,7 +36,7 @@ export default {
     let results = null, selected = null, hoverNode = null, short = false;
     const phases = new Map();
 
-    const tool = segmented({ label: "Tool — then click between two dots", value: "select", options: TOOLS });
+    const tool = segmented({ label: "Tool (then click between two dots)", value: "select", options: TOOLS });
     const editBox = el("div");
     const out = readouts([{ key: "p", label: "Total power" }, { key: "i", label: "Battery current" }]);
     L.side.append(
@@ -89,7 +89,7 @@ export default {
       onError: (e) => { L.error(e.message); results = null; },
       onResult: (d) => {
         L.clearError();
-        if (d.none) { results = null; out.set("p", "—"); out.set("i", "— (add a battery)"); renderEdit(); return; }
+        if (d.none) { results = null; out.set("p", "–"); out.set("i", "add a battery"); renderEdit(); return; }
         const byKey = new Map();
         d.res.result.components.forEach((c, i) => {
           const k = d.keys[i], [a] = ends(k).map((e) => e.join(","));

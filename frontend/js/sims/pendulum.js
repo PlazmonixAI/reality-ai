@@ -42,9 +42,9 @@ export default {
       onResult: (res) => {
         L.clearError(); data = res;
         const r = res.result;
-        out.set("period", r.period ? fmtUnit(r.period, "s") : "—");
+        out.set("period", r.period ? fmtUnit(r.period, "s") : "–");
         out.set("small", fmtUnit(r.small_angle_period, "s"));
-        out.set("ratio", r.period_ratio ? `${fmt(r.period_ratio, 5)}×` : "—");
+        out.set("ratio", r.period_ratio ? `${fmt(r.period_ratio, 5)}×` : "–");
         out.set("motion", r.motion); out.set("vmax", fmtUnit(r.max_speed, "m/s"));
         graph.setSeries([{ name: "θ", color: c1, x: res.trajectory.t, y: res.trajectory.theta_deg }]);
         player.load(DURATION, DURATION);

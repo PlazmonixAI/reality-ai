@@ -198,6 +198,6 @@ def orbital_decay(
         "curve": {"t_days": (t / DAY).tolist(), "altitude_km": (alt / 1000).tolist()},
         "units": "altitude in m (curve in km), time in days, density in kg/m³, B in kg/m²",
         "assumptions": ["Circular orbit shrinking slowly (orbit-averaged drag), no lift, non-rotating atmosphere",
-                        "Static exponential atmosphere — real density varies ×2–10 with solar activity",
+                        "Static exponential atmosphere; real density varies 2 to 10 times with solar activity",
                         "Re-entry counted at 100 km altitude"],
     }

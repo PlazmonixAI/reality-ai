@@ -49,7 +49,7 @@ export default {
       drag.root.style.opacity = rho ? 1 : 0.5;
       drag.root.querySelector("input").disabled = !rho;
       if (!rho) drag.set(false);
-      dragNote.textContent = rho ? `Air density ${rho} kg/m³` : "No atmosphere here — air resistance unavailable.";
+      dragNote.textContent = rho ? `Air density ${rho} kg/m³` : "No atmosphere here, so there's no air resistance.";
     }
 
     L.side.append(
@@ -75,7 +75,7 @@ export default {
         const r = res.result;
         out.set("range", fmtUnit(r.range, "m")); out.set("hmax", fmtUnit(r.max_height, "m"));
         out.set("time", fmtUnit(r.flight_time, "s")); out.set("vimp", fmtUnit(r.impact_speed, "m/s"));
-        out.set("vt", r.terminal_velocity ? fmtUnit(r.terminal_velocity, "m/s") : "— (no drag)");
+        out.set("vt", r.terminal_velocity ? fmtUnit(r.terminal_velocity, "m/s") : "no drag");
         player.load(r.flight_time, r.flight_time, { autoplay: true });
       } catch (e) {
         L.error(e.message);

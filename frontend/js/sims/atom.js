@@ -46,12 +46,12 @@ export default {
       delay: 40, onBusy: L.busy, onError: (e) => L.error(e.message),
       onResult: (r) => {
         L.clearError(); res = r.result;
-        out.set("el", res.element ? `${res.element.name} (${res.element.symbol})` : "— (no protons)");
+        out.set("el", res.element ? `${res.element.name} (${res.element.symbol})` : "no protons");
         out.set("mass", String(res.mass_number));
         out.set("charge", res.charge === 0 ? "0 (neutral atom)" : `${res.charge > 0 ? "+" : ""}${res.charge} (ion)`);
-        out.set("stable", res.stable_nucleus === null ? "—" : res.stable_nucleus ? "stable" : "unstable (radioactive)");
-        out.set("cfg", res.electron_configuration || "—");
-        out.set("be", r.binding_energy.total ? `${fmt(r.binding_energy.total, 4)} MeV (${fmt(r.binding_energy.per_nucleon, 3)} per nucleon)` : "—");
+        out.set("stable", res.stable_nucleus === null ? "–" : res.stable_nucleus ? "stable" : "unstable (radioactive)");
+        out.set("cfg", res.electron_configuration || "–");
+        out.set("be", r.binding_energy.total ? `${fmt(r.binding_energy.total, 4)} MeV (${fmt(r.binding_energy.per_nucleon, 3)} per nucleon)` : "–");
         tableBox.replaceChildren(...TABLE.map((t) => el("div", {
           style: `grid-column:${t.g};grid-row:${t.p};padding:3px 0;text-align:center;border-radius:4px;` +
             (res.element && res.element.symbol === t.sym ? "background:#2a78d6;color:#fff;font-weight:700" : "background:#eef2f7"),

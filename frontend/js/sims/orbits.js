@@ -106,7 +106,7 @@ export default {
         out.set("peri", fmtDistance(e.periapsis_radius - R));
         out.set("apo", e.apoapsis_radius ? fmtDistance(e.apoapsis_radius - R) : "∞ (escapes)");
         out.set("ecc", fmt(e.result.eccentricity, 4));
-        out.set("period", e.period ? fmtTime(e.period) : "— (unbound)");
+        out.set("period", e.period ? fmtTime(e.period) : "unbound");
         out.set("circ", `${fmt(d.circ, 5)} m/s`); out.set("esc", `${fmt(d.esc, 5)} m/s`);
         const hours = data.traj.t.map((t) => t / 3600);
         graph.setSeries([{ name: "Altitude", color: c1, x: hours, y: data.traj.x.map((x, i) => (Math.hypot(x, data.traj.y[i]) - R) / 1000) }]);

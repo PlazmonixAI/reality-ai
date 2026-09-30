@@ -66,7 +66,7 @@ export default {
         ctx.fillStyle = tone(j); ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
       } });
       names.forEach((n, j) => { ctx.fillStyle = tone(j); ctx.beginPath(); ctx.arc(bx + bw + 40, by + 30 + j * 30, 8, 0, Math.PI * 2); ctx.fill(); label(ctx, `${n}  ${fmt(fr[j] * 100, 3)} %`, bx + bw + 56, by + 30 + j * 30, { font: "13px system-ui" }); });
-      label(ctx, `pH ${fmt(ph.value, 3)} — each dot is 1 % of the acid`, bx, by - 14, { font: "bold 13px system-ui" });
+      label(ctx, `pH ${fmt(ph.value, 3)}: each dot is 1 % of the acid`, bx, by - 14, { font: "bold 13px system-ui" });
     }
 
     recompute();

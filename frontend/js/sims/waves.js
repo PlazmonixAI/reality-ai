@@ -32,7 +32,7 @@ export default {
     L.side.append(
       panel("Driver", driver.root, freq.root, width.root, amp.root),
       panel("String", tension.root, density.root, damping.root, end.root),
-      panel("Waves (from the engine)", out.root, el("p", { class: "note" }, "Standing-wave harmonics — click to drive at one:"), harmBox),
+      panel("Waves (from the engine)", out.root, el("p", { class: "note" }, "Standing-wave harmonics. Click one to drive it:"), harmBox),
     );
     sync();
     const player = new Player(L.bottom, (t) => { simTime = t; draw(); }, { speeds: [0.1, 0.25, 0.5, 1], speed: 0.25, loop: true });
@@ -47,8 +47,8 @@ export default {
         L.clearError(); data = res;
         const r = res.result;
         out.set("c", `${fmt(r.wave_speed, 4)} m/s`);
-        out.set("lam", r.wavelength ? `${fmt(r.wavelength, 4)} m` : "—");
-        out.set("T", r.period ? `${fmt(r.period, 4)} s` : "—");
+        out.set("lam", r.wavelength ? `${fmt(r.wavelength, 4)} m` : "–");
+        out.set("T", r.period ? `${fmt(r.period, 4)} s` : "–");
         out.set("trip", `${fmt(r.travel_time, 4)} s`);
         harmBox.replaceChildren(...(r.harmonics.length ? r.harmonics.slice(0, 4).map((f, i) =>
           button(`f${i + 1} = ${fmt(f, 3)} Hz`, () => { driver.set("oscillate"); sync(); freq.set(Math.min(12, f)); recompute(); })) : [el("span", { class: "note" }, "None with an open end.")]));

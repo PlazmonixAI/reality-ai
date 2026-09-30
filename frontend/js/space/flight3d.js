@@ -20,10 +20,10 @@ export function createFlight3D(host, { onSolarSystem, rocketHeight = 50 } = {}) 
   const tex = (name, srgb = true) => { const t = loader.load(TEX + name); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; texs.push(t); return t; };
   const wrap = el("div", { class: "sf3d" });
   const labels = el("div", { class: "sf3d-labels" });
-  const focusBtns = ["rocket", "earth", "moon"].map((f) => el("button", { class: "sf-btn wide", type: "button", onclick: () => setFocus(f) }, { rocket: "🚀 ROCKET", earth: "🌍 EARTH", moon: "🌕 MOON" }[f]));
+  const focusBtns = ["rocket", "earth", "moon"].map((f) => el("button", { class: "sf-btn wide", type: "button", onclick: () => setFocus(f) }, { rocket: "ROCKET", earth: "EARTH", moon: "MOON" }[f]));
   const dateBox = el("div", { class: "sf3d-date" });
   wrap.append(labels, el("div", { class: "sf3d-bar" }, ...focusBtns,
-    el("button", { class: "sf-btn wide accent", type: "button", onclick: () => onSolarSystem?.(jd) }, "☉ SOLAR SYSTEM")), dateBox,
+    el("button", { class: "sf-btn wide accent", type: "button", onclick: () => onSolarSystem?.(jd) }, "SOLAR SYSTEM")), dateBox,
     el("div", { class: "sf3d-note" }, "True-scale Earth and Moon on the mission date · drag to orbit, scroll to zoom"));
   host.append(wrap);
 

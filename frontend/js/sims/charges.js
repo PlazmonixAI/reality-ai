@@ -59,7 +59,7 @@ export default {
         out.set("e", `${fmt(p.magnitude, 4)} N/C`);
         out.set("dir", `${fmt((Math.atan2(p.ey, p.ex) * 180) / Math.PI, 3)}°`);
         out.set("v", `${fmt(p.potential, 4)} V`);
-        out.set("f", d.force ? `${fmt(d.force.magnitude, 4)} N (${d.force.nature})` : "— (needs exactly two)");
+        out.set("f", d.force ? `${fmt(d.force.magnitude, 4)} N (${d.force.nature})` : "needs exactly two");
         draw();
       },
     });

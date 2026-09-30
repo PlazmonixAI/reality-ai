@@ -33,7 +33,7 @@ export default {
         out.set("a", v(a)); out.set("b", v(b)); out.set("sum", v(res.sum));
         out.set("ma", `${fmt(res.magnitude_a, 4)}, ${fmt(res.magnitude_b, 4)}`);
         out.set("dot", fmt(res.dot, 4)); out.set("cross", fmt(res.cross[2], 4));
-        out.set("ang", res.angle_deg === null ? "—" : `${fmt(res.angle_deg, 4)}°`);
+        out.set("ang", res.angle_deg === null ? "–" : `${fmt(res.angle_deg, 4)}°`);
         draw();
       },
     });

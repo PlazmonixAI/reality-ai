@@ -79,7 +79,7 @@ export default {
       ctx.beginPath(); ctx.moveTo(ax, y - 30); ctx.lineTo(ax, wy); ctx.lineTo(bx, wy); ctx.lineTo(bx, y - 30); ctx.stroke();
       ctx.fillStyle = "#16202c"; ctx.fillRect(w / 2 - 60, wy - 28, 120, 56);
       ctx.fillStyle = "#1baf7a"; ctx.font = "bold 22px ui-monospace, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(res ? `${res.cell_potential >= 0 ? "" : "−"}${Math.abs(res.cell_potential).toFixed(3)} V` : "—", w / 2, wy);
+      ctx.fillText(res ? `${res.cell_potential >= 0 ? "" : "−"}${Math.abs(res.cell_potential).toFixed(3)} V` : "–", w / 2, wy);
       ctx.textAlign = "left";
       label(ctx, `${METALS[anode.value][0]}, ${fmt(ca.value, 3)} M`, xl + cw / 2, y + ch + 20, { align: "center", font: "bold 12px system-ui" });
       label(ctx, `${METALS[cathode.value][0]}, ${fmt(cc.value, 3)} M`, xr + cw / 2, y + ch + 20, { align: "center", font: "bold 12px system-ui" });

@@ -54,7 +54,7 @@ export default {
       delay: 40, onError: (e) => { res = null; L.error(e.message); eq.textContent = ""; draw(); },
       onResult: (r) => {
         res = r;
-        if (!r) { L.clearError(); eq.textContent = "Add at least two points."; out.set("r2", "—"); out.set("rms", "—"); out.set("c", "—"); resid.setSeries([]); draw(); return; }
+        if (!r) { L.clearError(); eq.textContent = "Add at least two points."; out.set("r2", "–"); out.set("rms", "–"); out.set("c", "–"); resid.setSeries([]); draw(); return; }
         L.clearError();
         const x = r.result;
         eq.textContent = x.equation;

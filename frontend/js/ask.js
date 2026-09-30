@@ -26,7 +26,7 @@ export function toolCard(step) {
   const main = "error" in r ? el("p", { class: "tool-error" }, r.error)
     : el("p", {}, el("b", {}, "result: "), show(r.result), r.units ? el("span", { class: "tool-units" }, `  (${r.units})`) : "");
   return el("details", { class: `tool-card ${step.ok ? "" : "failed"}` },
-    el("summary", {}, `${step.ok ? "⚙" : "⚠"} ${step.tool}`, el("span", { class: "tool-args" }, show(step.args))),
+    el("summary", {}, `${step.ok ? "" : "Failed: "}${step.tool.replace(/^\w+\./, "").replace(/_/g, " ")}`, el("span", { class: "tool-args" }, show(step.args))),
     main,
     r.assumptions ? el("ul", {}, r.assumptions.map((a) => el("li", {}, a))) : "");
 }
@@ -40,7 +40,7 @@ export function mountAsk(root) {
   const examples = el("div", { class: "chat-examples" }, EXAMPLES.map((q) => el("button", { class: "chip", type: "button", onclick: () => { input.value = q; input.focus(); } }, q)));
   root.append(el("div", { class: "ask-page" },
     el("div", { class: "hero" }, el("h1", {}, "Ask Reality ASM"),
-      el("p", {}, "Ask in plain language. The AI representative chooses the engine's simulation tools, runs them, and explains the result — every number comes from a real computation, shown below each answer.")),
+      el("p", {}, "Ask in plain language. The AI representative chooses the engine's simulation tools, runs them, and explains the result. Every number comes from a real computation, shown below each answer.")),
     examples, log, form));
 
   const bubble = (who, ...kids) => { const b = el("div", { class: `bubble ${who}` }, ...kids); log.append(b); b.scrollIntoView({ block: "end", behavior: "smooth" }); return b; };

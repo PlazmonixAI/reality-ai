@@ -683,7 +683,7 @@ def rocket_flight(
         fairing = False
         rho_now = _density(b, math.hypot(x, y) - R)
         q_now = 0.5 * rho_now * ((vx + om * y) ** 2 + (vy - om * x) ** 2)
-        events.append("fairing jettisoned" + (f" at {q_now / 1000:.1f} kPa — the payload is exposed to heating" if q_now > 1000 else ""))
+        events.append("fairing jettisoned" + (f" at {q_now / 1000:.1f} kPa: the payload is exposed to heating" if q_now > 1000 else ""))
     if deploy_chute and not chute and any(s["chute"] for s in upper):
         chute = True
         events.append("parachute deployed")

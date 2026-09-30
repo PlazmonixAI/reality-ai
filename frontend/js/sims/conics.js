@@ -44,10 +44,10 @@ export default {
         L.clearError(); res = r;
         const x = r.result, pt = (p) => `(${fmt(p[0], 3)}, ${fmt(p[1], 3)})`;
         eq.textContent = sl.map((s, i) => (s.value ? `${s.value >= 0 && i ? "+ " : ""}${s.value < 0 ? "− " : ""}${fmt(Math.abs(s.value), 3)}${SUFFIX[i]}` : "")).filter(Boolean).join(" ") + " = 0";
-        out.set("type", x.type); out.set("e", x.eccentricity !== undefined ? fmt(x.eccentricity, 4) : "—");
-        out.set("c", x.center ? pt(x.center) : x.vertex ? `vertex ${pt(x.vertex)}` : "—");
-        out.set("ax", x.semi_major ? `a = ${fmt(x.semi_major, 4)}, b = ${fmt(x.semi_minor, 4)}` : x.semi_transverse ? `a = ${fmt(x.semi_transverse, 4)}, b = ${fmt(x.semi_conjugate, 4)}` : x.focal_length ? `focal length ${fmt(x.focal_length, 4)}` : "—");
-        out.set("ang", x.angle_deg !== undefined ? `${fmt(x.angle_deg, 4)}°` : "—"); out.set("disc", fmt(x.discriminant, 4));
+        out.set("type", x.type); out.set("e", x.eccentricity !== undefined ? fmt(x.eccentricity, 4) : "–");
+        out.set("c", x.center ? pt(x.center) : x.vertex ? `vertex ${pt(x.vertex)}` : "–");
+        out.set("ax", x.semi_major ? `a = ${fmt(x.semi_major, 4)}, b = ${fmt(x.semi_minor, 4)}` : x.semi_transverse ? `a = ${fmt(x.semi_transverse, 4)}, b = ${fmt(x.semi_conjugate, 4)}` : x.focal_length ? `focal length ${fmt(x.focal_length, 4)}` : "–");
+        out.set("ang", x.angle_deg !== undefined ? `${fmt(x.angle_deg, 4)}°` : "–"); out.set("disc", fmt(x.discriminant, 4));
         draw();
       },
     });

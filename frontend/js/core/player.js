@@ -22,7 +22,7 @@ export class Player {
     const restart = el("button", { class: "icon-btn", type: "button", "aria-label": "Restart", title: "Restart", onclick: () => { this.seek(0); this.play(); } }, "↺");
     this.scrub = el("input", { type: "range", min: 0, max: 1000, value: 0, "aria-label": "Time" });
     this.scrub.addEventListener("input", () => this.seek((this.scrub.value / 1000) * this.duration));
-    this.timeLabel = el("span", { class: "time" }, "—");
+    this.timeLabel = el("span", { class: "time" }, "–");
     this.speedSel = el("select", { "aria-label": "Speed" },
       this.opts.speeds.map((s) => el("option", { value: s }, `${s}×`)));
     this.speedSel.value = String(this.speed);

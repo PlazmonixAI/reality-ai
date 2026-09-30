@@ -36,7 +36,7 @@ export default {
         L.clearError(); data = r;
         const x = r.result;
         out.set("lyap", x.lyapunov_exponent !== null ? `${fmt(x.lyapunov_exponent, 3)} s⁻¹` : "no exponential growth");
-        out.set("dt", x.lyapunov_exponent > 0.01 ? `${fmt(Math.log(10) / x.lyapunov_exponent, 3)} s` : "—");
+        out.set("dt", x.lyapunov_exponent > 0.01 ? `${fmt(Math.log(10) / x.lyapunov_exponent, 3)} s` : "–");
         out.set("flip", String(x.flips)); out.set("e", fmt(x.max_energy_drift, 2));
         graph.setSeries([{ name: "separation", color: c1, x: r.trajectory.t, y: r.twin.separation.map((s) => Math.log10(s)) }]);
         player.load(30, 30);

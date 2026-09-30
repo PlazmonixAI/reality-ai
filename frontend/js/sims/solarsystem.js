@@ -130,7 +130,7 @@ export function mountAt(root, startLevel = 0) {
   const bMinor = tool("☄", "Dwarf planets, asteroids and comets", () => { showMinor = !showMinor; bMinor.classList.toggle("off", !showMinor); minorGroup.visible = showMinor; minorOrbits.visible = showMinor; });
   const bBelts = tool("⁘", "Asteroid belt, trojans and Kuiper belt", () => { showBelts = !showBelts; bBelts.classList.toggle("off", !showBelts); beltPoints.visible = showBelts; });
   const bList = tool("☰", "All bodies", () => list.classList.toggle("hidden"));
-  const bLaunch = tool("🚀", "Launch a rocket on this date (Spaceflight Lab)", () => {
+  const bLaunch = tool("⇧", "Launch a rocket on this date (Spaceflight Lab)", () => {
     try { localStorage.setItem("reality-asm.mission-date", jdToDate(simJd).toISOString()); } catch { /* storage unavailable */ }
     location.hash = "#/sim/spaceflight";
   });
@@ -144,7 +144,7 @@ export function mountAt(root, startLevel = 0) {
   const toolbar = el("div", { class: "ss-toolbar" }, bList, bHome, bOrbits, bLabels, bMinor, bBelts, bScale, bLaunch);
   const timebar = el("div", { class: "ss-timebar" }, reverse, slower, bPlay, faster, speedText, today, dateInput);
   const ladder = el("nav", { class: "ss-ladder", "aria-label": "Scale" });
-  const credit = el("div", { class: "ss-credit" }, "Engine: JPL elements, HYG stars, Celestia catalogues, ΛCDM · textures: NASA/JPL, USGS, Celestia — see CREDITS");
+  const credit = el("div", { class: "ss-credit" }, "Engine: JPL elements, HYG stars, Celestia catalogues, ΛCDM · textures: NASA/JPL, USGS, Celestia (see CREDITS)");
   const rootEl = el("div", { class: "ss-root" }, view, labels, el("div", { class: "ss-top" }, brand, dateBig, timeSmall),
     toolbar, ladder, list, info, status, timebar, credit, fade);
   root.append(rootEl);

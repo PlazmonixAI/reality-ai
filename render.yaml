@@ -1,0 +1,40 @@
+# Render blueprint. Secrets are not stored here: set them in the Render dashboard (Environment tab).
+services:
+  - type: web
+    name: reality-asm
+    runtime: python
+    plan: starter            # a paid plan is needed for the persistent disk below
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips '*'
+    healthCheckPath: /health
+    disk:
+      name: reality-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DATABASE_PATH
+        value: /var/data/reality.db
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: CONTACT_EMAIL
+        sync: false
+      - key: LLM_PROVIDER
+        sync: false
+      - key: NIM_API_KEYS
+        sync: false
+      - key: GROQ_API_KEYS
+        sync: false
+      - key: XAI_API_KEYS
+        sync: false
+      - key: BETA_INVITE_CODES
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

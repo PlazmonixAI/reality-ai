@@ -62,7 +62,7 @@ export default {
         const res = r.result, vmax = r.curve.volume[r.curve.volume.length - 1];
         added.setRange(0, vmax); vol = Math.min(vol, vmax); added.set(vol);
         out.set("veq", `${fmt(res.equivalence_volume, 4)} mL`); out.set("pheq", fmt(res.equivalence_ph, 4));
-        out.set("half", fmt(res.half_equivalence_ph, 4)); out.set("ind", res.indicators.join(", ") || "—");
+        out.set("half", fmt(res.half_equivalence_ph, 4)); out.set("ind", res.indicators.join(", ") || "–");
         graph.setSeries([{ name: "pH", color: c1, x: r.curve.volume, y: r.curve.ph }]);
         player.load(vmax, 12, { autoplay: false }); player.seek(vol);
       },

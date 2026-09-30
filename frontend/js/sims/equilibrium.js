@@ -61,7 +61,7 @@ export default {
         out.set("dir", { forward: "→ toward products", reverse: "← toward reactants", "at equilibrium": "already at equilibrium" }[x.direction]);
         out.set("q", fmt(x.reaction_quotient_check, 4));
         const conv = Object.entries(x.fraction_converted);
-        out.set("conv", conv.length ? conv.map(([s, f]) => `${pretty(s)} ${fmt(f * 100, 3)}%`).join(", ") : "—");
+        out.set("conv", conv.length ? conv.map(([s, f]) => `${pretty(s)} ${fmt(f * 100, 3)}%`).join(", ") : "–");
         const sp = REACTIONS[rxn.value].species;
         table.replaceChildren(el("table", { class: "ice" },
           el("thead", {}, el("tr", {}, el("th", {}, ""), sp.map((s) => el("th", {}, pretty(s))))),
