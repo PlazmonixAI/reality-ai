@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import hmac
 import logging
 import re
 from pathlib import Path
@@ -16,7 +17,7 @@ from app.agent.llm import LLMError, NIMClient, NoKeysError
 from app.config import settings
 from app.core import runner
 from app.core.registry import get_tool, list_tools
-from app.platform import admin, auth, company, challenges, history
+from app.platform import admin, auth, company, challenges, history, waitlist
 from app.platform.auth import current_user, session_user
 from app.platform.security import RateLimiter, check, sign
 
@@ -53,9 +54,28 @@ CSP = ("default-src 'self'; script-src 'self' " + _importmap_hash() + "; style-s
        "form-action 'self' https://accounts.google.com")
 
 
+def _gate_ok(request: Request) -> bool:
+    """Private-testing gate: when TEST_GATE_USERNAME/PASSWORD are set, every page needs them (HTTP Basic)."""
+    if not (settings.test_gate_username and settings.test_gate_password):
+        return True
+    if request.url.path in ("/health", "/api/waitlist"):
+        return True
+    header = request.headers.get("authorization", "")
+    if not header.startswith("Basic "):
+        return False
+    try:
+        user, _, pw = base64.b64decode(header[6:]).decode().partition(":")
+    except (ValueError, UnicodeDecodeError):
+        return False
+    return hmac.compare_digest(user, settings.test_gate_username) & hmac.compare_digest(pw, settings.test_gate_password)
+
+
 @app.middleware("http")
 async def security(request: Request, call_next):
-    if request.method in ("POST", "PUT", "PATCH", "DELETE"):
+    if not _gate_ok(request):
+        return Response("Reality ASM is in private testing.", status_code=401,
+                        headers={"WWW-Authenticate": 'Basic realm="Reality ASM testing", charset="UTF-8"'})
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.url.path != "/api/waitlist":
         origin = request.headers.get("origin")
         host = request.headers.get("host", "")
         if origin and origin != "null" and re.sub(r"^https?://", "", origin) != host:
@@ -78,6 +98,7 @@ app.include_router(history.router)
 app.include_router(company.router)
 app.include_router(challenges.router)
 app.include_router(admin.router)
+app.include_router(waitlist.router)
 
 
 # ---------------------------------------------------------------- engine API (signed-in users only)

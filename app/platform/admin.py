@@ -34,6 +34,7 @@ def overview(user=Depends(admin_user)):
             "photos": one("SELECT COUNT(*) FROM photos"),
             "challenges_done": one("SELECT COUNT(*) FROM challenge_progress"),
             "feedback": one("SELECT COUNT(*) FROM feedback"),
+            "waitlist": one("SELECT COUNT(*) FROM waitlist"),
         }
         recent = [dict(r) for r in conn.execute(
             "SELECT name, email, created_at, last_login_at FROM users ORDER BY created_at DESC LIMIT 50")]
@@ -42,4 +43,5 @@ def overview(user=Depends(admin_user)):
             "LEFT JOIN users u ON u.id = f.user_id ORDER BY f.created_at DESC LIMIT 200")]
         challenges = [dict(r) for r in conn.execute(
             "SELECT challenge_id, COUNT(*) AS n FROM challenge_progress GROUP BY challenge_id ORDER BY n DESC")]
-    return {"stats": stats, "recent_users": recent, "feedback": feedback, "challenges": challenges}
+        waiting = [dict(r) for r in conn.execute("SELECT email, created_at, source FROM waitlist ORDER BY created_at DESC")]
+    return {"stats": stats, "recent_users": recent, "feedback": feedback, "challenges": challenges, "waitlist": waiting}

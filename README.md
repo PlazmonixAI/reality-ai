@@ -40,6 +40,12 @@ actually produced.
 
 **Storage:** a single SQLite file (`DATABASE_PATH`). Back it up by copying the file.
 
+## Pre-launch site on Cloudflare
+
+`cloudflare/` holds a static version of the landing page for Cloudflare Pages: only the main page is live, every other
+address shows "Coming soon", the "Join" buttons collect emails for the waitlist, and `/test` is a private page behind
+a username and password. See `cloudflare/README.md`.
+
 ## Deploying on Render
 
 1. Create a Web Service from this repo (or use `render.yaml` as a Blueprint). Build: `pip install -r requirements.txt`.

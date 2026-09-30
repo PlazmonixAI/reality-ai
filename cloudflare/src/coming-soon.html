@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Coming soon · Reality ASM</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+  <link rel="stylesheet" href="/static/prelaunch.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
+      <span class="grow"></span>
+      <a class="btn btn-primary" href="/#waitlist">Join the waitlist</a>
+    </div>
+  </header>
+  <main class="soon">
+    <div>
+      <img class="mark" src="/static/brand/mark.svg" alt="">
+      <p class="eyebrow">Coming soon</p>
+      <h1>This page opens with the public beta.</h1>
+      <p class="lede">We're putting the finishing touches on it. Kindly leave your email and we'll let you know the moment it's ready.</p>
+      <form class="waitlist" data-waitlist novalidate>
+        <label class="sr-only" for="soon-email">Email</label>
+        <input id="soon-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <button class="btn btn-primary" type="submit">Notify me</button>
+        <p class="wl-msg" role="status" aria-live="polite"></p>
+      </form>
+      <a class="link back" href="/">Back to the home page</a>
+    </div>
+  </main>
+  <script type="module" src="/static/waitlist.js"></script>
+</body>
+</html>

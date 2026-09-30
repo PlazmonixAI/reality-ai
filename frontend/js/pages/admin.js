@@ -3,7 +3,7 @@ import { el } from "../core/ui.js";
 import { api, when } from "../core/session.js";
 
 const LABELS = { users: "Accounts", users_7d: "New this week", active_24h: "Signed in today", saved_items: "Saved items",
-  flights: "Flights", companies: "Companies", spacecraft: "Spacecraft", photos: "Photos", challenges_done: "Challenges done", feedback: "Feedback" };
+  flights: "Flights", companies: "Companies", spacecraft: "Spacecraft", photos: "Photos", challenges_done: "Challenges done", feedback: "Feedback", waitlist: "Waitlist" };
 
 export default {
   title: "Admin",
@@ -21,6 +21,13 @@ export default {
           el("td", { class: "nowrap" }, when(f.created_at)), el("td", {}, f.name || "deleted account", el("br"), el("small", { class: "muted" }, f.email || "")),
           el("td", { class: "mono" }, f.page || ""), el("td", { class: "msg" }, f.message))))
           : el("p", { class: "muted" }, "No feedback yet."),
+        el("h2", { class: "section-title" }, `Waitlist (${d.waitlist.length})`,
+          d.waitlist.length ? el("button", { class: "btn small", type: "button", onclick: (e) => {
+            navigator.clipboard?.writeText(d.waitlist.map((w) => w.email).join("\n")).then(() => { e.target.textContent = "Copied"; });
+          } }, "Copy all emails") : ""),
+        d.waitlist.length ? table(["Email", "Joined", "From page"], d.waitlist.map((w) => el("tr", {},
+          el("td", {}, w.email), el("td", { class: "nowrap" }, when(w.created_at)), el("td", { class: "mono" }, w.source || ""))))
+          : el("p", { class: "muted" }, "Nobody on the waitlist yet."),
         el("h2", { class: "section-title" }, "Challenges completed"),
         d.challenges.length ? table(["Challenge", "Players"], d.challenges.map((c) => el("tr", {}, el("td", {}, c.challenge_id.replace(/_/g, " ")), el("td", {}, String(c.n)))))
           : el("p", { class: "muted" }, "None yet."),

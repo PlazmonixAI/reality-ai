@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     public_base_url: str = ""  # e.g. https://reality.plazmonix.ai (links in emails, Google sign-in callback)
     beta_invite_codes: str = ""  # comma separated; when set, sign-up needs one of them
     admin_emails: str = ""  # comma separated; these accounts see the admin page (sign-ups, feedback, usage)
+    waitlist_origins: str = ""  # comma separated sites allowed to post to /api/waitlist, e.g. https://realityasm.com
+    test_gate_username: str = ""  # when both are set, the whole app asks for this username and password (private testing)
+    test_gate_password: str = ""
     contact_email: str = "support@plazmonix.ai"
     enable_api_docs: bool = False  # /docs and /openapi.json stay off in production
     google_client_id: str = ""
@@ -40,6 +43,10 @@ class Settings(BaseSettings):
     smtp_from: str = ""
     simulate_rate_per_s: float = 25.0  # engine calls per user per second (burst of 4 s)
     ask_rate_per_min: float = 12.0
+
+    @property
+    def waitlist_origin_set(self) -> set[str]:
+        return {o.strip().rstrip("/") for o in self.waitlist_origins.split(",") if o.strip()}
 
     @property
     def admins(self) -> set[str]:

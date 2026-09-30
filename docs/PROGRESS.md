@@ -223,3 +223,7 @@
 - Send feedback from the account menu (stored in a `feedback` table, included in the data export, listed in the Privacy Policy).
 - Beta admin page (`#/admin`, `/api/admin/overview`) for the emails in `ADMIN_EMAILS`: account and usage counts, feedback, challenge completions, newest accounts.
 - **Next:** email verification, inclined ascents.
+
+## 2026-09-30 (evening): pre-launch site for Cloudflare
+- `cloudflare/`: static site for Cloudflare Pages built from the real landing page by `scripts/build_cloudflare_site.py`. Only `/` is live; every other address serves a "Coming soon" page (Cloudflare's 404.html); all "Join" buttons go to a waitlist form (placeholder until `waitlist_endpoint` is set); `/test` is guarded by a Pages Function asking for `TEST_USERNAME`/`TEST_PASSWORD`. Checked with wrangler: `/` 200, other paths show Coming soon, `/test` 401 without and 200 with the right password.
+- Backend: `POST /api/waitlist` (form or JSON, CORS only for `WAITLIST_ORIGINS`, rate limited, stored in a `waitlist` table and listed on the admin page with "Copy all emails"); optional private-testing gate for the whole Render app (`TEST_GATE_USERNAME`/`TEST_GATE_PASSWORD`, `/health` stays open).
