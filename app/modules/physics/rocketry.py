@@ -383,8 +383,15 @@ def _elements(b: dict, x, y, vx, vy) -> dict:
     out = {"eccentricity": e, "specific_energy": energy, "angular_momentum": h}
     if energy < 0:
         a = -mu / (2 * energy)
-        out.update({"semi_major_axis": a, "apoapsis_alt": a * (1 + e) - R, "periapsis_alt": a * (1 - e) - R,
-                    "period": 2 * math.pi * math.sqrt(a**3 / mu)})
+        period = 2 * math.pi * math.sqrt(a**3 / mu)
+        out.update({"semi_major_axis": a, "apoapsis_alt": a * (1 + e) - R, "periapsis_alt": a * (1 - e) - R, "period": period})
+        if e > 1e-6:  # time until the next apsis passes (the orbit is flown in the sense of h)
+            nu = math.atan2(ey * x / r - ex * y / r, ex * x / r + ey * y / r) * (1 if h >= 0 else -1)
+            big = 2 * math.atan2(math.sqrt(1 - e) * math.sin(nu / 2), math.sqrt(1 + e) * math.cos(nu / 2))
+            m = (big - e * math.sin(big)) % (2 * math.pi)
+            n = 2 * math.pi / period
+            out["time_to_periapsis"] = ((2 * math.pi - m) % (2 * math.pi)) / n
+            out["time_to_apoapsis"] = ((math.pi - m) % (2 * math.pi)) / n
     else:
         p = h * h / mu
         out.update({"semi_major_axis": None, "apoapsis_alt": None, "periapsis_alt": p / (1 + e) - R, "period": None})
@@ -960,6 +967,7 @@ def _result(b, stages, t, x, y, vx, vy, ang, k, props, landed, crashed, chute, e
         "delta_v_remaining": dv_left, "status": status, "fairing_attached": fairing,
         "apoapsis_alt": el["apoapsis_alt"], "periapsis_alt": el["periapsis_alt"], "eccentricity": el["eccentricity"],
         "period": el["period"], "stages_left": len(stages) - k,
+        "time_to_apoapsis": el.get("time_to_apoapsis"), "time_to_periapsis": el.get("time_to_periapsis"),
         "boosters": {"attached": True, "count": bst["count"], "fuel_fraction": bprops[k] / bst["prop"] if bst["prop"] else 0.0,
                      "solid": bst["solid"], "lit": lit[k]} if bst else None,
     }

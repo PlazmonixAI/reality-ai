@@ -5,6 +5,7 @@
 import { simulate } from "../core/api.js";
 import { el } from "../core/ui.js";
 import { fmt } from "../core/format.js";
+import { api, history, toast as notify } from "../core/session.js";
 
 const P = (part, count) => (count ? { part, count } : { part });
 const TEMPLATES = {
@@ -19,11 +20,14 @@ const TEMPLATES = {
   mars: { name: "Mars ascent vehicle", body: "mars", parts: [P("legs"), P("engine_booster"), P("tank_m"), P("interstage"), P("decoupler"), P("engine_lander", 2), P("tank_s"), P("probe"), P("nose")] },
 };
 const GROUPS = [
-  ["My designs", (p) => p.custom], ["Command & crew", (p) => p.category === "command"], ["Satellites", (p) => p.category === "satellite" && !p.custom],
+  ["My designs", (p) => p.custom], ["Command & crew", (p) => p.category === "command" && !p.agency], ["Satellites", (p) => p.category === "satellite" && !p.custom && !p.agency],
+  ["Real satellites", (p) => p.category === "satellite" && p.agency && !p.custom],
+  ["Real stages & strap-on boosters", (p) => (p.category === "stage" || p.category === "booster")],
+  ["Real spacecraft", (p) => p.category === "command" && p.agency],
   ["Fuel tanks", (p) => p.category === "tank"],
   ["Engines · small", (p) => p.category === "engine" && !p.custom && p.class === "small"], ["Engines · medium", (p) => p.category === "engine" && !p.custom && p.class === "medium"],
   ["Engines · large", (p) => p.category === "engine" && !p.custom && p.class === "large"], ["Engines · heavy", (p) => p.category === "engine" && !p.custom && p.class === "heavy"],
-  ["Structure, fairings & recovery", (p) => ["structural", "aero", "recovery"].includes(p.category)],
+  ["Structure, fairings & recovery", (p) => ["structural", "aero", "recovery"].includes(p.category) && !p.id.startsWith("decoupler_real")],
 ];
 const WARPS = [1, 2, 5, 10, 25, 100, 1000, 10000, 100000];
 const SKY = { earth: [[0, [118, 178, 255]], [12e3, [70, 120, 220]], [35e3, [20, 30, 80]], [70e3, [2, 4, 12]]], mars: [[0, [220, 170, 120]], [15e3, [150, 100, 80]], [45e3, [8, 6, 10]]], moon: [[0, [0, 0, 0]]] };
@@ -31,13 +35,21 @@ const GROUND = { earth: ["#3d7a3a", "#2c5e2a"], mars: ["#b5643b", "#8e4a2b"], mo
 const OMEGA = { earth: -7.2921159e-5, moon: -2.6617e-6, mars: -7.088218e-5 };
 const CLASS_TONE = { small: "#8a93a3", medium: "#6b7280", large: "#5b6270", heavy: "#474d57" };
 const STORE = "reality-asm.spaceflight.custom-parts";
-const SITES = [[-52.77, "Kourou (Guiana)"], [80.23, "Sriharikota (India)"], [-80.6, "Cape Canaveral (USA)"], [63.3, "Baikonur (Kazakhstan)"], [110.95, "Wenchang (China)"]];
+const SITES = [[-52.77, "Kourou (Guiana)"], [80.23, "Sriharikota (India)"], [-80.6, "Cape Canaveral (USA)"], [63.3, "Baikonur (Kazakhstan)"], [110.95, "Wenchang (China)"],
+  [177.86, "Mahia (New Zealand)"], [-120.61, "Vandenberg (USA)"], [130.97, "Tanegashima (Japan)"]];
+const SITE_ID_LON = { kourou: -52.77, sriharikota: 80.23, canaveral: -80.6, baikonur: 63.3, wenchang: 110.95, mahia: 177.86, vandenberg: -120.61, tanegashima: 130.97 };
+const KEYS = [["Z / X", "Full throttle / cut engines"], ["Shift / Ctrl", "Throttle up / down"], ["A D or ← →", "Rotate"], ["Space", "Stage"],
+  ["F", "Drop the fairing"], ["M", "Map"], ["V", "3D view (Earth flights)"], [", .", "Slower / faster time"], ["P", "Pause"],
+  ["K", "Quick save"], ["L", "Quick load"], ["H", "Show or hide these keys"]];
 const takeStored = (key) => { try { const v = localStorage.getItem(key); localStorage.removeItem(key); return v; } catch { return null; } };
 const putStored = (key, v) => { try { localStorage.setItem(key, v); } catch { /* storage unavailable */ } };
 const loadCustom = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
 const saveCustom = (c) => { try { localStorage.setItem(STORE, JSON.stringify(c)); } catch { /* storage unavailable */ } };
 const isFairing = (p) => p.id?.startsWith("fairing");
 const isEngine = (p) => p.category === "engine";
+const isDecoupler = (p) => p?.id?.startsWith("decoupler");
+const isBooster = (p) => p.category === "booster";
+const stackHeight = (parts) => parts.reduce((a, p) => a + (isBooster(p) ? 0 : p.height), 0);
 
 // ---------- part drawing (used by the builder, the flight view and the designers) ----------
 function bell(ctx, ex, top, bot, bw, tone, vacuum) {
@@ -93,7 +105,16 @@ function drawPart(ctx, p, cx, yb, s, opts = {}) {
   const cyl = (fill) => { const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, fill); g.addColorStop(0.45, "#ffffff"); g.addColorStop(1, "#9aa6b5"); return g; };
   ctx.save();
   ctx.lineWidth = Math.max(1, s * 0.05); ctx.strokeStyle = "rgba(20,30,45,.6)";
-  if (p.category === "tank") {
+  if (p.category === "stage" || isBooster(p)) { // a real stage: propellant body with its engines underneath
+    const eh = Math.min(h * 0.14, w * 0.9), bodyH = h - eh;
+    const tone = p.agency === "Roscosmos" ? "#d6dccf" : white;
+    ctx.fillStyle = cyl(tone); ctx.fillRect(x, y, w, bodyH); ctx.strokeRect(x, y, w, bodyH);
+    if (isBooster(p)) { ctx.beginPath(); ctx.moveTo(x, y + w * 0.9); ctx.quadraticCurveTo(x, y, cx, y - w * 0.4); ctx.quadraticCurveTo(x + w, y, x + w, y + w * 0.9); ctx.fillStyle = cyl(tone); ctx.fill(); ctx.stroke(); }
+    ctx.fillStyle = p.solid ? "#3a3f47" : "#1c2430";
+    for (const f of [0.1, 0.9]) ctx.fillRect(x, y + bodyH * f - s * 0.1, w, s * 0.2);
+    if (p.agency === "ISRO" && !isBooster(p)) { ctx.fillStyle = "#e0662e"; ctx.fillRect(x, y + bodyH * 0.45, w, Math.max(1, s * 0.25)); }
+    if (p.thrust_vac) { const vacuum = p.isp_sl < 0.6 * p.isp_vac; bell(ctx, cx, y + bodyH, yb, Math.min(w * 0.8, eh * 1.4), p.solid ? "#4b5260" : "#6b7280", vacuum); }
+  } else if (p.category === "tank") {
     ctx.fillStyle = cyl(white); ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h);
     ctx.fillStyle = "#1c2430";
     for (const f of [0.08, 0.92]) ctx.fillRect(x, y + h * f - s * 0.12, w, s * 0.24);
@@ -116,7 +137,8 @@ function drawPart(ctx, p, cx, yb, s, opts = {}) {
     ctx.fillStyle = g; ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h);
   } else if (isFairing(p)) { // the nose of the fairing (its cylinder around the payload is drawn by drawShells)
     ctx.fillStyle = cyl(white); ctx.globalAlpha = opts.ghost ? 0.55 : 1; ctx.beginPath(); ctx.moveTo(x, yb); ctx.bezierCurveTo(x, y + h * 0.35, cx - w * 0.3, y, cx, y); ctx.bezierCurveTo(cx + w * 0.3, y, x + w, y + h * 0.35, x + w, yb); ctx.closePath(); ctx.fill(); ctx.stroke();
-  } else switch (p.id) {
+  } else if (isDecoupler(p)) { ctx.fillStyle = "#2a2f36"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#f2c230"; for (let i = 0; i < 6; i++) ctx.fillRect(x + (i + 0.25) * (w / 6), y + h * 0.25, w / 12, h * 0.5); }
+  else switch (p.id) {
     case "decoupler": ctx.fillStyle = "#2a2f36"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#f2c230"; for (let i = 0; i < 6; i++) ctx.fillRect(x + (i + 0.25) * (w / 6), y + h * 0.25, w / 12, h * 0.5); break;
     case "nose": { ctx.fillStyle = cyl(white); ctx.beginPath(); ctx.moveTo(x, yb); ctx.quadraticCurveTo(x, y + h * 0.15, cx, y); ctx.quadraticCurveTo(x + w, y + h * 0.15, x + w, yb); ctx.closePath(); ctx.fill(); ctx.stroke(); break; }
     case "capsule": case "lander": {
@@ -139,8 +161,8 @@ function drawShells(ctx, parts, layout, cx, s, ghost) {
   ctx.lineWidth = Math.max(1, s * 0.05); ctx.strokeStyle = "rgba(20,30,45,.6)";
   parts.forEach((p, i) => {
     let from = -1;
-    if (isFairing(p)) { from = i; while (from > 0 && parts[from - 1].id !== "decoupler") from--; if (from === i) return; }
-    else if (p.id.startsWith("interstage") && parts[i + 1]?.id === "decoupler" && parts[i + 2] && isEngine(parts[i + 2])) from = i + 3;
+    if (isFairing(p)) { from = i; while (from > 0 && !isDecoupler(parts[from - 1])) from--; while (from < i && isBooster(parts[from])) from++; if (from === i) return; }
+    else if (p.id.startsWith("interstage") && isDecoupler(parts[i + 1]) && parts[i + 2] && isEngine(parts[i + 2])) from = i + 3;
     else return;
     const w = p.width * s, x = cx - w / 2;
     const top = isFairing(p) ? layout[i][1] : layout[i + 2][0], bottom = isFairing(p) ? layout[from][1] : layout[i][0];
@@ -154,13 +176,24 @@ function drawShells(ctx, parts, layout, cx, s, ghost) {
 }
 function drawStack(ctx, parts, cx, yb, s, opts = {}) { // → [[top, bottom], …] per part
   const layout = [], covered = new Set(); // parts inside a closed (non-cutaway) fairing are hidden
-  if (!opts.ghost && !opts.hideFairing) parts.forEach((p, i) => { if (isFairing(p)) for (let j = i - 1; j >= 0 && parts[j].id !== "decoupler"; j--) covered.add(j); });
+  if (!opts.ghost && !opts.hideFairing) parts.forEach((p, i) => { if (isFairing(p)) for (let j = i - 1; j >= 0 && !isDecoupler(parts[j]); j--) covered.add(j); });
+  const boosters = [];
   parts.forEach((p, i) => {
+    if (isBooster(p)) { layout.push([yb, yb]); boosters.push(i); return; } // strap-ons fly beside the core, drawn below
     const h = p.height * s;
     layout.push([yb - h, yb]);
     if (!(isFairing(p) && opts.hideFairing) && !covered.has(i)) drawPart(ctx, p, cx, yb, s, { selected: i === opts.selected, profile: p.profile, ghost: opts.ghost });
     yb -= h;
   });
+  for (const i of boosters) { // bottom-aligned with the first part of their stage, one each side (×n when more)
+    const p = parts[i];
+    let first = i; while (first > 0 && !isDecoupler(parts[first - 1])) first--;
+    let core = first; while (core < parts.length && isBooster(parts[core])) core++;
+    const base = layout[first][1], coreW = (parts[core]?.width || p.width) * s;
+    for (const side of [-1, 1]) drawPart(ctx, { ...p, count: 1 }, cx + side * (coreW / 2 + (p.width * s) / 2), base, s, { selected: i === opts.selected });
+    if ((p.count || 1) > 2) { ctx.save(); ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.max(10, s * 1.2)}px system-ui`; ctx.textAlign = "left"; ctx.fillText(`×${p.count}`, cx + coreW / 2 + p.width * s + 6, base - p.height * s * 0.5); ctx.restore(); }
+    layout[i] = [base - p.height * s, base];
+  }
   drawShells(ctx, opts.hideFairing ? parts.map((p) => (isFairing(p) ? { ...p, id: "gone" } : p)) : parts, layout, cx, s, opts.ghost);
   return layout;
 }
@@ -173,7 +206,7 @@ function iconCanvas(p) {
 }
 
 export default {
-  mount(root) {
+  mount(root, params = {}) {
     let catalogue = null, stack = TEMPLATES.orbiter.parts.map((p) => ({ ...p })), body = "earth", selected = -1, design = null;
     let mode = "build", customs = loadCustom();
     const rootEl = el("div", { class: "sf-root" });
@@ -186,8 +219,21 @@ export default {
     const palette = el("div", { class: "sf-palette" });
     const statsBox = el("div", { class: "sf-stats" });
     const partBox = el("div", { class: "sf-partbox" });
-    const tplSel = el("select", { class: "sf-select", "aria-label": "Template", onchange: () => { const t = TEMPLATES[tplSel.value]; if (t) { stack = t.parts.map((p) => ({ ...p })); body = t.body; bodySel.value = body; selected = -1; refresh(); } } },
-      el("option", { value: "" }, "Templates…"), ...Object.entries(TEMPLATES).map(([k, t]) => el("option", { value: k }, t.name)));
+    let vehicles = []; // real launch vehicles from the engine's catalogue
+    const applyTemplate = (key) => {
+      const v = vehicles.find((x) => `v:${x.id}` === key);
+      if (v) {
+        stack = v.parts.map((p) => ({ ...p })); body = "earth"; bodySel.value = body; selected = -1;
+        if (SITE_ID_LON[v.site] !== undefined) siteSel.value = String(SITE_ID_LON[v.site]);
+        designName = v.name; refresh(); return;
+      }
+      const t = TEMPLATES[key];
+      if (t) { stack = t.parts.map((p) => ({ ...p })); body = t.body; bodySel.value = body; selected = -1; designName = t.name; refresh(); }
+    };
+    const tplSel = el("select", { class: "sf-select", "aria-label": "Rocket templates", onchange: () => applyTemplate(tplSel.value) },
+      el("option", { value: "" }, "Rockets and templates"),
+      el("optgroup", { label: "Examples" }, ...Object.entries(TEMPLATES).map(([k, t]) => el("option", { value: k }, t.name))));
+    let designName = "My rocket";
     const bodySel = el("select", { class: "sf-select", "aria-label": "Launch from", onchange: () => { body = bodySel.value; refresh(); } },
       el("option", { value: "earth" }, "Launch from Earth"), el("option", { value: "moon" }, "Launch from the Moon"), el("option", { value: "mars" }, "Launch from Mars"));
     const handoff = takeStored("reality-asm.mission-date"); // set by the Solar System's "launch on this date" button
@@ -196,12 +242,14 @@ export default {
     const siteSel = el("select", { class: "sf-select", "aria-label": "Launch site", title: "Launch site (flights are planar, so the site is projected onto the equator)" },
       ...SITES.map(([lon, name]) => el("option", { value: lon }, name)));
     const startSel = el("select", { class: "sf-select", "aria-label": "Start" }, el("option", { value: "pad" }, "Start on the launch pad"), el("option", { value: "orbit" }, "Start in low orbit (skip ascent)"));
-    const launchBtn = el("button", { class: "sf-launch", type: "button", onclick: () => startFlight() }, "LAUNCH ▶");
+    const launchBtn = el("button", { class: "sf-launch", type: "button", onclick: () => startFlight() }, "Launch");
     const clearBtn = el("button", { class: "sf-small", type: "button", onclick: () => { stack = []; selected = -1; refresh(); } }, "Clear");
     const buildView = el("div", { class: "sf-build" },
       el("div", { class: "sf-build-top" }, el("span", { class: "sf-title" }, "ROCKET BUILDER"), tplSel, bodySel, siteSel, dateIn, startSel, clearBtn,
-        el("button", { class: "sf-small accent", type: "button", onclick: () => openEngineDesigner() }, "⚙ Engine designer"),
-        el("button", { class: "sf-small accent", type: "button", onclick: () => openSatDesigner() }, "🛰 Satellite designer"),
+        el("button", { class: "sf-small accent", type: "button", onclick: () => openEngineDesigner() }, "Engine designer"),
+        el("button", { class: "sf-small accent", type: "button", onclick: () => openSatDesigner() }, "Satellite designer"),
+        el("button", { class: "sf-small", type: "button", onclick: () => saveDesign() }, "Save design"),
+        el("a", { class: "sf-small", href: "#/company?probe=1", title: "Plan a mission to Mars, Venus, Jupiter or Saturn in Mission Control" }, "Planet missions"),
         el("span", { class: "sf-spacer" }), launchBtn),
       palette, el("div", { class: "sf-build-stage" }, bCanvas), el("div", { class: "sf-right" }, partBox, statsBox));
     rootEl.append(buildView);
@@ -260,8 +308,10 @@ export default {
         ...d.stages.map((s) => el("div", { class: "sf-stage" }, el("div", { class: "sf-stage-h" }, `Stage ${s.stage + 1}${s.has_fairing ? " · fairing" : ""}${s.interstage ? " · interstage" : ""}`),
           el("div", { class: "sf-fact" }, el("span", {}, "Δv"), el("b", {}, `${fmt(s.delta_v_vac, 4)} m/s`)),
           el("div", { class: "sf-fact" }, el("span", {}, "TWR"), el("b", { class: s.twr_surface < 1 && s.stage === 0 ? "bad" : "" }, fmt(s.twr_surface, 3))),
-          el("div", { class: "sf-fact" }, el("span", {}, "Burn time"), el("b", {}, s.burn_time ? `${fmt(s.burn_time, 3)} s` : "—")))),
-        ...d.warnings.map((w) => el("p", { class: "sf-warn" }, "⚠ " + w)));
+          el("div", { class: "sf-fact" }, el("span", {}, "Burn time"), el("b", {}, s.burn_time ? `${fmt(s.burn_time, 3)} s` : "none")),
+          s.boosters ? el("div", { class: "sf-fact" }, el("span", {}, `${s.boosters.count} strap-on${s.boosters.count > 1 ? "s" : ""}${s.boosters.solid ? " (solid)" : ""}`),
+            el("b", {}, `${fmt(s.boosters.thrust_sl / 1000, 4)} kN · ${fmt(s.boosters.burn_time, 3)} s`)) : "")),
+        ...d.warnings.map((w) => el("p", { class: "sf-warn" }, w)));
     }
 
     let bLayout = [];
@@ -274,13 +324,13 @@ export default {
       ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 1;
       for (let gx = 0; gx < W; gx += 24) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
       for (let gy = 0; gy < H; gy += 24) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
-      const parts = stack.map(partOf), total = parts.reduce((a, p) => a + p.height, 0) || 1, maxW = Math.max(3.2, ...parts.map((p) => p.width));
+      const parts = stack.map(partOf), total = stackHeight(parts) || 1, maxW = Math.max(3.2, ...parts.map((p) => (isBooster(p) ? 0 : p.width))) + Math.max(0, ...parts.filter(isBooster).map((p) => 2 * p.width));
       const s = Math.min((H - 80) / total, (W * 0.45) / maxW, 22);
       const yb = H - 40;
       ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(W / 2 - 80, yb, 160, 6);
       bLayout = drawStack(ctx, parts, W / 2, yb, s, { selected, ghost: true });
       let st = 1, from = yb; // stage brackets
-      parts.forEach((p, i) => { if (p.id === "decoupler" || i === parts.length - 1) { const to = bLayout[i][0], bx = W / 2 + maxW * s / 2 + 26; ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.beginPath(); ctx.moveTo(bx, from); ctx.lineTo(bx + 6, from); ctx.lineTo(bx + 6, to); ctx.lineTo(bx, to); ctx.stroke(); ctx.fillStyle = "#cfe0f5"; ctx.font = "12px system-ui"; ctx.fillText(`Stage ${st}`, bx + 12, (from + to) / 2 + 4); st++; from = to; } });
+      parts.forEach((p, i) => { if (isDecoupler(p) || i === parts.length - 1) { const to = bLayout[i][0], bx = W / 2 + maxW * s / 2 + 26; ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.beginPath(); ctx.moveTo(bx, from); ctx.lineTo(bx + 6, from); ctx.lineTo(bx + 6, to); ctx.lineTo(bx, to); ctx.stroke(); ctx.fillStyle = "#cfe0f5"; ctx.font = "12px system-ui"; ctx.fillText(`Stage ${st}`, bx + 12, (from + to) / 2 + 4); st++; from = to; } });
       if (!parts.length) { ctx.fillStyle = "#cfe0f5"; ctx.font = "15px system-ui"; ctx.textAlign = "center"; ctx.fillText("Add an engine, a fuel tank and a capsule or satellite", W / 2, H / 2); ctx.textAlign = "left"; }
     }
     bCanvas.addEventListener("click", (e) => {
@@ -358,7 +408,7 @@ export default {
           ["Exit pressure", `${fmt(r.exit_pressure / 1000, 3)} kPa`], ["Chamber temperature", `${fmt(r.chamber_temperature, 4)} K`]];
         stats.replaceChildren(...rows.map(([k, v]) => el("div", { class: "sf-fact" }, el("span", {}, k), el("b", {}, v))),
           el("div", { class: "sf-alt" }, el("span", {}, "Thrust vs altitude (% of vacuum)"), ...r.thrust_vs_altitude.map((a) => el("i", { title: `${a.altitude_km} km: ${fmt(a.thrust_kn, 4)} kN, Isp ${fmt(a.isp, 3)} s`, style: `height:${Math.max(2, (a.thrust_kn / (r.thrust_vac / 1000)) * 100)}%` }, el("em", {}, `${a.altitude_km} km`)))),
-          ...r.warnings.map((w) => el("p", { class: "sf-warn" }, "⚠ " + w)));
+          ...r.warnings.map((w) => el("p", { class: "sf-warn" }, w)));
       }
       go();
     }
@@ -404,7 +454,7 @@ export default {
           ["Orbital period", `${fmt(r.orbital_period / 60, 4)} min`], ["Longest eclipse", `${fmt(r.eclipse_duration / 60, 3)} min`],
           ["Power in sunlight / orbit average", `${fmt(r.power_in_sunlight, 4)} / ${fmt(r.orbit_average_power, 4)} W`], ["Battery depth of discharge", `${fmt(r.battery_depth_of_discharge * 100, 3)} %`]];
         stats.replaceChildren(el("div", { class: `sf-badge ${r.power_ok ? "ok" : "bad"}` }, r.power_ok ? "Power budget closes" : "Power budget fails"),
-          ...rows.map(([k, v]) => el("div", { class: "sf-fact" }, el("span", {}, k), el("b", {}, v))), ...r.warnings.map((w) => el("p", { class: "sf-warn" }, "⚠ " + w)));
+          ...rows.map(([k, v]) => el("div", { class: "sf-fact" }, el("span", {}, k), el("b", {}, v))), ...r.warnings.map((w) => el("p", { class: "sf-warn" }, w)));
       }
       go();
     }
@@ -422,12 +472,18 @@ export default {
       b.addEventListener("pointerdown", () => { rotating = dirn; setSas("free"); }); ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, () => { rotating = 0; })); return b; };
     const fairingBtn = el("button", { class: "sf-fairbtn", type: "button", onclick: () => { fairingReq = true; } }, "FAIRING");
     const btn3d = el("button", { class: "sf-btn wide accent", type: "button", title: "See the flight in 3D over the real Earth and Moon", onclick: () => show3d(!view3dOn) }, "3D");
+    const deployBtn = el("button", { class: "sf-btn wide accent", type: "button", title: "Release the satellite into your Mission Control fleet", style: "display:none", onclick: () => openDeploy() }, "DEPLOY");
+    const pauseBtn = el("button", { class: "sf-btn wide", type: "button", title: "Pause (P)", onclick: () => togglePause() }, "PAUSE");
+    const apBtn = el("button", { class: "sf-btn wide", type: "button", title: "Coast to just before the next apoapsis", onclick: () => warpTo("apoapsis") }, "TO AP");
+    const peBtn = el("button", { class: "sf-btn wide", type: "button", title: "Coast to just before the next periapsis", onclick: () => warpTo("periapsis") }, "TO PE");
+    const keysBox = el("div", { class: "sf-keys hidden" }, el("b", {}, "Controls"), ...KEYS.map(([k, v]) => el("div", {}, el("kbd", {}, k), el("span", {}, v))));
+    const helpBtn = el("button", { class: "sf-btn", type: "button", title: "Keyboard controls (H)", "aria-label": "Keyboard controls", onclick: () => keysBox.classList.toggle("hidden") }, "?");
     let f3d = null, view3dOn = false;
     async function show3d(on) {
       view3dOn = on; btn3d.classList.toggle("on", on);
       if (on && !f3d) {
         const { createFlight3D } = await import("../space/flight3d.js");
-        f3d = createFlight3D(flightView, { rocketHeight: flight.parts.reduce((a, q) => a + q.height, 0),
+        f3d = createFlight3D(flightView, { rocketHeight: stackHeight(flight.parts),
           onSolarSystem: (jd) => { putStored("reality-asm.solar-date", new Date((jd - 2440587.5) * 86400000).toISOString()); location.hash = "#/sim/solarsystem"; } });
         if (flight.last) f3d.update(flight.last);
       }
@@ -437,8 +493,8 @@ export default {
     const flightView = el("div", { class: "sf-flight hidden" }, fCanvas, hud, toast,
       el("div", { class: "sf-topright" },
         el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx - 1) }, "«"), warpLabel, el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx + 1) }, "»"),
-        el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapView = !mapView; show3d(false); } }, "MAP"), focusBtn, btn3d,
-        el("button", { class: "sf-btn wide", type: "button", onclick: () => toBuild() }, "BUILD")),
+        el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapView = !mapView; show3d(false); } }, "MAP"), focusBtn, btn3d, pauseBtn, apBtn, peBtn, deployBtn, helpBtn,
+        el("button", { class: "sf-btn wide", type: "button", onclick: () => toBuild() }, "BUILD")), keysBox,
       el("div", { class: "sf-throttle-box" }, el("div", { class: "sf-thr-title" }, "THROTTLE"), thr, thrLabel,
         el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(1) }, "Full"), el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(0) }, "Cut")),
       el("div", { class: "sf-bottomleft" }, hold(-1), hold(1), el("div", { class: "sf-sas-row" }, ...sasBtns)),
@@ -448,32 +504,169 @@ export default {
     rootEl.append(flightView);
 
     let flight = null, prev = null, throttle = 0, rel = 0, rotating = 0, sas = "free", warpIdx = 0, mapView = false, mapFocus = "auto";
+    let paused = false, autoWarp = null, quick = null;
     let stageReq = false, chuteReq = false, fairingReq = false, busy = false, stepStart = 0, stepLen = 0.1, zoom = 1, raf = 0, lastT = 0, log = [], ended = false;
     const setThrottle = (v) => { throttle = v; thr.value = Math.round(v * 100); thrLabel.textContent = `${thr.value}%`; };
     function setSas(m) { sas = m; sasBtns.forEach((b, i) => b.classList.toggle("on", ["free", "prograde", "retrograde", "up"][i] === m)); }
     function setWarp(i) { warpIdx = Math.max(0, Math.min(WARPS.length - 1, i)); warpLabel.textContent = `${WARPS[warpIdx]}×`; }
     setSas("free");
+    function togglePause(on = !paused) { paused = on; pauseBtn.textContent = paused ? "RESUME" : "PAUSE"; pauseBtn.classList.toggle("on", paused); if (paused) { autoWarp = null; say("Paused. Press P to carry on."); } }
+    function warpTo(which) {
+      const tel = flight?.tel;
+      const wait = which === "apoapsis" ? tel?.time_to_apoapsis : tel?.time_to_periapsis;
+      if (!tel || wait == null || flight.state.landed) { say(`No ${which} ahead on this trajectory.`); return; }
+      if (throttle > 0) setThrottle(0);
+      if (tel.altitude < (flight.local?.atmosphere_top || 0)) { say("Leave the atmosphere before warping."); return; }
+      autoWarp = { until: flight.state.t + Math.max(0, wait - 20), chunk: Math.max(20, (tel.period || 6000) / 60) };
+      paused = false; pauseBtn.textContent = "PAUSE"; pauseBtn.classList.remove("on");
+      say(`Coasting to ${which} (${fmtT(wait)} away).`);
+    }
+    function quickSave() {
+      if (!flight) return;
+      quick = { state: JSON.parse(JSON.stringify(flight.state)), sig: flight.sig, verified: flight.verified, t: flight.state.t };
+      say(`Quick saved at T+${fmtT(flight.state.t)}. Press L to go back to it.`);
+    }
+    function quickLoad() {
+      if (!flight || !quick) { say("Nothing quick saved yet (press K)."); return; }
+      flight.state = JSON.parse(JSON.stringify(quick.state)); flight.sig = quick.sig; flight.verified = quick.verified; prev = null;
+      ended = !!flight.state.crashed; autoWarp = null; setThrottle(0); setWarp(0);
+      say(`Back to T+${fmtT(quick.t)}.`); step(0.05);
+    }
 
-    async function startFlight() {
+    async function startFlight(resume = null) {
       const start = startSel.value;
-      if (start === "pad" && (!design || design.warnings.some((w) => w.includes("cannot leave")))) { if (!confirm("This rocket probably can't lift off. Launch anyway?")) return; }
-      const custom = usedCustom();
+      if (!resume && start === "pad" && (!design || design.warnings.some((w) => w.includes("cannot leave")))) { if (!confirm("This rocket probably can't lift off. Launch anyway?")) return; }
+      const custom = resume ? resume.custom_parts || {} : usedCustom();
       let r;
       const when = body === "earth" ? { date: new Date((dateIn.value || new Date().toISOString().slice(0, 16)) + ":00Z").toISOString(), site_longitude_deg: +siteSel.value } : {};
-      try { r = await simulate("physics", "rocket_launch_state", { parts: stack, body, custom_parts: custom, start, ...when }); }
-      catch (e) { statsBox.prepend(el("p", { class: "sf-warn" }, "⚠ " + e.message)); return; }
+      if (resume) r = { result: resume.state, signature: resume.signature || null, verified: !!resume.signature };
+      else {
+        try { r = await simulate("physics", "rocket_launch_state", { parts: stack, body, custom_parts: custom, start, ...when }); }
+        catch (e) { statsBox.prepend(el("p", { class: "sf-warn" }, e.message)); return; }
+      }
       const parts = stack.map(partOf);
-      flight = { state: r.result, tel: null, traj: [], trajMoon: [], trajDt: 0, planet: null, local: null, moon: null, parts, stages: splitStages(parts), custom, ref: body, jettisonAt: 0 };
-      prev = null; rel = 0; setThrottle(0); setWarp(0); mapView = false; log = []; ended = false; zoom = 1;
+      flight = { state: r.result, sig: r.signature || null, verified: r.verified !== false, tel: null, traj: [], trajMoon: [], trajDt: 0, planet: null, local: null, moon: null,
+        parts, stages: splitStages(parts), custom, ref: body, jettisonAt: 0, runId: resume?.runId || null, name: resume?.name || designName,
+        launch: resume?.launch || { body, start, ...when, site_name: siteSel.selectedOptions[0]?.textContent }, lastSave: 0, checked: {} };
+      prev = null; rel = 0; setThrottle(0); setWarp(0); mapView = false; log = []; ended = !!(r.result.crashed); zoom = 1; paused = false; autoWarp = null; quick = null;
       fairingBtn.style.display = parts.some(isFairing) ? "" : "none";
       btn3d.style.display = body === "earth" ? "" : "none"; show3d(false);
       if (f3d) { f3d.dispose(); f3d = null; }
       mode = "flight"; buildView.classList.add("hidden"); flightView.classList.remove("hidden");
-      say(start === "orbit" ? "In a circular parking orbit. Open the MAP (M); the HUD shows the next trans-lunar injection window." : `Ready on the pad — ${bodySel.selectedOptions[0].textContent.replace("Launch from ", "")}. Throttle up (Z) to lift off.`);
-      step(0.05);
+      if (resume) say(`Resumed "${flight.name}" at T+${fmtT(r.result.t)}.${flight.verified ? "" : " This flight can't be verified, so it won't count for challenges."}`);
+      else say(start === "orbit" ? "In a circular parking orbit. Open the map (M); the HUD shows the next trans-lunar injection window." : `Ready on the pad at ${bodySel.selectedOptions[0].textContent.replace("Launch from ", "")}. Throttle up (Z) to lift off.`);
+      drawChallenge();
+      await step(0.05);
+      saveFlight(true);
     }
-    function toBuild() { show3d(false); mode = "build"; flightView.classList.add("hidden"); buildView.classList.remove("hidden"); refresh(); }
-    function splitStages(parts) { const out = []; let cur = []; parts.forEach((p) => { cur.push(p); if (p.id === "decoupler") { out.push(cur); cur = []; } }); if (cur.length) out.push(cur); return out; }
+
+    // ---------- history: flights save themselves; designs are saved on request
+    async function saveFlight(force = false) {
+      if (!flight?.state || !flight.tel) return;
+      const now = performance.now();
+      if (!force && now - flight.lastSave < 20000) return;
+      flight.lastSave = now;
+      const tel = flight.tel, st = flight.state;
+      const payload = { parts: stack, custom_parts: flight.custom, body, launch: flight.launch, state: st, signature: flight.sig, name: flight.name, events: log.map((l) => l.msg).slice(0, 4) };
+      const summary = { status: tel.status, altitude: tel.altitude, mission_time: st.t, reference: tel.reference, vehicle: flight.name, verified: flight.verified };
+      try {
+        if (flight.runId) await history.update(flight.runId, { payload, summary });
+        else {
+          const run = await history.create({ kind: "flight", sim_id: "spaceflight", title: `${flight.name}, ${new Date().toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}`, payload, summary });
+          flight.runId = run.id;
+        }
+      } catch (e) { if (force) say(`Couldn't save the flight: ${e.message}`); }
+    }
+    async function saveDesign() {
+      if (!stack.length) { notify("Add some parts first."); return; }
+      try {
+        await history.create({ kind: "design", sim_id: "spaceflight", title: designName === "My rocket" ? `Rocket design, ${new Date().toLocaleDateString()}` : `${designName} (design)`,
+          payload: { parts: stack, custom_parts: usedCustom(), body, customs: Object.fromEntries(Object.entries(customs).filter(([id]) => stack.some((p) => p.part === id))) },
+          summary: design ? { delta_v: design.total_delta_v_vac, mass: design.total_mass, stages: design.stages.length } : {} });
+        notify("Design saved to your history.");
+      } catch (e) { notify(e.message, "error"); }
+    }
+    async function loadFromHistory() {
+      const id = params.resume || params.design;
+      if (!id) return false;
+      try {
+        const run = await history.get(id);
+        const pl = run.payload;
+        for (const [cid, c] of Object.entries(pl.customs || {})) customs[cid] = c;
+        for (const [cid, spec] of Object.entries(pl.custom_parts || {})) if (!customs[cid]) customs[cid] = { spec };
+        saveCustom(customs); renderPalette();
+        stack = pl.parts.map((p) => ({ ...p })); body = pl.body || "earth"; bodySel.value = body; designName = pl.name || run.title;
+        if (pl.launch?.date) dateIn.value = pl.launch.date.slice(0, 16);
+        if (pl.launch?.site_longitude_deg !== undefined) siteSel.value = String(pl.launch.site_longitude_deg);
+        await refresh();
+        if (params.resume && pl.state) await startFlight({ state: pl.state, signature: pl.signature, custom_parts: pl.custom_parts, runId: run.id, name: pl.name || run.title, launch: pl.launch });
+        else notify(`Loaded "${run.title}".`);
+        return true;
+      } catch (e) { notify(e.message, "error"); return false; }
+    }
+
+    // ---------- challenge mode
+    let challenge = null;
+    const chBox = el("div", { class: "sf-challenge hidden" });
+    rootEl.append(chBox);
+    const CH_CHECK = {
+      karman: (tel) => tel.reference === "earth" && tel.altitude >= 100e3,
+      first_orbit: (tel) => tel.status === "orbit" && tel.periapsis_alt >= 150e3,
+      splashdown: (tel, st) => st.landed && !st.crashed && st.landed_on === "earth" && st.t >= 5400,
+      moonshot: (tel) => tel.status === "lunar orbit",
+      moon_landing: (tel, st) => st.landed && !st.crashed && st.landed_on === "moon",
+    };
+    function drawChallenge(result) {
+      if (!challenge) { chBox.classList.add("hidden"); return; }
+      chBox.classList.remove("hidden");
+      chBox.replaceChildren(el("b", {}, `Challenge: ${challenge.title}`), el("span", {}, challenge.goal),
+        result ? el("span", { class: result.passed ? "ok" : "no" }, result.message) : "",
+        mode === "flight" ? el("button", { class: "sf-small accent", type: "button", onclick: () => submitChallenge(true) }, "Submit") : "");
+    }
+    async function submitChallenge(manual = false) {
+      if (!challenge || !flight?.sig) { if (manual) say("This flight can't be verified. Launch again to take part in the challenge."); return; }
+      try {
+        const r = await api(`/api/challenges/${challenge.id}/submit`, { method: "POST", body: { flight: { state: flight.state, signature: flight.sig, parts: stack, custom_parts: flight.custom } } });
+        drawChallenge(r);
+        if (r.passed) { say(`Challenge complete: ${challenge.title}.`); notify(`Challenge complete: ${challenge.title}`); challenge.done = true; }
+        else if (manual) say(r.message);
+      } catch (e) { say(e.message); }
+    }
+
+    // ---------- deploy a satellite from orbit into the Mission Control fleet
+    function openDeploy() {
+      const sats = flight.stages.slice(flight.state.stage).flat().filter((p) => p.category === "satellite");
+      if (!sats.length) { say("There's no satellite on board to deploy."); return; }
+      const sat = sats[sats.length - 1];
+      const siteLon = +(flight.launch.site_longitude_deg ?? siteSel.value);
+      const lat = { "-52.77": 5.24, "80.23": 13.72, "-80.6": 28.5, "63.3": 45.96, "110.95": 19.61, "177.86": -39.26, "-120.61": 34.63, "130.97": 30.4 }[String(siteLon)] ?? 0;
+      const name = el("input", { class: "sf-text", value: sat.name, maxlength: 48 });
+      const inc = el("input", { class: "sf-text", type: "number", step: "any", min: 0, max: 180, value: Math.abs(lat).toFixed(1) });
+      const msg = el("p", { class: "sf-warn" });
+      const go = el("button", { class: "sf-launch", type: "button" }, "Deploy");
+      go.addEventListener("click", async () => {
+        go.disabled = true; msg.textContent = "";
+        const body = { state: flight.state, signature: flight.sig, parts: stack, custom_parts: flight.custom, name: name.value || sat.name, inclination_deg: +inc.value };
+        if (sat.catalog_satellite) body.satellite = sat.catalog_satellite;
+        else body.custom_satellite = { name: sat.name, dry_mass: sat.mass, propellant: sat.prop || 0, isp: sat.isp_vac || 220, area_m2: Math.max(1, sat.width * sat.height * 0.6), camera: null };
+        try {
+          const r = await api("/api/company/deploy", { method: "POST", body });
+          closeModal(); say(`${r.name} deployed. It now flies in Mission Control.`); notify(`${r.name} added to your fleet.`);
+        } catch (e) {
+          msg.textContent = e.status === 409 ? "Found your space company in Mission Control first." : e.message;
+        } finally { go.disabled = false; }
+      });
+      modal.replaceChildren(el("div", { class: "sf-design sf-deploy" },
+        el("div", { class: "sf-design-head" }, el("b", {}, "DEPLOY TO MISSION CONTROL"), el("button", { class: "sf-close", type: "button", "aria-label": "Close", onclick: closeModal }, "×")),
+        el("div", { class: "sf-deploy-body" },
+          el("p", { class: "sf-hint" }, `${sat.name} leaves the rocket in its current orbit and joins your fleet, where it keeps flying in real time. Flights here are flown in a plane, so choose the orbit's inclination: anything from the launch site's latitude (${Math.abs(lat).toFixed(1)}°) up is possible, and reaching a different plane is paid for from the Δv the upper stage has left.`),
+          control("Name in your fleet", name), control("Inclination (°)", inc), msg),
+        el("div", { class: "sf-design-foot" }, go)));
+      modal.classList.remove("hidden");
+    }
+
+    function toBuild() { saveFlight(true); show3d(false); mode = "build"; autoWarp = null; paused = false; flightView.classList.add("hidden"); buildView.classList.remove("hidden"); drawChallenge(); refresh(); }
+    function splitStages(parts) { const out = []; let cur = []; parts.forEach((p) => { cur.push(p); if (isDecoupler(p)) { out.push(cur); cur = []; } }); if (cur.length) out.push(cur); return out; }
     function say(msg) { log.unshift({ msg, t: performance.now() }); log = log.slice(0, 4); }
 
     function commandAngle() {
@@ -496,17 +689,22 @@ export default {
       const wantStage = stageReq, wantChute = chuteReq, wantFairing = fairingReq; stageReq = chuteReq = fairingReq = false;
       try {
         const r = await simulate("physics", "rocket_flight", { state: s, parts: stack, throttle: ended ? 0 : throttle, angle: commandAngle(), dt, stage: wantStage, deploy_chute: wantChute,
-          jettison_fairing: wantFairing, custom_parts: flight.custom, predict: mapView || view3dOn || warpIdx > 0 || Math.random() < 0.2 });
+          jettison_fairing: wantFairing, custom_parts: flight.custom, predict: mapView || view3dOn || warpIdx > 0 || !!autoWarp || Math.random() < 0.2 }, undefined, { signature: flight.sig });
+        flight.sig = r.signature || null; flight.verified = !!r.verified;
         flight.last = r; if (f3d) f3d.update(r);
         prev = { ...flight.state, local: flight.local }; flight.state = r.result.state; flight.tel = r.result.telemetry; flight.planet = r.planet; flight.local = r.local; flight.moon = r.moon || null;
         if (r.trajectory.length) { flight.traj = r.trajectory; flight.trajMoon = r.trajectory_moon || []; flight.trajDt = r.trajectory_dt || 0; }
         for (const e of r.result.events) { say(e.charAt(0).toUpperCase() + e.slice(1)); if (e.startsWith("fairing jettisoned")) flight.jettisonAt = performance.now(); }
         const tel = r.result.telemetry;
         if (tel.reference !== flight.ref) { say(tel.reference === "moon" ? "Entered the Moon's sphere of influence" : "Left the Moon's sphere of influence"); flight.ref = tel.reference; }
-        if (flight.state.crashed && !ended) { ended = true; setThrottle(0); setWarp(0); say("Vehicle destroyed. Press BUILD to try again."); }
-        if (tel.status === "orbit" && !flight.orbitSaid) { flight.orbitSaid = true; say("Orbit achieved! 🎉"); }
-        if (tel.status === "lunar orbit" && !flight.lunarSaid) { flight.lunarSaid = true; say("Lunar orbit achieved! 🌕"); }
-        stepStart = performance.now(); stepLen = Math.max(0.05, dt / WARPS[warpIdx]);
+        if (flight.state.crashed && !ended) { ended = true; setThrottle(0); setWarp(0); autoWarp = null; say("Vehicle destroyed. Press Build to try again."); saveFlight(true); }
+        if (tel.status === "orbit" && !flight.orbitSaid) { flight.orbitSaid = true; say("Orbit achieved."); saveFlight(true); }
+        if (tel.status === "lunar orbit" && !flight.lunarSaid) { flight.lunarSaid = true; say("Lunar orbit achieved."); saveFlight(true); }
+        if (r.result.events.some((e) => e.startsWith("touchdown"))) saveFlight(true);
+        deployBtn.style.display = tel.status === "orbit" && tel.reference === "earth" && flight.stages.slice(flight.state.stage).flat().some((p) => p.category === "satellite") ? "" : "none";
+        if (challenge && !challenge.done && CH_CHECK[challenge.id]?.(tel, flight.state) && !flight.checked[challenge.id]) { flight.checked[challenge.id] = true; submitChallenge(); }
+        saveFlight();
+        stepStart = performance.now(); stepLen = autoWarp ? 0.08 : Math.max(0.05, dt / WARPS[warpIdx]);
       } catch (e) { say(`Engine error: ${e.message}`); } finally { busy = false; }
     }
 
@@ -521,13 +719,14 @@ export default {
       if (k === "shift") setThrottle(Math.min(1, throttle + 0.1)); if (k === "control") setThrottle(Math.max(0, throttle - 0.1));
       if (k === " ") { stageReq = true; e.preventDefault(); } if (k === "m") { mapView = !mapView; show3d(false); } if (k === "f") fairingReq = true;
       if (k === "v" && body === "earth") show3d(!view3dOn);
+      if (k === "p") togglePause(); if (k === "k") quickSave(); if (k === "l") quickLoad(); if (k === "h" || k === "?") keysBox.classList.toggle("hidden");
       if (k === "." || k === ">") setWarp(warpIdx + 1); if (k === "," || k === "<") setWarp(warpIdx - 1);
     };
     const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     let panY = 0, drag = null; // drag the flight view along the rocket to inspect it; double-click recentres
     fCanvas.addEventListener("pointerdown", (e) => { if (!mapView) drag = [e.clientY, panY]; });
-    fCanvas.addEventListener("pointermove", (e) => { if (drag && flight) { const rocketH = flight.parts.reduce((a, q) => a + q.height, 0); const scale = ((fCanvas.clientHeight * 0.32) / Math.max(10, rocketH)) * zoom; panY = Math.max(-rocketH * 1.2, Math.min(rocketH * 0.2, drag[1] - (e.clientY - drag[0]) / scale)); } });
+    fCanvas.addEventListener("pointermove", (e) => { if (drag && flight) { const rocketH = stackHeight(flight.parts); const scale = ((fCanvas.clientHeight * 0.32) / Math.max(10, rocketH)) * zoom; panY = Math.max(-rocketH * 1.2, Math.min(rocketH * 0.2, drag[1] - (e.clientY - drag[0]) / scale)); } });
     ["pointerup", "pointerleave"].forEach((ev) => fCanvas.addEventListener(ev, () => { drag = null; }));
     fCanvas.addEventListener("dblclick", () => { panY = 0; zoom = 1; });
     fCanvas.addEventListener("wheel", (e) => { zoom = Math.max(0.0005, Math.min(60, zoom * (e.deltaY > 0 ? 0.85 : 1.18))); e.preventDefault(); }, { passive: false });
@@ -551,7 +750,12 @@ export default {
         const tel = flight.tel, inAir = tel && flight.local && tel.altitude < flight.local.atmosphere_top; // limit time warp while thrusting or in air
         const maxWarp = (throttle > 0 && !ended) || inAir ? 5 : Infinity;
         if (WARPS[warpIdx] > maxWarp) setWarp(WARPS.findIndex((w) => w >= maxWarp));
-        if (!busy && performance.now() - stepStart >= stepLen * 1000 * 0.9) step(Math.min(0.1 * WARPS[warpIdx], 86400 * 30));
+        if (autoWarp && (throttle > 0 || ended)) autoWarp = null;
+        if (autoWarp && !busy) {
+          const left = autoWarp.until - flight.state.t;
+          if (left <= 0.5) { autoWarp = null; setWarp(0); say("Arrived. Time is back to normal."); }
+          else step(Math.min(left, autoWarp.chunk));
+        } else if (!paused && !busy && performance.now() - stepStart >= stepLen * 1000 * 0.9) step(Math.min(0.1 * WARPS[warpIdx], 86400 * 30));
         if (view3dOn && f3d) { f3d.render(Math.min(1, (performance.now() - stepStart) / 1000 / stepLen)); drawHud(flight.tel, flight.state); }
         else drawFlight();
       }
@@ -579,7 +783,7 @@ export default {
       ctx.fillStyle = `rgb(${sky.join(",")})`; ctx.fillRect(0, 0, W, H);
       const starA = Math.max(0, Math.min(1, 1 - (sky[0] + sky[1] + sky[2]) / 200));
       if (starA > 0) { ctx.fillStyle = `rgba(255,255,255,${starA})`; for (const [a, b, z] of starSeed) ctx.fillRect(a * W, b * H, 1 + z, 1 + z); }
-      const rocketH = flight.parts.reduce((a, p) => a + p.height, 0);
+      const rocketH = stackHeight(flight.parts);
       const scale = ((H * 0.32) / Math.max(10, rocketH)) * zoom; // px per metre
       const up = Math.atan2(L.y, L.x), cx = W / 2, cy = Math.min(H * 0.8, H / 2 + (rocketH * scale) / 2) - panY * scale; // the state point is the rocket's base
       const toScreen = (wx, wy) => { const dx = wx - L.x, dy = wy - L.y; const a = Math.PI / 2 - up; const rx = dx * Math.cos(a) - dy * Math.sin(a), ry = dx * Math.sin(a) + dy * Math.cos(a); return [cx + rx * scale, cy - ry * scale]; };
@@ -602,15 +806,23 @@ export default {
         }
       }
       // Rocket (upper stages only once lower ones are dropped)
-      const parts = flight.stages.slice(s.stage).flat();
+      const parts = flight.stages.slice(s.stage).flatMap((st, j) => (j === 0 && !(s.boosters_on || [])[s.stage] ? st.filter((p) => !isBooster(p)) : st));
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(-(s.angle - up));
-      const totalH = parts.reduce((a, p) => a + p.height, 0);
+      const totalH = stackHeight(parts);
       if (tel && tel.thrust > 0 && !s.crashed) { // flame
         const fl = (0.75 + 0.25 * Math.random()) * (0.5 + throttle * 2) * Math.max(6, flight.stages[s.stage][0].width * 4, rocketH * 0.12) * scale * (tel.air_density < 0.01 ? 1.6 : 1);
         const fw = Math.max(...flight.stages[s.stage].map((p) => (isEngine(p) || p.thrust_vac ? p.width : 0.5))) * scale * 0.55;
         const g = ctx.createLinearGradient(0, 0, 0, fl), vac = tel.air_density < 0.01;
         g.addColorStop(0, "rgba(255,255,230,.95)"); g.addColorStop(0.3, vac ? "rgba(140,170,255,.7)" : "rgba(255,170,60,.85)"); g.addColorStop(1, "rgba(255,90,20,0)");
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-fw / 2, 0); ctx.quadraticCurveTo(-fw * (vac ? 1.3 : 0.7), fl * 0.5, 0, fl); ctx.quadraticCurveTo(fw * (vac ? 1.3 : 0.7), fl * 0.5, fw / 2, 0); ctx.fill();
+      }
+      if (tel?.boosters?.attached && tel.boosters.lit && tel.boosters.fuel_fraction > 0 && !s.crashed) { // strap-on booster exhaust
+        const st0 = flight.stages[s.stage], bp = st0.find(isBooster), core = st0.find((p) => !isBooster(p));
+        if (bp && core) for (const side of [-1, 1]) {
+          const bx = side * (core.width / 2 + bp.width / 2) * scale, fw = bp.width * scale * 0.6, fl = (0.8 + 0.2 * Math.random()) * Math.max(4, bp.width * 5) * scale;
+          const g = ctx.createLinearGradient(0, 0, 0, fl); g.addColorStop(0, "rgba(255,250,220,.95)"); g.addColorStop(0.35, bp.solid ? "rgba(255,190,90,.9)" : "rgba(255,160,60,.85)"); g.addColorStop(1, "rgba(255,90,20,0)");
+          ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(bx - fw / 2, 0); ctx.quadraticCurveTo(bx - fw * 0.8, fl * 0.5, bx, fl); ctx.quadraticCurveTo(bx + fw * 0.8, fl * 0.5, bx + fw / 2, 0); ctx.fill();
+        }
       }
       if (s.chute) { const top = -totalH * scale; ctx.fillStyle = "#e0662e"; ctx.beginPath(); ctx.ellipse(0, top - 22 * scale, 14 * scale, 8 * scale, 0, Math.PI, 0); ctx.fill(); ctx.strokeStyle = "#ddd"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-14 * scale, top - 22 * scale); ctx.lineTo(0, top); ctx.lineTo(14 * scale, top - 22 * scale); ctx.stroke(); }
       if (s.crashed) { ctx.fillStyle = "rgba(255,120,40,.8)"; ctx.beginPath(); ctx.arc(0, 0, 8 * scale + 20, 0, Math.PI * 2); ctx.fill(); }
@@ -620,7 +832,7 @@ export default {
         if (!s.fairing && flight.jettisonAt && since < 4) {
           const fi = parts.findIndex(isFairing);
           if (fi >= 0) {
-            let from = fi; while (from > 0 && parts[from - 1].id !== "decoupler") from--;
+            let from = fi; while (from > 0 && !isDecoupler(parts[from - 1])) from--; while (from < fi && isBooster(parts[from])) from++;
             const top = layout[fi][0], bottom = layout[from][1], w = parts[fi].width * scale;
             for (const side of [-1, 1]) {
               const midY = (top + bottom) / 2; // each half tumbles about its own middle as it drifts away
@@ -712,10 +924,27 @@ export default {
 
     // ---------- boot ----------
     const ro = new ResizeObserver(() => { if (mode === "build") drawBuild(); }); ro.observe(rootEl);
-    simulate("physics", "rocket_parts", {}).then((r) => {
+    Promise.all([simulate("physics", "rocket_parts", {}), simulate("physics", "launch_vehicle_catalog", {}).catch(() => null)]).then(async ([r, vc]) => {
       catalogue = r.result;
+      if (vc) {
+        const known = new Set(catalogue.parts.map((p) => p.id));
+        catalogue.parts.push(...vc.result.parts.filter((p) => !known.has(p.id)));
+        vehicles = vc.result.vehicles;
+        const agencies = [...new Set(vehicles.map((v) => v.agency))];
+        tplSel.append(...agencies.map((a) => el("optgroup", { label: `Real rockets: ${a}` },
+          ...vehicles.filter((v) => v.agency === a).map((v) => el("option", { value: `v:${v.id}` }, `${v.name} (${v.country})`)))));
+      }
       for (const id of Object.keys(customs)) if (!customs[id]?.spec) delete customs[id];
-      renderPalette(); refresh();
+      renderPalette();
+      if (params.challenge) {
+        try {
+          const { challenges } = await api("/api/challenges");
+          challenge = challenges.find((c) => c.id === params.challenge) || null;
+          if (challenge) { challenge.done = !!challenge.completed_at; drawChallenge(); }
+        } catch { /* not critical */ }
+      }
+      if (params.template) { tplSel.value = params.template in TEMPLATES ? params.template : `v:${params.template}`; applyTemplate(tplSel.value); }
+      if (!(await loadFromHistory()) && !params.template) refresh();
     });
     raf = requestAnimationFrame(frame);
     return () => { cancelAnimationFrame(raf); ro.disconnect(); f3d?.dispose(); window.removeEventListener("keydown", kd); window.removeEventListener("keyup", ku); };

@@ -164,3 +164,14 @@ def test_flight_states_are_signed_and_tampering_is_detected():
     other = c.post("/simulate", json={"domain": "physics", "name": "rocket_flight", "signature": step["signature"],
                                       "args": {"state": step["result"]["state"], "parts": parts + [{"part": "nose"}], "dt": 1.0}})
     assert other.json()["verified"] is False
+
+
+def test_signature_survives_a_browser_round_trip():
+    """Browsers print 6378137.0 as 6378137; the signature must not care."""
+    import json
+    from app.platform.security import check, sign
+    state = {"y": 6378137.0, "stage": 0, "props": [411000.0, 1.5], "landed": True}
+    sig = sign("flight", state)
+    browser = json.loads(json.dumps(state).replace("6378137.0", "6378137").replace("411000.0", "411000"))
+    assert check("flight", browser, sig)
+    assert not check("flight", {**browser, "y": 6378138}, sig)

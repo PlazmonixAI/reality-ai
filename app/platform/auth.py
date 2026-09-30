@@ -227,6 +227,13 @@ def logout(request: Request, response: Response):
     return {"ok": True}
 
 
+@router.get("/auth/session")
+def session(request: Request):
+    """The signed-in user, or null (never an error), for pages that just want to know."""
+    row = optional_user(request)
+    return {"user": public_user(row) if row else None}
+
+
 @router.get("/auth/me")
 def me(user=Depends(current_user)):
     return {"user": user}

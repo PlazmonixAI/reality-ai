@@ -12,7 +12,7 @@ const QUICK = [
 ];
 
 let statusPromise = null;
-const llmStatus = () => (statusPromise ||= fetch("llm/status").then((r) => r.json()).catch(() => ({ configured: false })));
+const llmStatus = () => (statusPromise ||= fetch("/llm/status").then((r) => r.json()).catch(() => ({ configured: false })));
 
 export function mountAiPanel(page, sim) {
   const history = [];
@@ -46,7 +46,7 @@ export function mountAiPanel(page, sim) {
     const wait = bubble("bot pending", "Reading the simulation and thinking…");
     const context = { sim_id: sim.id, title: sim.title, blurb: sim.blurb, recent: recentCalls() };
     try {
-      const r = await fetch("ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q, history: history.slice(-8), context }) });
+      const r = await fetch("/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q, history: history.slice(-8), context }) });
       const body = await r.json().catch(() => ({}));
       wait.remove();
       if (!r.ok) { bubble("bot error", r.status === 503 ? "The AI isn't connected yet. Once the LLM keys are added on the server, I'll analyse this simulation for you." : (body.detail || `Request failed (${r.status})`)); return; }

@@ -106,8 +106,10 @@ def jd_of(date: str | None) -> float:
 
 
 def gmst_rad(jd: float) -> float:
+    """Greenwich sidereal angle. IAU's W for Earth is measured from the equator's node at RA 90°, so GMST = W + 90°
+    (280.46° at J2000)."""
     w0, rate = ROTATION["earth"][2:]
-    return math.radians((w0 + rate * (jd - J2000_JD)) % 360.0)
+    return math.radians((w0 + 90.0 + rate * (jd - J2000_JD)) % 360.0)
 
 
 def sun_dir(jd: float) -> np.ndarray:
@@ -115,6 +117,12 @@ def sun_dir(jd: float) -> np.ndarray:
     c, s = math.cos(OBLIQUITY), math.sin(OBLIQUITY)
     v = -np.array([e[0], c * e[1] - s * e[2], s * e[1] + c * e[2]])
     return v / np.linalg.norm(v)
+
+
+def subsolar(jd: float) -> tuple[float, float]:
+    """Latitude and longitude (degrees) where the Sun is overhead."""
+    s = sun_dir(jd)
+    return geodetic(s * RE, jd)[:2]
 
 
 def geodetic(r: np.ndarray, jd: float) -> tuple[float, float, float]:
@@ -223,7 +231,7 @@ def state_at(el: dict, jd: float) -> dict:
     rn = np.linalg.norm(r)
     along = float(np.dot(r, s))
     perp = float(np.linalg.norm(r - along * s))
-    eclipse = along < 0 and perp < RE
+    eclipse = bool(along < 0 and perp < RE)
     return {"r": r, "v": v, "lat": lat, "lon": lon, "alt": alt, "speed": float(np.linalg.norm(v)), "sunlit": not eclipse,
             "sun_elevation_below_deg": math.degrees(math.asin(float(np.dot(r / rn, s))))}
 
@@ -360,9 +368,21 @@ def satellite_manoeuvre(orbit: dict, epoch: str, burn: str, at: str | None = Non
         m_t = big - ecc * math.sin(big)
         return ((m_t - e_["m"]) % (2 * math.pi)) / mean_motion(e_["a"], ecc, e_["i"])
 
+    def afford(total_dv: float) -> None:
+        if total_dv <= 0:
+            return
+        if isp <= 0:
+            raise ValueError("this satellite has no thrusters")
+        need_kg = m_total * (1 - math.exp(-total_dv / (isp * G0)))
+        if need_kg > propellant + 1e-9:
+            dv_max = isp * G0 * math.log(m_total / dry_mass) if propellant > 0 else 0.0
+            raise ValueError(f"not enough propellant: this manoeuvre needs {total_dv:.1f} m/s ({need_kg:.1f} kg) but the tanks "
+                             f"hold {propellant:.1f} kg (≈ {dv_max:.1f} m/s)")
+
     if burn in ("prograde", "retrograde", "normal", "antinormal", "radial_out", "radial_in"):
         if delta_v <= 0:
             raise ValueError("give delta_v (m/s) for a direct burn")
+        afford(delta_v)
         v = v + dv_vec(burn, delta_v, r, v)
         burns.append({"at_s": 0.0, "delta_v": delta_v, "direction": burn})
         new = rv_to_coe(r, v)
@@ -404,16 +424,11 @@ def satellite_manoeuvre(orbit: dict, epoch: str, burn: str, at: str | None = Non
         burns.append({"at_s": ap_wait, "delta_v": abs(need), "direction": "retrograde"})
         new, t_after = rv_to_coe(r1, v1), ap_wait
     total = sum(b["delta_v"] for b in burns)
-    if isp <= 0 and total > 0:
-        raise ValueError("this satellite has no thrusters")
+    afford(total)
     used = m_total * (1 - math.exp(-total / (isp * G0))) if total > 0 else 0.0
-    if used > propellant + 1e-9:
-        dv_max = isp * G0 * math.log(m_total / dry_mass) if propellant > 0 else 0.0
-        raise ValueError(f"not enough propellant: this manoeuvre needs {total:.1f} m/s ({used:.1f} kg) but the tanks hold "
-                         f"{propellant:.1f} kg (≈ {dv_max:.1f} m/s)")
     new_epoch_jd = jd1 + t_after / DAY
     pub = to_public(new)
-    reenters = pub["perigee_alt"] < REENTRY_ALT
+    reenters = bool(pub["perigee_alt"] < REENTRY_ALT)
     return {"result": {"orbit": pub, "epoch_jd": new_epoch_jd, "burns": burns, "delta_v_total": total,
                        "propellant_used": used, "propellant_left": propellant - used, "will_reenter": reenters,
                        "manoeuvre_seconds": t_after},

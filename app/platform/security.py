@@ -46,8 +46,21 @@ def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def _norm(value):
+    """Numbers as floats, so 6378137.0 and 6378137 (as a browser sends it back) sign the same."""
+    if isinstance(value, bool) or value is None or isinstance(value, str):
+        return value
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, dict):
+        return {str(k): _norm(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_norm(v) for v in value]
+    return value
+
+
 def canonical(value) -> bytes:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    return json.dumps(_norm(value), sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
 
 
 def sign(purpose: str, value) -> str:

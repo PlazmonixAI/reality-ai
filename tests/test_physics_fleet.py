@@ -109,3 +109,11 @@ def test_radar_works_at_night_but_looks_sideways():
     nadir = satellite_imaging(o, EPOCH, sar, at="2026-03-01T00:00:00Z")["result"]
     assert not nadir["possible"] and "sideways" in " ".join(nadir["reasons"])
     assert nadir["resolution"] == 3.0
+
+
+def test_subsolar_point():
+    from app.modules.physics.fleet import jd_of, subsolar
+    lat, lon = subsolar(jd_of("2026-06-21T12:00:00Z"))  # June solstice, noon at Greenwich
+    assert lat == pytest.approx(23.44, abs=0.1) and lon == pytest.approx(0.0, abs=2.5)  # equation of time ≈ −1.6°
+    lat, lon = subsolar(jd_of("2026-12-21T06:00:00Z"))
+    assert lat == pytest.approx(-23.44, abs=0.1) and lon == pytest.approx(90.0, abs=2.0)

@@ -1,1 +1,57 @@
-<!doctype html><title>Reality ASM</title>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cookie Policy · Reality ASM</title>
+  <meta name="robots" content="index">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
+      <span class="grow"></span>
+      <span data-auth-slot style="display:flex;gap:10px">
+        <a class="btn btn-ghost" href="/login">Sign in</a>
+        <a class="btn btn-primary" href="/signup">Join the beta</a>
+      </span>
+    </div>
+  </header>
+  <main class="legal">
+    <div class="wrap">
+      <h1>Cookie Policy</h1>
+      <p class="updated">Last updated 30 September 2026 · Version {{TERMS_VERSION}}</p>
+      <p>Reality ASM uses as little browser storage as it can. There are no advertising or analytics cookies, so there's nothing to
+        opt out of.</p>
+      <h2>Cookies</h2>
+      <table>
+        <tr><th>Name</th><th>Purpose</th><th>Lifetime</th></tr>
+        <tr><td class="mono">rasm_session</td><td>Keeps you signed in. Strictly necessary. HttpOnly, so page scripts can't read it.</td><td>30 days, or until you close the browser if you untick "Keep me signed in"</td></tr>
+        <tr><td class="mono">rasm_oauth</td><td>Protects the "Continue with Google" sign-in from forgery. Only set while you sign in with Google.</td><td>10 minutes</td></tr>
+      </table>
+      <h2>Local storage</h2>
+      <p>The app also keeps a few settings in your browser's local storage so they survive a reload: that you've seen the cookie
+        notice, your own engine and satellite designs in the Spaceflight Lab, and small hand-offs between pages (for example the
+        date to launch on when you jump from the Solar System to the Spaceflight Lab). They never leave your device unless you save
+        something to your history.</p>
+      <h2>Managing them</h2>
+      <p>You can clear cookies and local storage in your browser's settings. If you remove <span class="mono">rasm_session</span>
+        you'll be signed out.</p>
+
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Plazmonix AI. Built by Subham Agarwal.</span>
+      <span class="grow"></span>
+      <nav aria-label="Legal">
+        <a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a>
+        <a href="/acceptable-use">Acceptable use</a><a href="mailto:{{CONTACT_EMAIL}}">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script type="module" src="/static/site.js"></script>
+</body>
+</html>
