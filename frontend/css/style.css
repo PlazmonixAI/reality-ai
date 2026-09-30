@@ -588,3 +588,15 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .btn.small { font-size: 13px; }
 .ss-label.probe { color: #FFB199; font-weight: 600; }
 .feedback-text { height: auto; padding: 10px; resize: vertical; margin-top: 4px; }
+/* admin */
+.admin-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.stat-box { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; }
+.stat-box b { font-family: "Plex Mono", monospace; font-weight: 400; font-size: 24px; }
+.stat-box span { color: var(--text-2); font-size: 13px; }
+.admin-table { background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; }
+.admin-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-table th, .admin-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.admin-table th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-2); background: var(--surface-2); }
+.admin-table .nowrap { white-space: nowrap; }
+.admin-table .msg { white-space: pre-wrap; min-width: 280px; }
+.admin-table .mono { font-family: "Plex Mono", monospace; font-size: 12px; }

@@ -169,4 +169,5 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Email verification on sign-up
 - [x] Show the user's probes inside the 3D Solar System (along their transfer arcs, on any date)
 - [x] In-app beta feedback, saved AI conversations, saved Solar System views
+- [x] Beta admin page (sign-ups, usage, feedback)
 - [ ] Shared mission gallery

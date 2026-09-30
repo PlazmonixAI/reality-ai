@@ -47,7 +47,7 @@ actually produced.
 2. Attach a **persistent disk** at `/var/data` and set `DATABASE_PATH=/var/data/reality.db`. Without a disk, Render
    wipes the database on every deploy or restart.
 3. In **Environment**, set `SECRET_KEY` (long random), `COOKIE_SECURE=true`, `PUBLIC_BASE_URL`, `CONTACT_EMAIL`, and the
-   LLM keys (`LLM_PROVIDER` + `NIM_API_KEYS` / `GROQ_API_KEYS` / `XAI_API_KEYS`). Optional: `BETA_INVITE_CODES`,
+   LLM keys (`LLM_PROVIDER` + `NIM_API_KEYS` / `GROQ_API_KEYS` / `XAI_API_KEYS`). Optional: `BETA_INVITE_CODES`, `ADMIN_EMAILS` (who can open the beta admin page),
    `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`, `SMTP_*` for password-reset email. All variables are listed in `.env.example`.
    No secrets live in the repository.
 

@@ -21,6 +21,7 @@ const PAGES = {
   challenges: () => import("./pages/challenges.js"),
   history: () => import("./pages/history.js"),
   account: () => import("./pages/account.js"),
+  admin: () => import("./pages/admin.js"),
 };
 
 export function parseHash() {
@@ -149,6 +150,7 @@ async function account() {
       el("a", { href: "#/account", role: "menuitem" }, "Account settings"),
       el("a", { href: "#/history", role: "menuitem" }, "My history"),
       el("button", { type: "button", role: "menuitem", onclick: () => feedbackBox() }, "Send feedback"),
+      user.admin ? el("a", { href: "#/admin", role: "menuitem" }, "Beta admin") : "",
       el("a", { href: "/terms", target: "_blank", role: "menuitem" }, "Terms and privacy"),
       el("button", { type: "button", role: "menuitem", onclick: () => signOut() }, "Sign out"));
     const btn = el("button", { class: "avatar", type: "button", "aria-haspopup": "menu", "aria-label": `Account: ${user.name}` }, initials);

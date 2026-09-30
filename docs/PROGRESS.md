@@ -221,4 +221,5 @@
 - Ask AI conversations save themselves to the history and reopen with their engine cards; the AI-not-configured message no longer mentions server settings.
 - Solar System: "Save this view" (date, scale, speed, selected body) and reopening from the history; your company's probes appear on their Lambert transfer arcs at the date shown, and their labels open Mission Control on that probe.
 - Send feedback from the account menu (stored in a `feedback` table, included in the data export, listed in the Privacy Policy).
-- **Next:** email verification, inclined ascents, an admin view of feedback.
+- Beta admin page (`#/admin`, `/api/admin/overview`) for the emails in `ADMIN_EMAILS`: account and usage counts, feedback, challenge completions, newest accounts.
+- **Next:** email verification, inclined ascents.

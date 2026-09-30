@@ -16,7 +16,7 @@ from app.agent.llm import LLMError, NIMClient, NoKeysError
 from app.config import settings
 from app.core import runner
 from app.core.registry import get_tool, list_tools
-from app.platform import auth, company, challenges, history
+from app.platform import admin, auth, company, challenges, history
 from app.platform.auth import current_user, session_user
 from app.platform.security import RateLimiter, check, sign
 
@@ -77,6 +77,7 @@ app.include_router(auth.router)
 app.include_router(history.router)
 app.include_router(company.router)
 app.include_router(challenges.router)
+app.include_router(admin.router)
 
 
 # ---------------------------------------------------------------- engine API (signed-in users only)

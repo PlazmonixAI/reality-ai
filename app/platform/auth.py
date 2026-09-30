@@ -46,7 +46,8 @@ def client_ip(request: Request) -> str:
 
 def public_user(row) -> dict[str, Any]:
     return {"id": row["id"], "email": row["email"], "name": row["name"], "created_at": row["created_at"],
-            "google": bool(row["google_sub"]), "has_password": bool(row["password_hash"])}
+            "google": bool(row["google_sub"]), "has_password": bool(row["password_hash"]),
+            "admin": row["email"].lower() in settings.admins}
 
 
 def _clean_email(email: str) -> str:

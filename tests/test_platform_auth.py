@@ -187,3 +187,17 @@ def test_feedback_is_stored_for_the_user():
     assert row["message"] == "The map is great" and row["page"] == "#/company"
     assert c.get("/api/account/export").json()["feedback"][0]["message"] == "The map is great"
     assert fresh().post("/api/feedback", json={"message": "anonymous"}).status_code == 401
+
+
+def test_admin_page_only_for_admin_emails(monkeypatch):
+    from app.config import settings
+    c, user = new_client()
+    c.post("/api/feedback", json={"message": "Please add Vega-C"})
+    assert c.get("/api/admin/overview").status_code == 403
+    monkeypatch.setattr(settings, "admin_emails", f"someone@else.com, {user['email'].upper()}")
+    r = c.get("/api/admin/overview")
+    assert r.status_code == 200
+    data = r.json()
+    assert data["stats"]["users"] >= 1 and data["stats"]["feedback"] >= 1
+    assert any(f["message"] == "Please add Vega-C" for f in data["feedback"])
+    assert c.get("/api/auth/me").json()["user"]["admin"] is True
