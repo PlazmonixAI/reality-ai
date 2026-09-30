@@ -89,3 +89,24 @@ export function promptBox(title, label, value = "", okLabel = "Save") {
     input.focus(); input.select();
   });
 }
+
+export function feedbackBox() {
+  const text = el("textarea", { class: "text-input feedback-text", rows: 6, maxlength: 4000, placeholder: "What broke, what confused you, or what you'd love to see next." });
+  const msg = el("p", { class: "form-msg" });
+  const send = el("button", { class: "btn primary", type: "submit" }, "Send");
+  const close = () => wrap.remove();
+  const form = el("form", { class: "modal", role: "dialog", "aria-modal": "true", "aria-label": "Send feedback" },
+    el("h3", {}, "Send feedback"),
+    el("p", {}, "Thanks for testing the beta. We read every message."),
+    text, msg,
+    el("div", { class: "modal-actions" }, el("button", { class: "btn", type: "button", onclick: close }, "Cancel"), send));
+  const wrap = el("div", { class: "modal-back", onclick: (e) => { if (e.target === wrap) close(); } }, form);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    send.disabled = true; msg.textContent = "";
+    try { await api("/api/feedback", { method: "POST", body: { message: text.value, page: location.hash } }); close(); toast("Thanks. Your feedback is in."); }
+    catch (err) { msg.textContent = err.message; } finally { send.disabled = false; }
+  });
+  document.body.append(wrap);
+  text.focus();
+}

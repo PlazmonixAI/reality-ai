@@ -167,5 +167,6 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Spaceflight Lab: pause, quick save and load, warp to apoapsis and periapsis, keyboard help, deploy satellites to the fleet
 - [x] Render deployment files (`render.yaml`, `.env.example`)
 - [ ] Email verification on sign-up
-- [ ] Show the user's probes and satellites inside the 3D Solar System
+- [x] Show the user's probes inside the 3D Solar System (along their transfer arcs, on any date)
+- [x] In-app beta feedback, saved AI conversations, saved Solar System views
 - [ ] Shared mission gallery

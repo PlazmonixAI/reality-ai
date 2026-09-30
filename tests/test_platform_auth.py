@@ -175,3 +175,15 @@ def test_signature_survives_a_browser_round_trip():
     browser = json.loads(json.dumps(state).replace("6378137.0", "6378137").replace("411000.0", "411000"))
     assert check("flight", browser, sig)
     assert not check("flight", {**browser, "y": 6378138}, sig)
+
+
+def test_feedback_is_stored_for_the_user():
+    from app.platform import db
+    c, user = new_client()
+    assert c.post("/api/feedback", json={"message": "The map is great", "page": "#/company"}).status_code == 201
+    assert c.post("/api/feedback", json={"message": "x"}).status_code == 422
+    with db.connect() as conn:
+        row = conn.execute("SELECT * FROM feedback WHERE user_id = ?", (user["id"],)).fetchone()
+    assert row["message"] == "The map is great" and row["page"] == "#/company"
+    assert c.get("/api/account/export").json()["feedback"][0]["message"] == "The map is great"
+    assert fresh().post("/api/feedback", json={"message": "anonymous"}).status_code == 401

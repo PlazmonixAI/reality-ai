@@ -142,6 +142,7 @@ export default {
       poll();
       loop();
       if (params.probe) openProbe();
+      if (params.craft) select(params.craft);
       if (params.run) openFromHistory(params.run);
       else side.replaceChildren(el("div", { class: "mc-empty" }, el("b", {}, "Select a spacecraft"), el("p", { class: "muted small" }, "Pick one from the list to see its orbit, fire thrusters or take pictures.")));
     }

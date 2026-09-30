@@ -8,7 +8,7 @@ import { el } from "./core/ui.js";
 import { health, clearRecentCalls, recentCalls } from "./core/api.js";
 import { mountAsk } from "./ask.js";
 import { mountAiPanel } from "./core/aichat.js";
-import { currentUser, signOut, history, toast } from "./core/session.js";
+import { currentUser, signOut, history, toast, feedbackBox } from "./core/session.js";
 
 const app = document.getElementById("app");
 const crumb = document.getElementById("crumb");
@@ -99,7 +99,7 @@ async function openSim(sim, params) {
     const mod = await sim.load();
     const simCleanup = mod.default.mount(page, params) || null;
     const aiCleanup = mountAiPanel(page, sim);
-    const saveCleanup = sim.id === "spaceflight" ? () => {} : mountSnapshot(page, sim, params);
+    const saveCleanup = ["spaceflight", "solarsystem"].includes(sim.id) ? () => {} : mountSnapshot(page, sim, params); // those two save their own state
     cleanup = () => { aiCleanup(); saveCleanup(); simCleanup?.(); };
   } catch (err) {
     console.error(err);
@@ -148,6 +148,7 @@ async function account() {
       el("div", { class: "account-who" }, el("b", {}, user.name), el("small", {}, user.email)),
       el("a", { href: "#/account", role: "menuitem" }, "Account settings"),
       el("a", { href: "#/history", role: "menuitem" }, "My history"),
+      el("button", { type: "button", role: "menuitem", onclick: () => feedbackBox() }, "Send feedback"),
       el("a", { href: "/terms", target: "_blank", role: "menuitem" }, "Terms and privacy"),
       el("button", { type: "button", role: "menuitem", onclick: () => signOut() }, "Sign out"));
     const btn = el("button", { class: "avatar", type: "button", "aria-haspopup": "menu", "aria-label": `Account: ${user.name}` }, initials);

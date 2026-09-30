@@ -35,6 +35,7 @@ login_ip_limit = RateLimiter(20, per=60)
 login_email_limit = RateLimiter(6, per=60)
 signup_limit = RateLimiter(5, per=600)
 forgot_limit = RateLimiter(3, per=600)
+feedback_limit = RateLimiter(10, per=3600)
 
 
 # ---------------------------------------------------------------- helpers
@@ -160,6 +161,11 @@ class ForgotIn(BaseModel):
 class ResetIn(BaseModel):
     token: str = Field(max_length=200)
     password: str = Field(max_length=400)
+
+
+class FeedbackIn(BaseModel):
+    message: str = Field(min_length=3, max_length=4000)
+    page: str = Field(default="", max_length=200)
 
 
 class ProfileIn(BaseModel):
@@ -290,6 +296,18 @@ def reset(body: ResetIn, request: Request, response: Response):
     return {"ok": True}
 
 
+@router.post("/feedback", status_code=201)
+def feedback(body: FeedbackIn, request: Request, user=Depends(current_user)):
+    """Beta feedback from inside the app (read it from the feedback table)."""
+    if not feedback_limit.allow(user["id"]):
+        raise HTTPException(429, "Thanks, we've got a lot from you this hour. Try again a bit later.")
+    with db.connect() as conn:
+        conn.execute("INSERT INTO feedback (id, user_id, created_at, page, message, user_agent) VALUES (?,?,?,?,?,?)",
+                     (db.new_id("fb"), user["id"], db.now(), body.page.strip()[:200], body.message.strip(),
+                      request.headers.get("user-agent", "")[:200]))
+    return {"ok": True}
+
+
 @router.patch("/account")
 def update_profile(body: ProfileIn, user=Depends(current_user)):
     name = _clean_name(body.name)
@@ -309,6 +327,7 @@ def export_account(user=Depends(current_user)):
                "spacecraft": rows("SELECT * FROM spacecraft WHERE user_id = ?"),
                "photos": rows("SELECT * FROM photos WHERE user_id = ?"),
                "challenges": rows("SELECT * FROM challenge_progress WHERE user_id = ?"),
+               "feedback": rows("SELECT created_at, page, message FROM feedback WHERE user_id = ?"),
                "sessions": rows("SELECT created_at, expires_at, user_agent FROM sessions WHERE user_id = ?")}
     for group in ("history", "spacecraft", "photos", "challenges"):
         for r in out[group]:

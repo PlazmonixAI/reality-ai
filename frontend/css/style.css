@@ -586,3 +586,5 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .btn.primary { color: var(--accent-ink); }
 .btn.big { font-size: 15px; }
 .btn.small { font-size: 13px; }
+.ss-label.probe { color: #FFB199; font-weight: 600; }
+.feedback-text { height: auto; padding: 10px; resize: vertical; margin-top: 4px; }

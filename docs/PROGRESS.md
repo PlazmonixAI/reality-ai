@@ -216,3 +216,9 @@
 - **Fixed on the way:** Greenwich sidereal time in the fleet model (IAU W is measured from RA 90°, so GMST = W + 90°); signatures now survive the browser's number formatting.
 - **Known issues:** the Spaceflight Lab still flies in a plane (inclination is chosen when a satellite is deployed); satellite photos use NASA GIBS imagery in the browser (250 m at best), so very sharp cameras show their footprint and resolution correctly but the picture is limited by the imagery; the static atmosphere ignores solar activity; SQLite on Render needs a persistent disk.
 - **Next:** email verification, probes and fleet shown in the 3D Solar System, inclined ascents.
+
+## 2026-09-30 (later): closing the history loop, probes in the Solar System, feedback
+- Ask AI conversations save themselves to the history and reopen with their engine cards; the AI-not-configured message no longer mentions server settings.
+- Solar System: "Save this view" (date, scale, speed, selected body) and reopening from the history; your company's probes appear on their Lambert transfer arcs at the date shown, and their labels open Mission Control on that probe.
+- Send feedback from the account menu (stored in a `feedback` table, included in the data export, listed in the Privacy Policy).
+- **Next:** email verification, inclined ascents, an admin view of feedback.
