@@ -5,8 +5,8 @@ export class ApiError extends Error {
   constructor(message, status) { super(message); this.status = status; }
 }
 
-function toLogin() {
-  location.href = `/login?next=${encodeURIComponent("/app/" + location.hash)}`;
+function toLogin() {  // ASM Teach has its own sign-in page
+  location.href = location.pathname.startsWith("/teach") ? "/teach" : `/login?next=${encodeURIComponent("/app/" + location.hash)}`;
 }
 
 export async function api(path, { method = "GET", body, signal } = {}) {

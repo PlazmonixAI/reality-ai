@@ -48,7 +48,7 @@ export async function simulate(domain, name, args = {}, signal, extra = {}) {
     throw new EngineError("Can't reach the Reality ASM engine. Check your connection and try again.");
   }
   if (response.status === 401) {
-    location.href = `/login?next=${encodeURIComponent("/app/" + location.hash)}`;
+    location.href = location.pathname.startsWith("/teach") ? "/teach" : `/login?next=${encodeURIComponent("/app/" + location.hash)}`;
     throw new EngineError("Please sign in again.");
   }
   const data = await response.json().catch(() => ({}));

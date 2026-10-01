@@ -4,7 +4,7 @@ import { api, currentUser, history, when } from "../core/session.js";
 import { openLink, KIND_LABEL } from "./history.js";
 
 const PLACES = [
-  ["#/teach", "ASM Teach", "Coursework 1 to 4 in physics, chemistry and maths as live simulations, with a whiteboard and practice.", "book"],
+  ["/teach", "ASM Teach", "The separate classroom app for schools: teacher accounts, a full board and live experiments. Opens its own sign-in.", "book"],
   ["#/sims", "All simulations", "82 research simulations across physics, chemistry and mathematics.", "grid"],
   ["#/ask", "Ask the AI", "Ask a question in plain words; it runs the engine and explains the answer.", "chat"],
   ["#/sim/solarsystem", "Solar System", "Every planet and moon on any date, out to the stars and galaxies.", "planet"],

@@ -50,6 +50,8 @@ def main() -> None:
          form),
         ('<script type="module" src="/static/site.js"></script>', '<script type="module" src="/static/waitlist.js"></script>'),
         ('<link rel="stylesheet" href="/static/site.css">', '<link rel="stylesheet" href="/static/site.css">\n  <link rel="stylesheet" href="/static/prelaunch.css">'),
+        ('<a class="door" href="/app/">', '<a class="door" href="#waitlist">'),
+        ('<a class="door teach" href="/teach">', '<a class="door teach" href="#waitlist">'),
         ("{{CONTACT_EMAIL}}", email),
     ]
     for old, new in swaps:

@@ -356,7 +356,7 @@ def delete_account(body: DeleteIn, response: Response, user=Depends(current_user
 
 # ---------------------------------------------------------------- Google sign-in (only when configured)
 @router.get("/auth/google/start")
-def google_start(request: Request, next: str = "/app/"):
+def google_start(request: Request, next: str = "/app/", mode: str = ""):
     if not (settings.google_client_id and settings.google_client_secret):
         raise HTTPException(404, "Google sign-in isn't set up on this server.")
     state = new_token()
@@ -365,7 +365,7 @@ def google_start(request: Request, next: str = "/app/"):
                                 "scope": "openid email profile", "state": state, "prompt": "select_account"})
     resp = RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{q}", status_code=302)
     safe_next = next if next.startswith("/") and not next.startswith("//") else "/app/"
-    resp.set_cookie("rasm_oauth", f"{state}|{safe_next}", max_age=600, httponly=True, samesite="lax",
+    resp.set_cookie("rasm_oauth", f"{state}|{safe_next}|{'teach' if mode == 'teach' else ''}", max_age=600, httponly=True, samesite="lax",
                     secure=settings.cookie_secure, path="/api/auth/google")
     return resp
 
@@ -373,9 +373,11 @@ def google_start(request: Request, next: str = "/app/"):
 @router.get("/auth/google/callback")
 def google_callback(request: Request, code: str = "", state: str = ""):
     saved = request.cookies.get("rasm_oauth", "")
-    want, _, nxt = saved.partition("|")
+    want, _, rest = saved.partition("|")
+    nxt, _, mode = rest.partition("|")
+    fail = "/teach?error=google" if mode == "teach" else "/login?error=google"
     if not code or not state or state != want:
-        return RedirectResponse("/login?error=google", status_code=302)
+        return RedirectResponse(fail, status_code=302)
     try:
         r = httpx.post("https://oauth2.googleapis.com/token", timeout=15, data={
             "code": code, "client_id": settings.google_client_id, "client_secret": settings.google_client_secret,
@@ -386,9 +388,15 @@ def google_callback(request: Request, code: str = "", state: str = ""):
         claims = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
     except Exception as e:  # noqa: BLE001
         log.warning("google sign-in failed: %s", e)
-        return RedirectResponse("/login?error=google", status_code=302)
+        return RedirectResponse(fail, status_code=302)
     if claims.get("aud") != settings.google_client_id or not claims.get("email_verified"):
-        return RedirectResponse("/login?error=google", status_code=302)
+        return RedirectResponse(fail, status_code=302)
+    if mode == "teach":  # ASM Teach school sign-up / sign-in: Google only proves the school's email
+        from app.platform.teach import google_school_login
+        resp = RedirectResponse("/teach", status_code=302)
+        resp.headers["location"] = google_school_login(claims, request, resp)
+        resp.delete_cookie("rasm_oauth", path="/api/auth/google")
+        return resp
     email, sub = claims["email"].lower(), claims["sub"]
     with db.connect() as conn:
         row = conn.execute("SELECT * FROM users WHERE google_sub = ? OR email = ?", (sub, email)).fetchone()

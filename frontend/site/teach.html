@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ASM Teach · Sign in</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <div class="auth teach-auth">
+    <div class="auth-form">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>ASM <b>Teach</b></span></a>
+      <div class="auth-box">
+        <div class="msg" role="alert" data-msg></div>
+
+        <section data-step="choose">
+          <h1>Sign in to ASM Teach</h1>
+          <p>Live physics, chemistry and maths for the classroom. Who is signing in?</p>
+          <div class="choice-grid">
+            <a class="choice" href="#school"><b>For schools</b><span>School admins and teachers</span></a>
+            <div class="choice off" aria-disabled="true"><b>For private institutions</b><span>Coming soon. Write to {{CONTACT_EMAIL}} to join early.</span></div>
+          </div>
+        </section>
+
+        <section data-step="school" hidden>
+          <p class="alt back"><a class="link" href="#">‹ Back</a></p>
+          <h1>For schools</h1>
+          <p>The school admin manages the school account and adds teachers. Teachers sign in with the username their school gave them.</p>
+          <div class="choice-grid">
+            <a class="choice" href="#admin"><b>School admin</b><span>Sign in, or create your school's account</span></a>
+            <a class="choice" href="#teacher"><b>Teacher</b><span>Sign in to your classroom board</span></a>
+          </div>
+        </section>
+
+        <section data-step="admin" hidden>
+          <p class="alt back"><a class="link" href="#school">‹ Back</a></p>
+          <h1>School admin</h1>
+          <p>Sign in with the school's username, or with the school's Google account.</p>
+          <form data-teach-login="school" novalidate>
+            <a class="btn btn-ghost" data-google-teach href="/api/auth/google/start?mode=teach" style="width:100%;height:46px">Continue with Google</a>
+            <div class="divider">or</div>
+            <label class="field"><span>School username</span><input name="username" autocomplete="username" required></label>
+            <label class="field"><span>Password</span><input name="password" type="password" autocomplete="current-password" required></label>
+            <label class="check"><input type="checkbox" name="remember" checked> Keep me signed in on this device</label>
+            <button class="btn btn-primary" type="submit">Sign in</button>
+            <p class="alt">New school? <a class="link" href="#signup">Create a school account</a></p>
+          </form>
+        </section>
+
+        <section data-step="signup" hidden>
+          <p class="alt back"><a class="link" href="#admin">‹ Back</a></p>
+          <h1>Create your school account</h1>
+          <p>Step 1 of 2. Continue with the school's Google account. Google confirms the email, so there is no code to wait for.</p>
+          <a class="btn btn-primary" data-google-teach href="/api/auth/google/start?mode=teach" style="width:100%;height:46px">Continue with Google</a>
+          <p class="alt" data-google-off hidden>Google sign-in is not switched on for this server yet. Ask the Reality ASM team at {{CONTACT_EMAIL}}.</p>
+        </section>
+
+        <section data-step="setup" hidden>
+          <h1>Set up your school</h1>
+          <p>Step 2 of 2. Verified by Google as <b data-google-email></b>. Choose the username and password the school admin will use.</p>
+          <form data-teach-setup novalidate>
+            <label class="field"><span>School name</span><input name="school_name" autocomplete="organization" required maxlength="120"></label>
+            <label class="field"><span>City</span><input name="city" autocomplete="address-level2" maxlength="80"></label>
+            <label class="field"><span>Admin username</span><input name="username" autocomplete="username" required minlength="3" maxlength="32" placeholder="e.g. vikash.admin"></label>
+            <label class="field"><span>Password</span><input name="password" type="password" autocomplete="new-password" required minlength="8"></label>
+            <label class="field"><span>Confirm password</span><input name="confirm" type="password" autocomplete="new-password" required minlength="8"></label>
+            <label class="check terms"><input type="checkbox" name="accept_terms"> I agree to the <a class="link" href="/teach-terms" target="_blank">ASM Teach Terms</a> and the <a class="link" href="/privacy" target="_blank">Privacy Policy</a> on behalf of the school.</label>
+            <button class="btn btn-primary" type="submit" disabled>Create school account</button>
+          </form>
+        </section>
+
+        <section data-step="teacher" hidden>
+          <p class="alt back"><a class="link" href="#school">‹ Back</a></p>
+          <h1>Teacher sign in</h1>
+          <p>Use the username and password your school admin made for you.</p>
+          <form data-teach-login="teacher" novalidate>
+            <label class="field"><span>Username</span><input name="username" autocomplete="username" required></label>
+            <label class="field"><span>Password</span><input name="password" type="password" autocomplete="current-password" required></label>
+            <label class="check"><input type="checkbox" name="remember" checked> Keep me signed in on this device</label>
+            <button class="btn btn-primary" type="submit">Sign in</button>
+            <p class="alt">Forgot your password? Your school admin can set a new one.</p>
+          </form>
+        </section>
+      </div>
+      <p class="auth-foot"><a href="/teach-terms">ASM Teach Terms</a> · <a href="/privacy">Privacy</a> · <a href="/">Reality ASM</a> · © 2026 Plazmonix AI</p>
+    </div>
+    <div class="auth-art teach-art" role="img" aria-label="A whiteboard with a pendulum computed by ASM Teach">
+      <blockquote>Write T = 2π√(L/g) on the board and the pendulum starts swinging, with the period worked out for the length your class picks.<cite>ASM Teach</cite></blockquote>
+    </div>
+  </div>
+  <script type="module" src="/static/teach-signin.js"></script>
+</body>
+</html>

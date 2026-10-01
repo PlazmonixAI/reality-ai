@@ -186,6 +186,13 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Equation Lab (`teach.explore`): any equation is built from the mathematics, not looked up. Identities proved step by step, impossible statements caught with the reason, exact solutions (general solutions for trigonometry), function study, implicit curves and conics, z = f(x, y) contours, dimensional checks for physics formulas with live sliders, chemical equations balanced or rejected
 - [x] Listen mode (`teach.listen`): the teacher speaks, ASM Teach follows. Spoken maths ("T equals 2 pi root L by g", "into", "by"), topics and values ("length 2 metres") open the experiment with those values or build the equation; browser speech recognition, no extra libraries
 - [ ] Listen mode in Hindi (speech recognition hi-IN plus spoken Hindi maths)
+- [x] ASM Teach as its own product at /teach: sign-in for schools (private institutions marked coming soon); school admins sign up with Google, set a username and password and accept the ASM Teach Terms; teachers sign in with the username and password the school gives them
+- [x] School admin panel: add, pause, reset and remove teachers; usage per teacher (sessions, experiments, lessons, media) and the most used experiments
+- [x] Teacher board: full-width whiteboard with a folding tool rail (suggested experiments from the board and speech, Equation Lab, YouTube, web windows, the teacher's own files, listen mode, AI co-teacher only when tapped, save lesson)
+- [x] Teacher files (PDF, slides, pictures, video) with per-teacher storage; slides converted to PDF where LibreOffice is installed
+- [x] Teacher profile panel (works on phones): profile, password, usage, saved lessons
+- [ ] Private institutions sign-up
+- [ ] Files on object storage instead of SQLite once schools upload a lot
 - [ ] Equation Lab for calculus notation (d/dx, ∫) and differential equations
 
 ## Phase 12: Relativity and quantum dynamics

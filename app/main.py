@@ -17,7 +17,7 @@ from app.agent.llm import LLMError, NIMClient, NoKeysError
 from app.config import settings
 from app.core import runner
 from app.core.registry import get_tool, list_tools
-from app.platform import admin, auth, company, challenges, history, waitlist
+from app.platform import admin, auth, company, challenges, history, teach, waitlist
 from app.platform.auth import current_user, session_user
 from app.platform.security import RateLimiter, check, sign
 
@@ -99,6 +99,7 @@ app.include_router(company.router)
 app.include_router(challenges.router)
 app.include_router(admin.router)
 app.include_router(waitlist.router)
+app.include_router(teach.router)
 
 
 # ---------------------------------------------------------------- engine API (signed-in users only)
@@ -209,12 +210,13 @@ def ask(req: AskRequest, client=Depends(get_llm_client), user=Depends(current_us
 # ---------------------------------------------------------------- public site
 PAGES = {"": "index.html", "login": "login.html", "signup": "signup.html", "forgot": "forgot.html", "reset": "reset.html",
          "terms": "legal/terms.html", "privacy": "legal/privacy.html", "cookies": "legal/cookies.html",
-         "acceptable-use": "legal/acceptable-use.html", "about": "about.html"}
+         "acceptable-use": "legal/acceptable-use.html", "about": "about.html", "teach-terms": "legal/teach-terms.html"}
 
 
 def _page(name: str) -> HTMLResponse:
     html = (SITE_DIR / PAGES[name]).read_text()
     html = html.replace("{{CONTACT_EMAIL}}", settings.contact_email).replace("{{TERMS_VERSION}}", auth.TERMS_VERSION)
+    html = html.replace("{{TEACH_TERMS_VERSION}}", teach.TEACH_TERMS_VERSION)
     return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
 
 
@@ -226,6 +228,27 @@ def favicon():
 @app.get("/", include_in_schema=False)
 def landing():
     return _page("")
+
+
+# ---------------------------------------------------------------- ASM Teach (its own sign-in and app, separate from ASM)
+TEACH_CSP = CSP.replace("default-src 'self';", "default-src 'self'; frame-src 'self' https:; media-src 'self' blob:;")
+
+
+@app.get("/teach", include_in_schema=False)
+def teach_signin(request: Request):
+    user = session_user(request.cookies.get(auth.COOKIE))
+    if user is not None and teach._role(user["id"])[0] is not None:
+        return RedirectResponse("/teach/app", status_code=302)
+    html = (SITE_DIR / "teach.html").read_text().replace("{{CONTACT_EMAIL}}", settings.contact_email)
+    return HTMLResponse(html.replace("{{TEACH_TERMS_VERSION}}", teach.TEACH_TERMS_VERSION), headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/teach/app", include_in_schema=False)
+def teach_app(request: Request):
+    user = session_user(request.cookies.get(auth.COOKIE))
+    if user is None or teach._role(user["id"])[0] is None:
+        return RedirectResponse("/teach", status_code=302)
+    return FileResponse(FRONTEND_DIR / "teach.html", headers={"Cache-Control": "no-cache", "Content-Security-Policy": TEACH_CSP})
 
 
 @app.get("/{page}", include_in_schema=False)
