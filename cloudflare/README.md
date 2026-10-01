@@ -8,7 +8,18 @@ What visitors get now:
 The site is plain files in `cloudflare/public`, rebuilt from the real landing page with
 `python scripts/build_cloudflare_site.py`. Commit the rebuilt files before deploying.
 
-## Put it on Cloudflare Pages
+## Put it on Cloudflare Workers (the way Plazmonix AI deploys)
+`wrangler.jsonc` at the repository root and `cloudflare/worker.js` make the site a Worker with static assets. The Worker
+reuses the code in `functions/` for the waitlist and the /test password; every other page is a plain file.
+1. Workers & Pages > Create > Import a repository > `PlazmonixAI/reality-ai`.
+2. Project name: `plazmonixai-reality-asm` (the same as `name` in `wrangler.jsonc`). Build command: empty.
+   Deploy command: `npx wrangler deploy`. Leave the root/path as the repository root.
+3. Deploy. Wrangler creates the `WAITLIST` KV namespace on the first deploy.
+4. Worker > Settings > Variables and Secrets > add `TEST_USERNAME` and `TEST_PASSWORD` as **Secret** (secrets survive
+   redeploys). Until both exist, /test stays closed.
+5. Worker > Settings > Domains & Routes > add your domain.
+
+## Or put it on Cloudflare Pages
 1. Cloudflare dashboard > **Workers & Pages** > **Create** > **Pages** > **Connect to Git**, and pick this repository.
 2. Build settings:
    - Framework preset: **None**

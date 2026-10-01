@@ -11,3 +11,5 @@ htmlcov/
 .vscode/
 
 data/
+.wrangler/
+node_modules/
