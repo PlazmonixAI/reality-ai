@@ -30,8 +30,8 @@ const GROUPS = [
   ["Structure, fairings & recovery", (p) => ["structural", "aero", "recovery"].includes(p.category) && !p.id.startsWith("decoupler_real")],
 ];
 const WARPS = [1, 2, 5, 10, 25, 100, 1000, 10000, 100000];
-const SKY = { earth: [[0, [118, 178, 255]], [12e3, [70, 120, 220]], [35e3, [20, 30, 80]], [70e3, [2, 4, 12]]], mars: [[0, [220, 170, 120]], [15e3, [150, 100, 80]], [45e3, [8, 6, 10]]], moon: [[0, [0, 0, 0]]] };
-const GROUND = { earth: ["#3d7a3a", "#2c5e2a"], mars: ["#b5643b", "#8e4a2b"], moon: ["#8f8f94", "#6e6e74"] };
+const SKY = { earth: [[0, [176, 200, 222]], [3e3, [112, 150, 196]], [12e3, [52, 86, 146]], [35e3, [14, 24, 52]], [70e3, [3, 6, 14]]], mars: [[0, [220, 170, 120]], [15e3, [150, 100, 80]], [45e3, [8, 6, 10]]], moon: [[0, [0, 0, 0]]] };
+const GROUND = { earth: ["#4a5a3c", "#262f22"], mars: ["#b5643b", "#8e4a2b"], moon: ["#8f8f94", "#6e6e74"] };
 const OMEGA = { earth: -7.2921159e-5, moon: -2.6617e-6, mars: -7.088218e-5 };
 const CLASS_TONE = { small: "#8a93a3", medium: "#6b7280", large: "#5b6270", heavy: "#474d57" };
 const STORE = "reality-asm.spaceflight.custom-parts";
@@ -242,10 +242,10 @@ export default {
     const siteSel = el("select", { class: "sf-select", "aria-label": "Launch site", title: "Launch site (flights are planar, so the site is projected onto the equator)" },
       ...SITES.map(([lon, name]) => el("option", { value: lon }, name)));
     const startSel = el("select", { class: "sf-select", "aria-label": "Start" }, el("option", { value: "pad" }, "Start on the launch pad"), el("option", { value: "orbit" }, "Start in low orbit (skip ascent)"));
-    const launchBtn = el("button", { class: "sf-launch", type: "button", onclick: () => startFlight() }, "Launch");
+    const launchBtn = el("button", { class: "sf-launch", type: "button", onclick: () => startFlight() }, "GO FOR LAUNCH");
     const clearBtn = el("button", { class: "sf-small", type: "button", onclick: () => { stack = []; selected = -1; refresh(); } }, "Clear");
     const buildView = el("div", { class: "sf-build" },
-      el("div", { class: "sf-build-top" }, el("span", { class: "sf-title" }, "ROCKET BUILDER"), tplSel, bodySel, siteSel, dateIn, startSel, clearBtn,
+      el("div", { class: "sf-build-top" }, el("span", { class: "sf-title" }, "VEHICLE ASSEMBLY"), tplSel, bodySel, siteSel, dateIn, startSel, clearBtn,
         el("button", { class: "sf-small accent", type: "button", onclick: () => openEngineDesigner() }, "Engine designer"),
         el("button", { class: "sf-small accent", type: "button", onclick: () => openSatDesigner() }, "Satellite designer"),
         el("button", { class: "sf-small", type: "button", onclick: () => saveDesign() }, "Save design"),
@@ -320,17 +320,30 @@ export default {
       if (!W || !catalogue) return;
       const dpr = Math.min(2, devicePixelRatio); c.width = W * dpr; c.height = H * dpr;
       const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = "#1f4f86"; ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "rgba(255,255,255,.08)"; ctx.lineWidth = 1;
-      for (let gx = 0; gx < W; gx += 24) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
-      for (let gy = 0; gy < H; gy += 24) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+      // Night launch site: ink sky, a dot field, a height ruler, a concrete pad and a lattice service tower
+      const skyG = ctx.createLinearGradient(0, 0, 0, H); skyG.addColorStop(0, "#060b15"); skyG.addColorStop(0.75, "#0B1526"); skyG.addColorStop(1, "#16233a");
+      ctx.fillStyle = skyG; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "rgba(143,163,194,.18)";
+      for (let gx = 16; gx < W; gx += 32) for (let gy = 16; gy < H - 40; gy += 32) ctx.fillRect(gx, gy, 1.5, 1.5);
       const parts = stack.map(partOf), total = stackHeight(parts) || 1, maxW = Math.max(3.2, ...parts.map((p) => (isBooster(p) ? 0 : p.width))) + Math.max(0, ...parts.filter(isBooster).map((p) => 2 * p.width));
       const s = Math.min((H - 80) / total, (W * 0.45) / maxW, 22);
       const yb = H - 40;
-      ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(W / 2 - 80, yb, 160, 6);
+      ctx.fillStyle = "#0f1a2c"; ctx.fillRect(0, yb, W, H - yb);
+      ctx.fillStyle = "#26324a"; ctx.fillRect(W / 2 - 110, yb, 220, 8);
+      ctx.fillStyle = "#FF5B2E"; ctx.fillRect(W / 2 - 110, yb, 220, 2);
+      for (let k = -2; k <= 2; k++) { ctx.fillStyle = "rgba(255,91,46,.75)"; ctx.beginPath(); ctx.arc(W / 2 + k * 48, yb + 14, 2, 0, Math.PI * 2); ctx.fill(); }
+      const ruler = 36, step = [1, 2, 5, 10, 20, 50, 100].find((v) => v * s >= 26) || 100;
+      ctx.strokeStyle = "rgba(143,163,194,.5)"; ctx.fillStyle = "#8fa3c2"; ctx.font = "11px Plex, system-ui"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(ruler, yb); ctx.lineTo(ruler, 20); ctx.stroke();
+      for (let m = 0; yb - m * s > 24; m += step) { const y = yb - m * s; ctx.beginPath(); ctx.moveTo(ruler - 6, y); ctx.lineTo(ruler, y); ctx.stroke(); ctx.fillText(`${m} m`, ruler + 6, y + 4); }
+      const tx = W / 2 + maxW * s / 2 + 70, th = Math.min(total * s * 1.08, yb - 30), tw = Math.max(10, Math.min(22, s * 2.2));
+      ctx.strokeStyle = "#3a4a66"; ctx.lineWidth = 1.5; ctx.strokeRect(tx, yb - th, tw, th);
+      for (let y = yb; y > yb - th + tw; y -= tw) { ctx.beginPath(); ctx.moveTo(tx, y); ctx.lineTo(tx + tw, y - tw); ctx.moveTo(tx + tw, y); ctx.lineTo(tx, y - tw); ctx.stroke(); }
+      for (let k = 1; k <= 3; k++) { const y = yb - th * k / 4; ctx.beginPath(); ctx.moveTo(tx, y); ctx.lineTo(W / 2 + maxW * s / 2 + 6, y); ctx.stroke(); }
+      ctx.fillStyle = "#FF5B2E"; ctx.beginPath(); ctx.arc(tx + tw / 2, yb - th - 4, 3, 0, Math.PI * 2); ctx.fill();
       bLayout = drawStack(ctx, parts, W / 2, yb, s, { selected, ghost: true });
       let st = 1, from = yb; // stage brackets
-      parts.forEach((p, i) => { if (isDecoupler(p) || i === parts.length - 1) { const to = bLayout[i][0], bx = W / 2 + maxW * s / 2 + 26; ctx.strokeStyle = "rgba(255,255,255,.45)"; ctx.beginPath(); ctx.moveTo(bx, from); ctx.lineTo(bx + 6, from); ctx.lineTo(bx + 6, to); ctx.lineTo(bx, to); ctx.stroke(); ctx.fillStyle = "#cfe0f5"; ctx.font = "12px system-ui"; ctx.fillText(`Stage ${st}`, bx + 12, (from + to) / 2 + 4); st++; from = to; } });
+      parts.forEach((p, i) => { if (isDecoupler(p) || i === parts.length - 1) { const to = bLayout[i][0], bx = W / 2 + maxW * s / 2 + 26; ctx.strokeStyle = "rgba(255,138,99,.7)"; ctx.beginPath(); ctx.moveTo(bx, from); ctx.lineTo(bx + 6, from); ctx.lineTo(bx + 6, to); ctx.lineTo(bx, to); ctx.stroke(); ctx.fillStyle = "#FFB199"; ctx.font = "600 11px Plex, system-ui"; ctx.fillText(`Stage ${st}`, bx + 12, (from + to) / 2 + 4); st++; from = to; } });
       if (!parts.length) { ctx.fillStyle = "#cfe0f5"; ctx.font = "15px system-ui"; ctx.textAlign = "center"; ctx.fillText("Add an engine, a fuel tank and a capsule or satellite", W / 2, H / 2); ctx.textAlign = "left"; }
     }
     bCanvas.addEventListener("click", (e) => {
@@ -468,7 +481,7 @@ export default {
     const warpLabel = el("span", { class: "sf-warp-label" }, "1×");
     const focusBtn = el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapFocus = mapFocus === "earth" ? "moon" : mapFocus === "moon" ? "auto" : "earth"; focusBtn.textContent = `FOCUS: ${mapFocus.toUpperCase()}`; } }, "FOCUS: AUTO");
     const sasBtns = ["free", "prograde", "retrograde", "up"].map((m) => el("button", { class: "sf-sas", type: "button", onclick: () => setSas(m) }, { free: "Free", prograde: "Prograde", retrograde: "Retro", up: "Up" }[m]));
-    const hold = (dirn) => { const b = el("button", { class: "sf-rot", type: "button", "aria-label": dirn < 0 ? "Rotate left" : "Rotate right" }, dirn < 0 ? "⟲" : "⟳");
+    const hold = (dirn) => { const b = el("button", { class: "sf-rot", type: "button", "aria-label": dirn < 0 ? "Rotate left" : "Rotate right" }, dirn < 0 ? "‹" : "›");
       b.addEventListener("pointerdown", () => { rotating = dirn; setSas("free"); }); ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, () => { rotating = 0; })); return b; };
     const fairingBtn = el("button", { class: "sf-fairbtn", type: "button", onclick: () => { fairingReq = true; } }, "FAIRING");
     const btn3d = el("button", { class: "sf-btn wide accent", type: "button", title: "See the flight in 3D over the real Earth and Moon", onclick: () => show3d(!view3dOn) }, "3D");
@@ -779,8 +792,9 @@ export default {
       const { s, L } = lerpState(), tel = flight.tel, R = L.radius, ref = L.body || body;
       const alt = Math.hypot(L.x, L.y) - R;
       if (mapView) return drawMap(ctx, W, H, s, L);
-      const sky = skyColor(ref, alt);
-      ctx.fillStyle = `rgb(${sky.join(",")})`; ctx.fillRect(0, 0, W, H);
+      const sky = skyColor(ref, alt), skyTop = skyColor(ref, alt + 25e3);
+      const sg = ctx.createLinearGradient(0, 0, 0, H); sg.addColorStop(0, `rgb(${skyTop.join(",")})`); sg.addColorStop(1, `rgb(${sky.join(",")})`);
+      ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
       const starA = Math.max(0, Math.min(1, 1 - (sky[0] + sky[1] + sky[2]) / 200));
       if (starA > 0) { ctx.fillStyle = `rgba(255,255,255,${starA})`; for (const [a, b, z] of starSeed) ctx.fillRect(a * W, b * H, 1 + z, 1 + z); }
       const rocketH = stackHeight(flight.parts);
@@ -849,7 +863,7 @@ export default {
     }
 
     function drawMap(ctx, W, H, s, L) {
-      ctx.fillStyle = "#050a14"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#070d18"; ctx.fillRect(0, 0, W, H);
       const moon = flight.moon, tel = flight.tel;
       const focus = mapFocus === "auto" ? (L.body === "moon" && moon ? "moon" : "primary") : mapFocus === "moon" && moon ? "moon" : "primary";
       const pts = focus === "moon" ? (flight.trajMoon.length ? flight.trajMoon : [[s.x - moon.x, s.y - moon.y]]) : (flight.traj.length ? flight.traj : [[s.x, s.y]]);
@@ -858,6 +872,12 @@ export default {
       let ext = Rc * 1.3; for (const [x, y] of [...pts, craft]) ext = Math.max(ext, Math.abs(x) * 1.1, Math.abs(y) * 1.1);
       if (focus !== "moon" && moon && ext > 6e7) ext = Math.max(ext, moon.orbit_radius * 1.1);
       const sc = Math.min(W, H) / 2 / ext * zoom, cx = W / 2, cy = H / 2, S = (x, y) => [cx + x * sc, cy - y * sc];
+      { // range rings with distances from the centre body, and a crosshair
+        const maxR = Math.hypot(W, H) / 2 / sc, raw = maxR / 6, mag = 10 ** Math.floor(Math.log10(raw)), ring = [1, 2, 5, 10].map((k) => k * mag).find((v) => v >= raw);
+        ctx.strokeStyle = "rgba(143,163,194,.14)"; ctx.lineWidth = 1; ctx.fillStyle = "rgba(143,163,194,.55)"; ctx.font = "11px Plex, system-ui";
+        for (let r = ring; r < maxR; r += ring) { ctx.beginPath(); ctx.arc(cx, cy, r * sc, 0, Math.PI * 2); ctx.stroke(); ctx.fillText(`${fmt(r / 1e3, 3)} km`, cx + r * sc * 0.707 + 4, cy - r * sc * 0.707 - 4); }
+        ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+      }
       const disc = (x, y, r, c1, c2) => { const [a, b] = S(x, y), rr = Math.max(2, r * sc); const g = ctx.createRadialGradient(a - rr * 0.3, b - rr * 0.3, rr * 0.1, a, b, rr); g.addColorStop(0, c1); g.addColorStop(1, c2); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a, b, rr, 0, Math.PI * 2); ctx.fill(); };
       if (focus === "moon") {
         disc(0, 0, moon.radius, "#cfcfcf", "#555");
@@ -866,8 +886,9 @@ export default {
       } else {
         const top = flight.planet.atmosphere_top, R = flight.planet.radius;
         if (top) { ctx.fillStyle = "rgba(110,170,255,.15)"; ctx.beginPath(); ctx.arc(cx, cy, (R + top) * sc, 0, Math.PI * 2); ctx.fill(); }
-        const [c1, c2] = { earth: ["#4f8fe0", "#1d3f7a"], mars: ["#d0643b", "#6e2c16"], moon: ["#bbbbbb", "#555"] }[body];
+        const [c1, c2] = { earth: ["#2c4d7a", "#0f1d33"], mars: ["#a8532f", "#3e1a0d"], moon: ["#9a9aa0", "#3a3a40"] }[body];
         disc(0, 0, R, c1, c2);
+        ctx.strokeStyle = "rgba(255,91,46,.85)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, R * sc, 0, Math.PI * 2); ctx.stroke();
         if (moon) {
           ctx.strokeStyle = "rgba(200,200,200,.18)"; ctx.beginPath(); ctx.arc(cx, cy, moon.orbit_radius * sc, 0, Math.PI * 2); ctx.stroke();
           disc(moon.x, moon.y, moon.radius, "#cfcfcf", "#555");
@@ -875,13 +896,15 @@ export default {
           ctx.fillStyle = "#cfd8e6"; ctx.font = "12px system-ui"; ctx.fillText("Moon", mx + Math.max(6, moon.radius * sc) + 4, my - 6);
         }
       }
-      ctx.strokeStyle = "#2a78d6"; ctx.lineWidth = 2; ctx.beginPath(); pts.forEach(([x, y], i) => { const [a, b] = S(x, y); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.stroke();
-      const mark = (p, text, col) => { const [a, b] = S(...p); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(a, b, 5, 0, Math.PI * 2); ctx.fill(); ctx.font = "12px system-ui"; ctx.fillText(text, a + 8, b - 6); };
+      ctx.save(); ctx.shadowColor = "rgba(255,91,46,.7)"; ctx.shadowBlur = 8;
+      ctx.strokeStyle = "#FF5B2E"; ctx.lineWidth = 2; ctx.beginPath(); pts.forEach(([x, y], i) => { const [a, b] = S(x, y); i ? ctx.lineTo(a, b) : ctx.moveTo(a, b); }); ctx.stroke(); ctx.restore();
+      const mark = (p, text, col) => { const [a, b] = S(...p); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(a, b - 6); ctx.lineTo(a + 6, b); ctx.lineTo(a, b + 6); ctx.lineTo(a - 6, b); ctx.closePath(); ctx.fill();
+        ctx.font = "600 12px Plex, system-ui"; ctx.fillText(text, a + 10, b - 8); };
       const sameFrame = (focus === "moon") === (L.body === "moon");
       if (pts.length > 3 && sameFrame) {
         let lo = 0, hi = 0; pts.forEach(([x, y], i) => { const r = Math.hypot(x, y); if (r > Math.hypot(...pts[hi])) hi = i; if (r < Math.hypot(...pts[lo])) lo = i; });
-        if (tel.apoapsis_alt !== null && tel.apoapsis_alt > 0 && tel.apoapsis_alt < 3e8) mark(pts[hi], `Ap ${fmtAlt(tel.apoapsis_alt)}`, "#eb6834");
-        if (tel.periapsis_alt !== null && Math.hypot(...pts[lo]) > Rc) mark(pts[lo], `Pe ${fmtAlt(tel.periapsis_alt)}`, "#1baf7a");
+        if (tel.apoapsis_alt !== null && tel.apoapsis_alt > 0 && tel.apoapsis_alt < 3e8) mark(pts[hi], `Ap ${fmtAlt(tel.apoapsis_alt)}`, "#FFB199");
+        if (tel.periapsis_alt !== null && Math.hypot(...pts[lo]) > Rc) mark(pts[lo], `Pe ${fmtAlt(tel.periapsis_alt)}`, "#7fd3ff");
       }
       if (tel.encounter && focus !== "moon") { // where the Moon will be when the craft passes it
         const e = tel.encounter, [gx, gy] = S(...e.moon_position);
@@ -895,7 +918,7 @@ export default {
       const [rx, ry] = S(...craft);
       ctx.save(); ctx.translate(rx, ry); ctx.rotate(-s.angle + Math.PI / 2);
       ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(6, 7); ctx.lineTo(-6, 7); ctx.closePath(); ctx.fill(); ctx.restore();
-      ctx.fillStyle = "#7b8fa8"; ctx.font = "12px system-ui"; ctx.fillText(`MAP (${focus === "moon" ? "Moon-centred" : "Earth-centred"}). Scroll to zoom, M to return`, 16, H - 16);
+      ctx.fillStyle = "#8fa3c2"; ctx.font = "600 11px Plex, system-ui"; ctx.textAlign = "right"; ctx.fillText(`TRACKING · ${focus === "moon" ? "MOON-CENTRED" : "EARTH-CENTRED"} · SCROLL TO ZOOM · M TO RETURN`, W - 16, H - 16); ctx.textAlign = "left";
       drawHud(tel, s);
     }
 

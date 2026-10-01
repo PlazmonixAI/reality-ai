@@ -738,3 +738,54 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
   .teach-hero { grid-template-columns: 1fr; }
   .teach-reader-row { flex-direction: column; }
 }
+
+/* ---------- Spaceflight Lab: Reality ASM mission console (own look, ink and ember) ---------- */
+.sf-root { background: #070d18; font-family: "Plex", system-ui, sans-serif; }
+.sf-build { grid-template-columns: 260px 1fr 300px; grid-template-rows: 52px 1fr; }
+.sf-build-top { background: #0B1526; border-bottom: 2px solid #FF5B2E; }
+.sf-title { letter-spacing: .3em; font-size: 12px; color: #FF5B2E; }
+.sf-select, .sf-text { background: #101d33; border: 1px solid #263856; border-radius: 6px; }
+.sf-launch { background: #FF5B2E; color: #0B1526; border-radius: 6px; letter-spacing: .14em; box-shadow: 0 0 0 1px rgba(255,91,46,.4), 0 6px 18px rgba(255,91,46,.25); }
+.sf-palette, .sf-right { background: #0b1526; border-color: #1c2a44; }
+.sf-cat-title { color: #FF8A63; letter-spacing: .24em; border-bottom: 1px solid #1c2a44; padding-bottom: 4px; }
+.sf-part { background: #101d33; border: 1px solid #1c2a44; border-radius: 6px; }
+.sf-part:hover { background: #15264a; border-color: #FF5B2E; }
+.sf-part small, .sf-fact span, .sf-hint, .sf-stat-big, .sf-meter-label { color: #8fa3c2; }
+.sf-small { border-radius: 6px; background: #101d33; border-color: #263856; }
+.sf-small.accent { background: transparent; border-color: #FF5B2E; color: #FFB199; }
+.sf-stage { background: #0f1b30; border-left: 3px solid #FF5B2E; border-radius: 4px; }
+.sf-design { background: #0b1526; border-color: #263856; border-radius: 10px; }
+.sf-design-head, .sf-design-foot { background: #0f1b30; }
+
+/* telemetry strip across the top instead of a side table */
+.sf-hud { left: 14px; top: 14px; width: auto; max-width: calc(100% - 640px); min-width: 520px; padding: 8px 10px; border-radius: 8px; background: rgba(7,13,24,.82);
+  border: 1px solid #1f2f4c; border-top: 2px solid #FF5B2E; display: grid; grid-template-columns: repeat(6, minmax(78px, 1fr)); gap: 4px 10px; backdrop-filter: blur(4px); }
+.sf-hud .sf-status { grid-column: 1 / -1; margin: 0 0 2px; font-size: 11px; letter-spacing: .22em; }
+.sf-hud-row { display: flex; flex-direction: column; padding: 0; border-left: 1px solid #1f2f4c; padding-left: 8px; }
+.sf-hud-row span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #7f93b3; }
+.sf-hud-row b { font-family: "Plex Mono", monospace; font-weight: 400; font-size: 14px; color: #eef3fa; white-space: nowrap; }
+.sf-hud .sf-fuel { grid-column: 1 / -1; margin-top: 2px; }
+.sf-topright { gap: 4px; }
+.sf-btn { height: 32px; border-radius: 6px; border: 1px solid #263856; background: rgba(7,13,24,.82); font-size: 12px; letter-spacing: .08em; }
+.sf-btn.accent, .sf-btn.on { background: #FF5B2E; border-color: #FF5B2E; color: #0B1526; }
+.sf-warp-label { color: #FF8A63; font-family: "Plex Mono", monospace; }
+/* horizontal throttle at the bottom centre */
+.sf-throttle-box { top: auto; bottom: 16px; right: auto; left: 50%; transform: translateX(-50%); width: auto; flex-direction: row; gap: 10px; padding: 8px 14px;
+  border-radius: 8px; background: rgba(7,13,24,.82); border: 1px solid #1f2f4c; }
+.sf-throttle { writing-mode: horizontal-tb; direction: ltr; width: 240px; height: 22px; accent-color: #FF5B2E; }
+.sf-thr-label { font-family: "Plex Mono", monospace; font-weight: 400; min-width: 46px; text-align: right; color: #FF8A63; }
+/* attitude controls: one compact pad */
+.sf-bottomleft { gap: 6px; padding: 6px; border-radius: 8px; background: rgba(7,13,24,.82); border: 1px solid #1f2f4c; }
+.sf-rot { width: 46px; height: 40px; border-radius: 6px; font-size: 22px; background: #101d33; border: 1px solid #263856; }
+.sf-sas { border-radius: 6px; background: #101d33; border-color: #263856; font-size: 12px; }
+.sf-sas.on { background: #FF5B2E; border-color: #FF5B2E; color: #0B1526; }
+/* sequence buttons: a column on the right edge */
+.sf-bottomright { right: 14px; bottom: auto; top: 50%; transform: translateY(-50%); flex-direction: column; gap: 6px; }
+.sf-stagebtn, .sf-chutebtn, .sf-fairbtn { width: 128px; height: 44px; border-radius: 6px; background: rgba(7,13,24,.86); color: #eef3fa; font-size: 12px;
+  letter-spacing: .2em; text-align: left; padding-left: 16px; border: 1px solid #263856; }
+.sf-stagebtn { border-left: 4px solid #FF5B2E; }
+.sf-chutebtn { border-left: 4px solid #f0b54a; }
+.sf-fairbtn { border-left: 4px solid #8fa3c2; }
+.sf-stagebtn:hover, .sf-chutebtn:hover, .sf-fairbtn:hover { background: #15264a; }
+.sf-toast div { background: rgba(7,13,24,.86); border: 1px solid #1f2f4c; border-radius: 6px; }
+@media (max-width: 1100px) { .sf-hud { min-width: 0; max-width: calc(100% - 28px); grid-template-columns: repeat(4, minmax(70px, 1fr)); top: 56px; } }
