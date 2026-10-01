@@ -3,7 +3,7 @@
 // Secrets are not stored here: set TEST_USERNAME and TEST_PASSWORD in the Worker's Settings > Variables and Secrets.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "plazmonixai-reality-asm",
+  "name": "reality-asm",
   "main": "cloudflare/worker.js",
   "compatibility_date": "2025-09-01",
   "assets": {
