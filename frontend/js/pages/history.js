@@ -32,7 +32,7 @@ function summaryText(r) {
   if (s.resolution !== undefined) bits.push(`${s.resolution < 10 ? s.resolution.toFixed(2) : Math.round(s.resolution)} m resolution`);
   if (s.c3 !== undefined) bits.push(`C3 ${s.c3.toFixed(1)} km²/s²`);
   if (s.message) bits.push(s.message);
-  if (s.chapter) bits.push(`Class ${s.class} · ${s.chapter}`);
+  if (s.chapter) bits.push(`Coursework ${s.class - 8} · ${s.chapter}`);
   if (s.readings) bits.push(`${s.readings} readings`);
   if (s.tools) bits.push(s.tools.map((t) => t.replace(/_/g, " ")).join(", "));
   return bits.join(" · ");

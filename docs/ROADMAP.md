@@ -182,4 +182,10 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Class assignments and teacher reports
 - [ ] Hindi and regional language interface
 - [ ] Offline classroom mode
-- [ ] Board-specific chapter names for ICSE and each state board
+- [x] Library shown as Coursework 1 to 4 instead of classes and boards, so it reads as one library for every syllabus
+
+## Phase 12: Relativity and quantum dynamics
+- [x] Schwarzschild black hole: radii, clocks, curvature, tidal stretch, light bending, orbits, fall to the singularity
+- [x] Time-dependent Schrödinger solver for wave packets; quantum harmonic oscillator; Rabi oscillations on the Bloch sphere
+- [ ] Rotating (Kerr) black hole and an accretion disc image
+- [ ] Two-dimensional wave packets (double slit)

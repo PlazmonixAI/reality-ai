@@ -193,7 +193,7 @@ class Experiment:
     assumptions: list[str] = field(default_factory=list)
 
     def summary(self) -> dict[str, Any]:
-        return {"id": self.id, "class": self.cls, "subject": self.subject, "chapter": self.chapter, "title": self.title,
+        return {"id": self.id, "class": self.cls, "coursework": self.cls - 8, "subject": self.subject, "chapter": self.chapter, "title": self.title,
                 "kind": self.kind, "kind_label": KINDS[self.kind], "blurb": self.blurb, "boards": list(self.boards),
                 "scene": self.scene, "equation": pretty(self.eqs[0]) if self.eqs else ""}
 

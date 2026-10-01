@@ -522,6 +522,34 @@ export const SIMS = [
       <path d="M10 60 Q25 30 40 60 T70 60 T100 60 Q115 80 135 92 Q150 96 165 96 T195 96 T225 96" fill="none" stroke="#2a78d6" stroke-width="3"/>`),
   },
   {
+    id: "blackhole", domain: "physics", title: "Black Hole & Singularity",
+    blurb: "Bend light round a black hole, park a probe on the last stable orbit, and fall to r = 0 where curvature becomes infinite.",
+    load: () => import("./blackhole.js"),
+    art: sky(`<rect width="240" height="128" fill="#04060b"/><circle cx="120" cy="64" r="34" fill="#ff5b2e" fill-opacity=".18"/><circle cx="120" cy="64" r="22" fill="#000" stroke="#ff5b2e" stroke-width="1.5"/>
+      <circle cx="120" cy="64" r="33" fill="none" stroke="#ffc878" stroke-dasharray="4 4" stroke-opacity=".7"/><path d="M0 20 Q120 30 170 50 Q200 64 240 110" fill="none" stroke="#78aaff" stroke-width="1.5"/><path d="M0 40 Q90 44 112 58" fill="none" stroke="#ff5b2e" stroke-width="1.5"/>`),
+  },
+  {
+    id: "wavepacket", domain: "physics", title: "Quantum Wave Packets",
+    blurb: "One electron meets a barrier and splits: part tunnels through, part bounces back. Solved from the Schrödinger equation.",
+    load: () => import("./wavepacket.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><rect x="112" y="40" width="16" height="80" fill="#eb6834" fill-opacity=".3" stroke="#eb6834"/>
+      <path d="M20 100 Q40 100 50 60 Q60 30 70 60 Q80 100 100 100 M140 100 Q160 100 168 80 Q176 66 184 80 Q192 100 220 100" fill="#2a78d6" fill-opacity=".35" stroke="#2a78d6" stroke-width="2"/>`),
+  },
+  {
+    id: "oscillator", domain: "physics", title: "Quantum Harmonic Oscillator",
+    blurb: "Equally spaced energy levels, the shapes of the wavefunctions, and a superposition that sloshes back and forth.",
+    load: () => import("./oscillator.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><path d="M40 10 Q120 210 200 10" fill="none" stroke="#eb6834" stroke-width="2"/>
+      <g stroke="#c9ced6" stroke-opacity=".4"><path d="M84 100H156M70 76H170M60 52H180M52 28H188"/></g><path d="M84 100 Q120 80 156 100M70 76 Q95 60 120 76 T170 76" fill="none" stroke="#2a78d6" stroke-width="2"/>`),
+  },
+  {
+    id: "rabi", domain: "physics", title: "Spin & Rabi Oscillations",
+    blurb: "Drive a qubit and watch its state swing round the Bloch sphere, from ground to excited and back.",
+    load: () => import("./rabi.js"),
+    art: sky(`<rect width="240" height="128" fill="#0f1a2b"/><circle cx="120" cy="64" r="48" fill="none" stroke="#c9ced6" stroke-opacity=".5"/><ellipse cx="120" cy="64" rx="48" ry="14" fill="none" stroke="#c9ced6" stroke-opacity=".35"/>
+      <path d="M120 64 L150 30" stroke="#2a78d6" stroke-width="3"/><path d="M120 16 Q170 40 150 30" fill="none" stroke="#eb6834" stroke-width="2"/>`),
+  },
+  {
     id: "kepler", domain: "physics", title: "Kepler's Laws",
     blurb: "Ellipses, equal areas in equal times and T² ∝ a³, for Mercury, Mars, Jupiter or Halley's Comet.",
     load: () => import("./kepler.js"),

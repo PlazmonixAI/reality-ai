@@ -11,6 +11,8 @@ import { drawScene } from "../teach/scenes.js";
 import { createBoard } from "../teach/board.js";
 
 const SUBJECT = { physics: "Physics", chemistry: "Chemistry", mathematics: "Maths" };
+/** The library is grouped into four courseworks (one per year of senior school), never by board or class name. */
+export const coursework = (cls) => `Coursework ${cls - 8}`;
 const store = {
   get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* private mode */ } },
@@ -27,14 +29,13 @@ export default {
 // ================================================================ library
 function library(root) {
   root.classList.add("teach-lib");
-  const f = store.get("teach.filters", { board: "", cls: "", subject: "", kind: "", q: "" });
+  const f = { cls: "", subject: "", kind: "", q: "", ...store.get("teach.filters2", {}) };
   let items = [], counts = {};
   const list = el("div", { class: "teach-list" }, el("p", { class: "muted" }, "Loading the library…"));
   const stats = el("div", { class: "teach-stats" });
   const search = el("input", { class: "search", type: "search", placeholder: "Search chapters, laws and practicals", value: f.q, "aria-label": "Search the library" });
   search.addEventListener("input", () => { f.q = search.value; draw(); });
-  const boardSel = select({ label: "", options: [{ value: "", label: "All boards" }, ...["NCERT", "CBSE", "ICSE", "State"].map((b) => ({ value: b, label: b === "State" ? "State boards" : b }))], value: f.board, onChange: (v) => { f.board = v; draw(); } });
-  const clsSeg = segmented({ options: [{ value: "", label: "All classes" }, ...[9, 10, 11, 12].map((c) => ({ value: String(c), label: `Class ${c}` }))], value: f.cls, onChange: (v) => { f.cls = v; draw(); } });
+  const clsSeg = segmented({ options: [{ value: "", label: "All coursework" }, ...[9, 10, 11, 12].map((c) => ({ value: String(c), label: coursework(c) }))], value: f.cls, onChange: (v) => { f.cls = v; draw(); } });
   const subjSeg = segmented({ options: [{ value: "", label: "All" }, ...Object.entries(SUBJECT).map(([value, label]) => ({ value, label }))], value: f.subject, onChange: (v) => { f.subject = v; draw(); } });
   const kindSeg = segmented({ options: [{ value: "", label: "Everything" }, { value: "derivation", label: "Derivations" }, { value: "practical", label: "Practicals" }, { value: "law", label: "Laws" }, { value: "graph", label: "Graphs" }], value: f.kind, onChange: (v) => { f.kind = v; draw(); } });
 
@@ -54,11 +55,11 @@ function library(root) {
   root.append(el("div", { class: "teach-home" },
     el("div", { class: "teach-hero" },
       el("div", {}, el("p", { class: "teach-eyebrow" }, "ASM Teach"),
-        el("h1", {}, "Class 9 to 12, as live simulations"),
-        el("p", { class: "muted" }, "Every derivation, law and practical from the physics, chemistry and maths syllabus, ready to run in class with a whiteboard, practice questions and an AI co-teacher beside it. Chapters follow NCERT; CBSE, ICSE and state board topics are mapped.")),
+        el("h1", {}, "Four courseworks, as live simulations"),
+        el("p", { class: "muted" }, "Every derivation, law and practical across senior school physics, chemistry and maths, ready to run in class with a whiteboard, practice questions and an AI co-teacher beside it. One library for every school, whichever syllabus it follows.")),
       stats),
     reader,
-    el("div", { class: "teach-filters" }, boardSel.root, clsSeg.root, subjSeg.root, kindSeg.root, search),
+    el("div", { class: "teach-filters" }, clsSeg.root, subjSeg.root, kindSeg.root, search),
     list));
 
   simulate("teach", "catalog", {}).then(({ result }) => {
@@ -70,10 +71,10 @@ function library(root) {
   }).catch((err) => list.replaceChildren(el("p", { class: "empty" }, err.message)));
 
   function draw() {
-    store.set("teach.filters", f);
+    store.set("teach.filters2", f);
     if (!items.length) return;
     const words = f.q.toLowerCase().split(/\s+/).filter(Boolean);
-    const shown = items.filter((i) => (!f.board || i.boards.includes(f.board)) && (!f.cls || String(i.class) === f.cls) &&
+    const shown = items.filter((i) => (!f.cls || String(i.class) === f.cls) &&
       (!f.subject || i.subject === f.subject) && (!f.kind || i.kind === f.kind) &&
       (!words.length || words.every((w) => `${i.title} ${i.chapter} ${i.blurb} ${i.equation}`.toLowerCase().includes(w))));
     if (!shown.length) { list.replaceChildren(el("p", { class: "empty" }, "Nothing matches. Try another class, board or word.")); return; }
@@ -89,7 +90,7 @@ function library(root) {
       const [cls, subj] = key.split("|");
       const n = [...chapters.values()].reduce((a, c) => a + c.length, 0);
       return el("section", { class: "teach-group" },
-        el("h2", { class: "domain-title" }, `Class ${cls} ${SUBJECT[subj]}`, el("span", { class: "count" }, String(n))),
+        el("h2", { class: "domain-title" }, `${coursework(Number(cls))} ${SUBJECT[subj]}`, el("span", { class: "count" }, String(n))),
         ...[...chapters.entries()].map(([chapter, exps]) => el("div", { class: "teach-chapter" },
           el("h3", {}, chapter),
           el("div", { class: "teach-cards" }, exps.map(card)))));
@@ -111,7 +112,7 @@ function robustRange(seriesList) {
 function card(i) {
   return el("a", { class: `teach-card s-${i.subject}`, href: `#/teach/${i.id}` },
     el("div", { class: "teach-card-top" }, el("span", { class: `kind k-${i.kind}` }, i.kind_label),
-      i.boards.length < 4 ? el("span", { class: "teach-boards" }, i.boards.join(", ")) : ""),
+      el("span", { class: "teach-boards" }, coursework(i.class))),
     el("b", {}, i.title), el("span", { class: "teach-card-eq" }, i.equation), el("small", {}, i.blurb));
 }
 
@@ -185,7 +186,7 @@ function classroom(root, id, params) {
     aiCleanup = mountAiPanel(root, { id: `teach-${id}`, title: r.result.title, blurb: r.result.blurb }, {
       label: "AI co-teacher",
       quick: [
-        ["Explain it to my class", `Explain this experiment to a Class ${r.result.class} student in simple words, using the numbers on screen. Keep it to what a teacher could say in two minutes.`],
+        ["Explain it to my class", `Explain this experiment to a senior school student (${coursework(r.result.class)}) in simple words, using the numbers on screen. Keep it to what a teacher could say in two minutes.`],
         ["Common mistakes", "What mistakes and misconceptions do students usually have about this topic, and how can I show each one with this simulation?"],
         ["Questions for the board", "Give me three board questions of rising difficulty on this topic, with answers worked out using the engine."],
         ["Real-life examples", "Give three real-life examples of this idea that students in India would recognise, with numbers where you can compute them."],
@@ -198,8 +199,7 @@ function classroom(root, id, params) {
   function build(r) {
     document.title = `${r.title} · ASM Teach`;
     title.textContent = r.title;
-    meta.replaceChildren(el("span", { class: `kind k-${r.kind}` }, r.kind_label), el("span", {}, `Class ${r.class} ${SUBJECT[r.subject]} · ${r.chapter}`),
-      el("span", { class: "muted small" }, r.boards.length === 4 ? "NCERT, CBSE, ICSE, State" : r.boards.join(", ")));
+    meta.replaceChildren(el("span", { class: `kind k-${r.kind}` }, r.kind_label), el("span", {}, `${coursework(r.class)} ${SUBJECT[r.subject]} · ${r.chapter}`));
     if (r.lab) { labLink.hidden = false; labLink.href = `#/sim/${r.lab}`; }
     for (const p of r.params) {
       values[p.name] = p.default;

@@ -29,8 +29,8 @@ def _sig(x: float, digits: int = 4) -> float:
 
 
 @tool(domain="teach", name="catalog",
-      description="ASM Teach library: Class 9 to 12 physics, chemistry and maths experiments mapped to NCERT, CBSE, ICSE "
-                  "and state board chapters. Filter by class (9-12), subject, board or a search phrase.")
+      description="ASM Teach library: senior school physics, chemistry and maths experiments in four courseworks "
+                  "(cls 9 = Coursework 1 ... cls 12 = Coursework 4). Filter by coursework, subject or a search phrase.")
 def teach_catalog(cls: int | None = None, subject: str | None = None, board: str | None = None, query: str = "") -> dict:
     if cls is not None and cls not in (9, 10, 11, 12):
         raise ValueError("class must be 9, 10, 11 or 12")
@@ -52,8 +52,7 @@ def teach_catalog(cls: int | None = None, subject: str | None = None, board: str
         counts.setdefault(str(e.cls), {s: 0 for s in SUBJECTS})[e.subject] += 1
     return {"result": {"items": items, "total": len(CATALOG), "matched": len(items), "counts": counts,
                        "boards": list(BOARDS), "kinds": KINDS},
-            "units": {}, "assumptions": ["Chapters follow the NCERT textbooks, which CBSE and most state boards use.",
-                                         "Topics that ICSE teaches in a different class are tagged with the board."]}
+            "units": {}, "assumptions": ["Experiments are grouped into Coursework 1 to 4, one per year of senior school."]}
 
 
 @tool(domain="teach", name="experiment",

@@ -2,7 +2,7 @@
 
 Reality ASM is a research-simulation engine for physics, chemistry and mathematics, by Subham Agarwal and Plazmonix AI.
 It is now a full web app: public site, accounts, saved history, a space company that runs in real time, challenge
-missions, the Spaceflight Lab with real launch vehicles, the Solar System and 78 simulations. An AI analyst
+missions, the Spaceflight Lab with real launch vehicles, the Solar System and 82 simulations. An AI analyst
 (NVIDIA NIM, Groq or xAI) explains results using the engine's tools.
 
 Built by Plazmonix AI (a Velostra Aerospace company).
@@ -41,8 +41,8 @@ actually produced.
 **Storage:** a single SQLite file (`DATABASE_PATH`). Back it up by copying the file.
 
 ## ASM Teach
-The classroom part of the app, at `/app/#/teach`: 281 Class 9 to 12 physics, chemistry and maths experiments (derivations, laws,
-practicals and graphs), mapped to NCERT, CBSE, ICSE and state boards. Each one has a live picture, a graph, the equations and
+The classroom part of the app, at `/app/#/teach`: 281 senior school physics, chemistry and maths experiments (derivations, laws,
+practicals and graphs), grouped as Coursework 1 to 4 (one per year) rather than by board or class. Each one has a live picture, a graph, the equations and
 derivation, an observation table, practice questions with engine-computed answers, an AI co-teacher and a whiteboard that reads
 typed equations. Lessons save to the history. Engine tools: `teach.catalog`, `teach.experiment`, `teach.practice`, `teach.recognize`.
 
