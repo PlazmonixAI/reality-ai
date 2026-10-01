@@ -758,12 +758,12 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .sf-design-head, .sf-design-foot { background: #0f1b30; }
 
 /* telemetry strip across the top instead of a side table */
-.sf-hud { left: 14px; top: 14px; width: auto; max-width: calc(100% - 640px); min-width: 520px; padding: 8px 10px; border-radius: 8px; background: rgba(7,13,24,.82);
+.sf-hud { left: 14px; top: 14px; width: auto; max-width: calc(100% - 760px); min-width: 0; padding: 8px 10px; border-radius: 8px; background: rgba(7,13,24,.82);
   border: 1px solid #1f2f4c; border-top: 2px solid #FF5B2E; display: grid; grid-template-columns: repeat(6, minmax(78px, 1fr)); gap: 4px 10px; backdrop-filter: blur(4px); }
 .sf-hud .sf-status { grid-column: 1 / -1; margin: 0 0 2px; font-size: 11px; letter-spacing: .22em; }
-.sf-hud-row { display: flex; flex-direction: column; padding: 0; border-left: 1px solid #1f2f4c; padding-left: 8px; }
-.sf-hud-row span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: #7f93b3; }
-.sf-hud-row b { font-family: "Plex Mono", monospace; font-weight: 400; font-size: 14px; color: #eef3fa; white-space: nowrap; }
+.sf-hud-row { display: flex; flex-direction: column; min-width: 0; overflow: hidden; padding: 0; border-left: 1px solid #1f2f4c; padding-left: 8px; }
+.sf-hud-row span { font-size: 10px; letter-spacing: .12em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; color: #7f93b3; }
+.sf-hud-row b { font-family: "Plex Mono", monospace; font-weight: 400; font-size: 14px; color: #eef3fa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sf-hud .sf-fuel { grid-column: 1 / -1; margin-top: 2px; }
 .sf-topright { gap: 4px; }
 .sf-btn { height: 32px; border-radius: 6px; border: 1px solid #263856; background: rgba(7,13,24,.82); font-size: 12px; letter-spacing: .08em; }
@@ -788,4 +788,6 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .sf-fairbtn { border-left: 4px solid #8fa3c2; }
 .sf-stagebtn:hover, .sf-chutebtn:hover, .sf-fairbtn:hover { background: #15264a; }
 .sf-toast div { background: rgba(7,13,24,.86); border: 1px solid #1f2f4c; border-radius: 6px; }
-@media (max-width: 1100px) { .sf-hud { min-width: 0; max-width: calc(100% - 28px); grid-template-columns: repeat(4, minmax(70px, 1fr)); top: 56px; } }
+/* not enough room beside the toolbar: the strip drops below it */
+@media (max-width: 1500px) { .sf-hud { max-width: calc(100% - 190px); top: 58px; } }
+@media (max-width: 1100px) { .sf-hud { max-width: calc(100% - 28px); grid-template-columns: repeat(4, minmax(70px, 1fr)); } }
