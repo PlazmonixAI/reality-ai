@@ -183,6 +183,10 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Hindi and regional language interface
 - [ ] Offline classroom mode
 - [x] Library shown as Coursework 1 to 4 instead of classes and boards, so it reads as one library for every syllabus
+- [x] Equation Lab (`teach.explore`): any equation is built from the mathematics, not looked up. Identities proved step by step, impossible statements caught with the reason, exact solutions (general solutions for trigonometry), function study, implicit curves and conics, z = f(x, y) contours, dimensional checks for physics formulas with live sliders, chemical equations balanced or rejected
+- [x] Listen mode (`teach.listen`): the teacher speaks, ASM Teach follows. Spoken maths ("T equals 2 pi root L by g", "into", "by"), topics and values ("length 2 metres") open the experiment with those values or build the equation; browser speech recognition, no extra libraries
+- [ ] Listen mode in Hindi (speech recognition hi-IN plus spoken Hindi maths)
+- [ ] Equation Lab for calculus notation (d/dx, ∫) and differential equations
 
 ## Phase 12: Relativity and quantum dynamics
 - [x] Schwarzschild black hole: radii, clocks, curvature, tidal stretch, light bending, orbits, fall to the singularity

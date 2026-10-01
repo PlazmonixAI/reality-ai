@@ -9,6 +9,8 @@ import { mountAiPanel } from "../core/aichat.js";
 import { history, toast } from "../core/session.js";
 import { drawScene } from "../teach/scenes.js";
 import { createBoard } from "../teach/board.js";
+import { equationLab, looksLikeEquation } from "../teach/eqlab.js";
+import { listenButton, setListenHandler } from "../teach/listen.js";
 
 const SUBJECT = { physics: "Physics", chemistry: "Chemistry", mathematics: "Maths" };
 /** The library is grouped into four courseworks (one per year of senior school), never by board or class name. */
@@ -42,15 +44,26 @@ function library(root) {
   // The board reader, right on the library page: write an equation, get the experiment
   const eq = el("input", { type: "text", class: "teach-eq", placeholder: "Write an equation or a topic: T = 2π√(L/g), PV = nRT, Snell's law", spellcheck: "false", "aria-label": "Equation or topic" });
   const found = el("div", { class: "teach-found" });
-  const reader = el("form", { class: "teach-reader", onsubmit: async (e) => {
-    e.preventDefault();
+  const lab = equationLab();
+  const read = async () => {
     const text = eq.value.trim(); if (!text) return;
     found.replaceChildren(el("p", { class: "muted" }, "Reading it…"));
+    if (looksLikeEquation(text)) lab.run(text); else lab.root.hidden = true;
     try {
       const r = (await simulate("teach", "recognize", { equation: text })).result;
-      found.replaceChildren(...readerResult(r));
-    } catch (err) { found.replaceChildren(el("p", { class: "muted" }, err.message)); }
-  } }, el("label", { class: "teach-reader-label" }, "Find a simulation from an equation"), el("div", { class: "teach-reader-row" }, eq, el("button", { type: "submit", class: "btn primary" }, "Find")), found);
+      const eqn = looksLikeEquation(text);  // the Equation Lab speaks for an equation; keep only real equation matches
+      found.replaceChildren(...readerResult(eqn ? { ...r, read_as: null, matches: r.matches.filter((m) => m.reason !== "topic match") } : r, { quiet: eqn }));
+    } catch (err) { found.replaceChildren(looksLikeEquation(text) ? "" : el("p", { class: "muted" }, err.message)); }
+  };
+  const reader = el("form", { class: "teach-reader", onsubmit: (e) => { e.preventDefault(); read(); } },
+    el("label", { class: "teach-reader-label" }, "Write any equation: the board builds it, or finds the experiment"),
+    el("div", { class: "teach-reader-row" }, eq, el("button", { type: "submit", class: "btn primary" }, "Build"), listenButton()), lab.root, found);
+  const unlisten = setListenHandler((r) => {
+    if (r.experiment && (r.action === "open" || r.action === "update")) {
+      sessionStorage.setItem("teach.listenValues", JSON.stringify({ id: r.experiment.id, values: r.values }));
+      location.hash = `#/teach/${r.experiment.id}`;
+    } else if (r.action === "explore" && r.equation) { eq.value = r.equation; read(); }
+  });
 
   root.append(el("div", { class: "teach-home" },
     el("div", { class: "teach-hero" },
@@ -96,7 +109,7 @@ function library(root) {
           el("div", { class: "teach-cards" }, exps.map(card)))));
     }));
   }
-  return () => {};
+  return () => { lab.destroy(); unlisten(); };
 }
 
 /** Near a pole (a lens at u = f) one spike can flatten the whole curve; keep the view on the bulk of the data. */
@@ -116,13 +129,13 @@ function card(i) {
     el("b", {}, i.title), el("span", { class: "teach-card-eq" }, i.equation), el("small", {}, i.blurb));
 }
 
-function readerResult(r, { onWrite } = {}) {
+function readerResult(r, { onWrite, quiet = false } = {}) {
   const out = [];
   if (r.read_as) out.push(el("p", { class: "teach-readas" }, "Read as ", el("b", {}, r.read_as)));
   if (r.matches.length) out.push(el("div", { class: "teach-cards compact" }, r.matches.map((m) => {
     const c = card(m); c.append(el("span", { class: "teach-why" }, m.reason === "same equation" ? "Same equation" : m.reason === "topic match" ? "Topic match" : `Shares quantities (${Math.round(m.score * 100)}%)`)); return c;
   })));
-  else out.push(el("p", { class: "muted" }, "Nothing in the library uses that yet. Check the symbols match the textbook's (v, u, a, t)."));
+  else if (!quiet) out.push(el("p", { class: "muted" }, "Nothing in the library uses that yet. Check the symbols match the textbook's (v, u, a, t)."));
   if (r.rearranged.length) out.push(el("div", { class: "teach-rearr" }, el("span", { class: "muted small" }, "Rearranged: "),
     r.rearranged.map((x) => onWrite ? el("button", { type: "button", class: "chip", title: "Write on the board", onclick: () => onWrite(x.pretty) }, x.pretty) : el("span", { class: "chip" }, x.pretty))));
   return out;
@@ -145,7 +158,7 @@ function classroom(root, id, params) {
   const head = el("header", { class: "teach-head" },
     el("a", { class: "teach-back", href: "#/teach" }, "‹ Library"),
     el("div", { class: "teach-title" }, title, meta),
-    el("div", { class: "teach-actions" }, modeSeg.root, labLink, projBtn, saveBtn));
+    el("div", { class: "teach-actions" }, modeSeg.root, labLink, listenButton(), projBtn, saveBtn));
 
   const sceneBox = el("div", { class: "teach-scene" });
   const stage = createStage(sceneBox);
@@ -157,6 +170,20 @@ function classroom(root, id, params) {
   const readerCard = el("div", { class: "board-reader", hidden: true });
   const board = createBoard({ onEquation: (text) => readBoard(text) });
   board.root.append(readerCard);
+  const lab = equationLab({ onWrite: (t) => board.writeText(t, { color: "#2a78d6", size: 0.032 }) });
+  const unlisten = setListenHandler((r) => {
+    if (r.experiment && r.experiment.id !== id) {
+      sessionStorage.setItem("teach.listenValues", JSON.stringify({ id: r.experiment.id, values: r.values }));
+      location.hash = `#/teach/${r.experiment.id}`;
+    } else if (r.experiment) {
+      for (const [k, v] of Object.entries(r.values || {})) if (sliders[k]) { values[k] = v; sliders[k].set(v); }
+      run();
+    } else if (r.action === "explore" && r.equation) {
+      if (boardMode === "off") setBoardMode("beside");
+      board.writeText(r.equation);
+      readBoard(r.equation);
+    }
+  }, id);
 
   const inputs = el("div", { class: "teach-inputs" });
   const results = el("dl", { class: "teach-results" });
@@ -209,6 +236,14 @@ function classroom(root, id, params) {
       inputs.append(s.root);
     }
     inputs.append(el("div", { class: "btn-row" }, el("button", { type: "button", class: "btn small", onclick: () => { for (const p of r.params) { values[p.name] = p.default; sliders[p.name].set(p.default); } run(); } }, "Reset")));
+    try { // values the teacher said aloud before this page opened
+      const said = JSON.parse(sessionStorage.getItem("teach.listenValues") || "null");
+      sessionStorage.removeItem("teach.listenValues");
+      if (said?.id === id && Object.keys(said.values || {}).length) {
+        for (const [k, v] of Object.entries(said.values)) if (sliders[k]) { values[k] = v; sliders[k].set(v); }
+        run();
+      }
+    } catch { /* storage unavailable */ }
   }
 
   function apply(r, assumptions = []) {
@@ -327,15 +362,19 @@ function classroom(root, id, params) {
 
   async function readBoard(text) {
     readerCard.hidden = false;
-    readerCard.replaceChildren(el("p", { class: "muted small" }, "Reading the board…"));
+    const eqn = looksLikeEquation(text);
+    const close = el("button", { type: "button", class: "ai-x", "aria-label": "Close", onclick: () => { readerCard.hidden = true; } }, "×");
+    readerCard.replaceChildren(el("div", { class: "board-reader-head" }, el("b", {}, "Reading the board…"), close));
+    if (eqn) { readerCard.append(lab.root); lab.run(text); }  // the Equation Lab builds it first
     try {
       const r = (await simulate("teach", "recognize", { equation: text })).result;
       const here = r.matches.find((m) => m.id === id);
+      const others = r.matches.filter((m) => m.id !== id && (!eqn || m.reason !== "topic match")).slice(0, 3);
       readerCard.replaceChildren(
-        el("div", { class: "board-reader-head" }, el("b", {}, here && here.score === 1 ? "That is this experiment's equation." : "The board read your equation"),
-          el("button", { type: "button", class: "ai-x", "aria-label": "Close", onclick: () => { readerCard.hidden = true; } }, "×")),
-        ...readerResult({ ...r, matches: r.matches.filter((m) => m.id !== id).slice(0, 3) }, { onWrite: (t) => board.writeText(t, { color: "#2a78d6" }) }));
-    } catch (err) { readerCard.replaceChildren(el("p", { class: "muted small" }, err.message)); }
+        el("div", { class: "board-reader-head" }, el("b", {}, here && here.score === 1 ? "That is this experiment's equation." : "The board read your equation"), close),
+        ...(eqn ? [lab.root] : []),
+        ...(others.length || !eqn ? readerResult({ ...r, read_as: eqn ? null : r.read_as, matches: others }, { onWrite: (t) => board.writeText(t, { color: "#2a78d6" }), quiet: eqn }) : []));
+    } catch (err) { if (!eqn) readerCard.replaceChildren(el("p", { class: "muted small" }, err.message)); }
   }
 
   // ---------------------------------------------------------------- lessons
@@ -377,7 +416,7 @@ function classroom(root, id, params) {
   document.addEventListener("fullscreenchange", onFs);
 
   return () => {
-    alive = false; cancelAnimationFrame(raf); run.cancel(); aiCleanup(); board.destroy(); stage.destroy();
+    alive = false; cancelAnimationFrame(raf); run.cancel(); aiCleanup(); board.destroy(); stage.destroy(); lab.destroy(); unlisten();
     document.removeEventListener("fullscreenchange", onFs);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   };

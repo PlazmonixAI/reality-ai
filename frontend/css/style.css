@@ -813,3 +813,26 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 @media (max-width: 720px) { .ss-clock { width: auto; right: 14px; } .ss-toolbar { flex-wrap: wrap; right: 14px; } }
 .ss-ladder { border-radius: 8px; background: rgba(7,13,24,.84); border: 1px solid #1f2f4c; }
 .ss-rung { border-radius: 6px; } .ss-rung.on { background: #FF5B2E; color: #0B1526; border-color: #FF5B2E; }
+
+/* ASM Teach: Equation Lab card and listen mode */
+.eqlab { margin-top: 12px; padding: 14px 16px; border: 1px solid var(--border); border-top: 3px solid var(--accent); border-radius: 10px; background: var(--surface); color: var(--text); display: flex; flex-direction: column; gap: 10px; }
+.eqlab[hidden] { display: none; }
+.eqlab-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.eqlab-tag { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); font-weight: 700; }
+.eqlab-read { font-family: "Plex Mono", ui-monospace, monospace; font-size: 15px; }
+.eqlab-verdict { margin: 0; font-weight: 600; padding-left: 10px; border-left: 3px solid var(--ok); }
+.eqlab-verdict.bad { border-left-color: var(--danger); color: var(--danger); }
+.eqlab-balanced { margin: 0; font-family: "Plex Mono", ui-monospace, monospace; font-size: 18px; }
+.eqlab-sols { display: flex; flex-wrap: wrap; gap: 6px; }
+.eqlab-params { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 16px; }
+.eqlab-steps { margin: 0; padding-left: 20px; font-family: "Plex Mono", ui-monospace, monospace; font-size: 13px; display: flex; flex-direction: column; gap: 3px; }
+.eqlab-plot:empty { display: none; }
+.board-reader .eqlab { background: transparent; border-color: rgba(255,255,255,.18); color: #fff; }
+.board-reader .eqlab-verdict.bad { color: #ff9a80; }
+.listen-btn.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.listen-pill { position: fixed; left: 16px; bottom: 16px; z-index: 50; display: flex; align-items: center; gap: 10px; max-width: min(640px, calc(100vw - 32px));
+  padding: 8px 10px 8px 14px; border-radius: 999px; background: #0B1526; color: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.25); font-size: 14px; }
+.listen-pill[hidden] { display: none; }
+.listen-heard { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.listen-dot { width: 10px; height: 10px; border-radius: 50%; background: #FF5B2E; flex: none; animation: listen-pulse 1.2s ease-in-out infinite; }
+@keyframes listen-pulse { 50% { opacity: .35; } }

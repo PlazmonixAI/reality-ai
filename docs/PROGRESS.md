@@ -237,6 +237,13 @@
 - **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
 - **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
 
+## 2026-10-01 (later): Equation Lab and listen mode for ASM Teach
+- `teach.explore` (app/modules/teach/explore.py): the board builds any equation. It proves identities with a chain of rewrites plus random-point checks, flags statements that can never hold (sin²x + cos²x = 2, 2 + 2 = 5), solves over the reals with general solutions (sin x = 1/2), explains a missing real solution by the range of the function (sin x = 2), studies y = f(x) (derivative, zeros, turning points, period, domain), draws implicit curves by marching squares and names conics, draws z = f(x, y) as contours, checks physics formulas for dimensional consistency (F = mv is rejected; T in PV = nRT is read as temperature) and turns them into live formulas, and balances or rejects chemical equations. Board notation such as sin x, sinx, sin²x and sin^2 x is understood.
+- `teach.listen` (app/modules/teach/listen.py): one spoken sentence becomes an experiment with values or an Equation Lab equation. Indian classroom phrasing is handled ("into" multiplies, "by" divides, "root" covers the rest of the term), case is restored from the textbook equations, units are converted (cm to m, g to kg) and values clamped.
+- UI: Equation Lab card on the library reader and in the board reader; Listen button in the library and classroom (browser speech recognition, en-IN), one listener across pages. Both tools are also available to the AI co-teacher.
+- Tests: tests/test_teach_explore.py, tests/test_teach_listen.py (813 passing overall). Checked in the browser with a simulated microphone, no console errors.
+- Next: Hindi listen mode, calculus notation in the Equation Lab, handwriting recognition.
+
 ## 2026-10-01: Coursework, black hole and singularity, quantum dynamics, promo videos
 - Solar System: the time controls are now a mission clock panel at the top left (ISO date, a rate slider, Forward/Hold/Now), and the tools moved to a row along the bottom, so the layout no longer resembles other planetarium apps.
 - ASM Teach now shows Coursework 1 to 4 instead of classes, and no board names, so it reads as one library for every syllabus (UI, landing page, deck).
