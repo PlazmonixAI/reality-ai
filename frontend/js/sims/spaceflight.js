@@ -162,10 +162,12 @@ function drawShells(ctx, parts, layout, cx, s, ghost) {
   parts.forEach((p, i) => {
     let from = -1;
     if (isFairing(p)) { from = i; while (from > 0 && !isDecoupler(parts[from - 1])) from--; while (from < i && isBooster(parts[from])) from++; if (from === i) return; }
-    else if (p.id.startsWith("interstage") && isDecoupler(parts[i + 1]) && parts[i + 2] && isEngine(parts[i + 2])) from = i + 3;
+    else if (p.id.startsWith("interstage") && isDecoupler(parts[i + 1]) && parts[i + 2] && (isEngine(parts[i + 2]) || parts[i + 2].category === "stage")) from = i + 3;
     else return;
-    const w = p.width * s, x = cx - w / 2;
-    const top = isFairing(p) ? layout[i][1] : layout[i + 2][0], bottom = isFairing(p) ? layout[from][1] : layout[i][0];
+    const w = p.width * s, x = cx - w / 2, up = parts[i + 2];
+    // over an engine part: up to its top; over a real stage: up to where its tank meets its engines (drawPart's split)
+    const stageTop = up && up.category === "stage" ? layout[i + 2][1] - Math.min(up.height * s * 0.14, up.width * s * 0.9) : null;
+    const top = isFairing(p) ? layout[i][1] : stageTop ?? layout[i + 2][0], bottom = isFairing(p) ? layout[from][1] : layout[i][0];
     const g = ctx.createLinearGradient(x, 0, x + w, 0);
     if (isFairing(p)) { g.addColorStop(0, "#c9d1dc"); g.addColorStop(0.45, "#ffffff"); g.addColorStop(1, "#9aa6b5"); } else { g.addColorStop(0, "#2a2f36"); g.addColorStop(0.5, "#5b6270"); g.addColorStop(1, "#23272e"); }
     ctx.globalAlpha = ghost ? 0.5 : 1; ctx.fillStyle = g; ctx.fillRect(x, top, w, bottom - top);

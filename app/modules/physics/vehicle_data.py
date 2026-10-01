@@ -206,6 +206,25 @@ for _w, _tag in ((1.2, "1m"), (2.0, "2m"), (2.8, "3m"), (4.0, "4m"), (5.2, "5m")
     VEHICLE_PARTS[f"decoupler_real_{_tag}"] = {"name": f"Stage separation ({_w:g} m)", "category": "structural", "mass": 0.0,
                                                "height": 0.4, "width": _w}
 
+# Interstages of real vehicles: the skirt that covers an upper stage's engine during ascent. It sits below the separation
+# plane, so it falls away with the spent stage. Like the decouplers, its mass is already in the published stage masses.
+def _add_interstages() -> None:
+    for v in VEHICLES.values():
+        parts, out = v["parts"], []
+        for k, item in enumerate(parts):
+            nxt = parts[k + 1]["part"] if k + 1 < len(parts) else None
+            if item["part"].startswith("decoupler_real") and nxt and VEHICLE_PARTS.get(nxt, {}).get("category") == "stage":
+                w = VEHICLE_PARTS[nxt]["width"]
+                pid = f"interstage_real_{w:g}m"
+                VEHICLE_PARTS.setdefault(pid, {"name": f"Interstage ({w:g} m)", "category": "structural", "mass": 0.0,
+                                               "height": round(max(0.9, 0.5 * w), 2), "width": w})
+                out.append({"part": pid})
+            out.append(item)
+        v["parts"] = out
+
+
+_add_interstages()
+
 SITES = {  # longitude, latitude (deg)
     "sriharikota": {"name": "Satish Dhawan Space Centre, Sriharikota", "longitude": 80.23, "latitude": 13.72},
     "canaveral": {"name": "Cape Canaveral / Kennedy Space Center", "longitude": -80.60, "latitude": 28.50},
