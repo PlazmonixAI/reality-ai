@@ -45,3 +45,13 @@ reuses the code in `functions/` for the waitlist and the /test password; every o
 | `beta_app_url` | The Render app's address, shown on /test as "Open the beta app" |
 
 After changing it, run `python scripts/build_cloudflare_site.py`, commit, and push; Cloudflare redeploys by itself.
+
+## Search engines (after the domain is live)
+The build writes `sitemap.xml`, `robots.txt` (with the sitemap line), the share picture and the search tags on the main page.
+1. **Google Search Console** (search.google.com/search-console): Add property > **Domain** > `realityasm.com`. Google shows a
+   TXT record; with Cloudflare DNS it offers to add it for you. Then Sitemaps > submit `https://realityasm.com/sitemap.xml`
+   and URL inspection > `https://realityasm.com/` > Request indexing.
+2. **Bing Webmaster Tools** (bing.com/webmasters): Import from Google Search Console. This also covers Yahoo and DuckDuckGo.
+3. **One address only**: Rules > Redirect Rules > Create from template **"Redirect from WWW to root"**, so
+   `www.realityasm.com` sends visitors (and search engines) to `realityasm.com` with a 301.
+4. Check the share card at opengraph.xyz and the structured data at search.google.com/test/rich-results.

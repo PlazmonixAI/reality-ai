@@ -237,6 +237,12 @@
 - **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
 - **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
 
+## 2026-10-01 (night): search engine set-up for realityasm.com
+- The pre-launch build (scripts/build_cloudflare_site.py) now writes sitemap.xml (the main page and its pictures), a robots.txt that points to it and keeps /test and /api out, and site.webmanifest.
+- The main page gets a search title and description, canonical link, robots directives, Open Graph and Twitter cards with a 1200x630 share picture, app icons, and JSON-LD for Plazmonix AI, the website, Reality ASM and ASM Teach. Gallery pictures have alt text.
+- The Worker is named reality-asm to match the Cloudflare dashboard (Workers Builds rejected the old name).
+- Next: verify the domain in Google Search Console and Bing Webmaster Tools and submit the sitemap; redirect www to the bare domain; the landing page's Saturn screenshot still shows the old Solar System time bar.
+
 ## 2026-10-01 (evening): ASM Teach as a separate product with school and teacher accounts
 - The landing page has two doors: Open ASM (simulations, Spaceflight, Solar System, Mission Control) and Open ASM Teach. ASM Teach left the ASM navigation and lives at /teach (sign-in) and /teach/app.
 - Accounts (app/platform/teach.py): schools sign up through Google (the existing OAuth client, in a "teach" mode; Google proves the email, a signed 30-minute cookie carries it to set-up), then choose a username and password and must tick the ASM Teach Terms (frontend/site/legal/teach-terms.html). School admins add teachers with username and password; usernames share one namespace. Each school admin and teacher is backed by an internal users row, so sessions, /simulate, the AI and saved lessons work unchanged.
