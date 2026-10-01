@@ -791,3 +791,25 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 /* not enough room beside the toolbar: the strip drops below it */
 @media (max-width: 1500px) { .sf-hud { max-width: calc(100% - 190px); top: 58px; } }
 @media (max-width: 1100px) { .sf-hud { max-width: calc(100% - 28px); grid-template-columns: repeat(4, minmax(70px, 1fr)); } }
+
+/* Solar System: mission clock panel (top left) and a tool row along the bottom */
+.ss-top { left: 16px; top: 12px; }
+.ss-clock { position: absolute; left: 14px; top: 34px; width: 268px; padding: 10px 12px 12px; border-radius: 8px; background: rgba(7,13,24,.84);
+  border: 1px solid #1f2f4c; border-top: 2px solid #FF5B2E; backdrop-filter: blur(6px); display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+.ss-clock-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: #7f93b3; }
+.ss-clock .ss-speed-text { min-width: 0; text-align: right; font-family: "Plex Mono", monospace; font-size: 12px; letter-spacing: 0; text-transform: none; color: #FF8A63; }
+.ss-clock .ss-date { font-family: "Plex Mono", monospace; font-size: 24px; font-weight: 400; letter-spacing: .04em; color: #eef3fa; }
+.ss-clock .ss-time { font-family: "Plex Mono", monospace; font-size: 11px; color: #7f93b3; white-space: pre; margin-top: -4px; }
+.ss-clock-rate { display: flex; align-items: center; gap: 10px; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: #7f93b3; }
+.ss-rate { flex: 1; accent-color: #FF5B2E; }
+.ss-clock-row { display: flex; gap: 6px; }
+.ss-clock .ss-btn { flex: 1; min-width: 0; height: 30px; padding: 0 6px; border-radius: 6px; border: 1px solid #263856; background: #101d33; color: #eef3fa; font-size: 11px; letter-spacing: .08em; }
+.ss-clock .ss-btn:hover { background: #15264a; } .ss-clock .ss-btn.on { background: #FF5B2E; border-color: #FF5B2E; color: #0B1526; }
+.ss-clock .ss-dateinput { width: 34px; padding: 4px; border-radius: 6px; border-color: #263856; background: #101d33; color: transparent; }
+.ss-toolbar { left: 14px; top: auto; bottom: 26px; transform: none; flex-direction: row; gap: 6px; padding: 6px; border-radius: 8px; background: rgba(7,13,24,.84); border: 1px solid #1f2f4c; }
+.ss-tool { width: 38px; height: 36px; border-radius: 6px; border-color: #263856; background: #101d33; }
+.ss-tool.on { background: #FF5B2E; color: #0B1526; }
+.ss-list { left: 14px; top: auto; bottom: 80px; }
+@media (max-width: 720px) { .ss-clock { width: auto; right: 14px; } .ss-toolbar { flex-wrap: wrap; right: 14px; } }
+.ss-ladder { border-radius: 8px; background: rgba(7,13,24,.84); border: 1px solid #1f2f4c; }
+.ss-rung { border-radius: 6px; } .ss-rung.on { background: #FF5B2E; color: #0B1526; border-color: #FF5B2E; }

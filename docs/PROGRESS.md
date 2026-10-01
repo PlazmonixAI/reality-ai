@@ -238,6 +238,7 @@
 - **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
 
 ## 2026-10-01: Coursework, black hole and singularity, quantum dynamics, promo videos
+- Solar System: the time controls are now a mission clock panel at the top left (ISO date, a rate slider, Forward/Hold/Now), and the tools moved to a row along the bottom, so the layout no longer resembles other planetarium apps.
 - ASM Teach now shows Coursework 1 to 4 instead of classes, and no board names, so it reads as one library for every syllabus (UI, landing page, deck).
 - New tools: `physics.black_hole` (horizon, photon sphere, ISCO, Hawking temperature and lifetime, clock rate, escape speed, tidal stretch, Kretschmann curvature, proper time to fall to r = 0), `physics.black_hole_light` (null geodesics; exact deflection integral gives 1.75" at the Sun's limb), `physics.black_hole_orbit` (timelike geodesics, precession, plunging), `physics.wave_packet` (split-step Schrödinger solver: barrier, step, well, double barrier, trap), `physics.quantum_oscillator`, `physics.rabi_oscillation`.
 - New simulations: Black Hole & Singularity, Quantum Wave Packets, Quantum Harmonic Oscillator, Spin & Rabi Oscillations (82 in total).

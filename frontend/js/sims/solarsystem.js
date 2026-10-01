@@ -145,20 +145,23 @@ export function mountAt(root, startLevel = 0, params = {}) {
       toast("View saved to your history.");
     } catch (e) { toast(e.message, "error"); }
   });
-  const bPlay = el("button", { class: "ss-btn", type: "button", "aria-label": "Play or pause", onclick: () => { playing = !playing; bPlay.textContent = playing ? "❚❚" : "▶"; } }, "❚❚");
-  const slower = el("button", { class: "ss-btn", type: "button", "aria-label": "Slower", onclick: () => setSpeed(speedIdx - 1) }, "◀◀");
-  const faster = el("button", { class: "ss-btn", type: "button", "aria-label": "Faster", onclick: () => setSpeed(speedIdx + 1) }, "▶▶");
-  const reverse = el("button", { class: "ss-btn", type: "button", title: "Run time backwards", onclick: () => { dir = -dir; reverse.classList.toggle("on", dir < 0); window_ = null; } }, "⇆");
-  const today = el("button", { class: "ss-btn text", type: "button", onclick: () => { simJd = dateToJd(new Date()); window_ = null; } }, "Today");
+  // the clock panel: date, rate and time controls in one place (top left)
+  const bPlay = el("button", { class: "ss-btn", type: "button", "aria-label": "Play or pause", onclick: () => { playing = !playing; bPlay.textContent = playing ? "Hold" : "Run"; bPlay.classList.toggle("on", !playing); } }, "Hold");
+  const rate = el("input", { class: "ss-rate", type: "range", min: 1, max: SPEEDS.length - 1, step: 1, value: speedIdx, "aria-label": "Rate of time", oninput: () => setSpeed(+rate.value) });
+  const reverse = el("button", { class: "ss-btn", type: "button", title: "Run time backwards", onclick: () => { dir = -dir; reverse.classList.toggle("on", dir < 0); reverse.textContent = dir < 0 ? "Backward" : "Forward"; window_ = null; } }, "Forward");
+  const today = el("button", { class: "ss-btn", type: "button", onclick: () => { simJd = dateToJd(new Date()); window_ = null; } }, "Now");
   const dateInput = el("input", { class: "ss-dateinput", type: "date", min: "1800-01-01", max: "2050-12-31", "aria-label": "Jump to date", onchange: () => { if (dateInput.value) { simJd = dateToJd(new Date(dateInput.value + "T12:00:00Z")); window_ = null; } } });
   const toolbar = el("div", { class: "ss-toolbar" }, bList, bHome, bOrbits, bLabels, bMinor, bBelts, bScale, bLaunch, bSave);
-  const timebar = el("div", { class: "ss-timebar" }, reverse, slower, bPlay, faster, speedText, today, dateInput);
+  const timebar = el("div", { class: "ss-clock" },
+    el("div", { class: "ss-clock-head" }, el("span", {}, "Mission clock"), speedText), dateBig, timeSmall,
+    el("div", { class: "ss-clock-rate" }, el("span", {}, "Rate"), rate),
+    el("div", { class: "ss-clock-row" }, reverse, bPlay, today, dateInput));
   const ladder = el("nav", { class: "ss-ladder", "aria-label": "Scale" });
   const credit = el("div", { class: "ss-credit" }, "Engine: JPL elements, HYG stars, Celestia catalogues, ΛCDM · textures: NASA/JPL, USGS, Celestia (see CREDITS)");
-  const rootEl = el("div", { class: "ss-root" }, view, labels, el("div", { class: "ss-top" }, brand, dateBig, timeSmall),
+  const rootEl = el("div", { class: "ss-root" }, view, labels, el("div", { class: "ss-top" }, brand),
     toolbar, ladder, list, info, status, timebar, credit, fade);
   root.append(rootEl);
-  function setSpeed(i) { speedIdx = Math.max(1, Math.min(SPEEDS.length - 1, i)); speedText.textContent = SPEEDS[speedIdx][1]; window_ = null; }
+  function setSpeed(i) { speedIdx = Math.max(1, Math.min(SPEEDS.length - 1, i)); speedText.textContent = SPEEDS[speedIdx][1]; rate.value = speedIdx; window_ = null; }
   let dir = 1;
   setSpeed(speedIdx);
 
@@ -473,7 +476,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
         camera.position.set(0, 1800, 4200); controls.target.set(0, 0, 0); select(null); // glide in from the stars
       } else { controls.enabled = false; universe.levels[level - 1].enter(i < prevLevel ? "in" : "out"); }
       prevLevel = level;
-      for (const x of [toolbar, timebar, dateBig, timeSmall]) x.style.display = level === 0 ? "" : "none";
+      for (const x of [toolbar, timebar]) x.style.display = level === 0 ? "" : "none";
       brand.replaceChildren(level === 0 ? "SOLAR SYSTEM " : "", el("b", {}, level === 0 ? "3D" : LEVELS[level].name.toUpperCase()));
       ladderBtns.forEach((b, k) => b.classList.toggle("on", k === level));
       resize();
@@ -591,8 +594,8 @@ export function mountAt(root, startLevel = 0, params = {}) {
       }
       if (fx.clouds) fx.clouds.rotation.y += dt * 0.004 * Math.sign(SPEEDS[speedIdx][0]);
       const date = jdToDate(simJd);
-      dateBig.textContent = date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
-      timeSmall.textContent = `${date.toISOString().slice(11, 19)} UTC · JD ${simJd.toFixed(3)}`;
+      dateBig.textContent = date.toISOString().slice(0, 10);
+      timeSmall.textContent = `${date.toISOString().slice(11, 19)} UTC   JD ${simJd.toFixed(3)}`;
     }
     // Lighting uniforms, rings and the Sun
     for (const b of Object.values(bodies)) for (const m of b?.mats || []) m.uniforms.sunPos.value.copy(SUN_POS);
