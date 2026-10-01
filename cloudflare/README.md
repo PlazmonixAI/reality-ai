@@ -12,7 +12,7 @@ The site is plain files in `cloudflare/public`, rebuilt from the real landing pa
 `wrangler.jsonc` at the repository root and `cloudflare/worker.js` make the site a Worker with static assets. The Worker
 reuses the code in `functions/` for the waitlist and the /test password; every other page is a plain file.
 1. Workers & Pages > Create > Import a repository > `PlazmonixAI/reality-ai`.
-2. Project name: `plazmonixai-reality-asm` (the same as `name` in `wrangler.jsonc`). Build command: empty.
+2. Project name: `reality-asm` (the same as `name` in `wrangler.jsonc`). Build command: empty.
    Deploy command: `npx wrangler deploy`. Leave the root/path as the repository root.
 3. Deploy. Wrangler creates the `WAITLIST` KV namespace on the first deploy.
 4. Worker > Settings > Variables and Secrets > add `TEST_USERNAME` and `TEST_PASSWORD` as **Secret** (secrets survive
