@@ -19,14 +19,18 @@ The site is plain files in `cloudflare/public`, rebuilt from the real landing pa
    - `TEST_USERNAME`: the username for /test
    - `TEST_PASSWORD`: a long password (share it only with testers)
    Redeploy after adding them. Until both exist, /test stays closed.
-4. **Custom domains** > add your domain (and `www` if you like). Cloudflare sets up DNS and HTTPS.
+4. **Waitlist storage**: Workers & Pages > **KV** > Create a namespace (e.g. `reality-asm-waitlist`). Then in the
+   Pages project: **Settings > Bindings > Add > KV namespace**, variable name **`WAITLIST`**, pick that namespace,
+   and redeploy. Emails are then saved by `functions/api/waitlist.js`; download them at **`/test/waitlist.csv`**
+   (behind the /test password). Without the binding the form shows "That didn't go through".
+5. **Custom domains** > add your domain (and `www` if you like). Cloudflare sets up DNS and HTTPS.
 
 ## Settings (`cloudflare/site.config.json`)
 | Key | What it does |
 |---|---|
 | `domain` | Your domain, e.g. `realityasm.com` (adds the canonical link) |
 | `contact_email` | Shown on the pages |
-| `waitlist_endpoint` | Empty: the email form is a placeholder that only says thank you and **stores nothing**. Set it to `https://<your Render app>/api/waitlist` to keep the emails (they appear on the app's Beta admin page). |
+| `waitlist_endpoint` | `/api/waitlist` (default): emails go to Cloudflare KV (step 4). Later you can point it at `https://<your Render app>/api/waitlist` so they land on the app's Beta admin page. Empty: a placeholder that **stores nothing**. |
 | `beta_app_url` | The Render app's address, shown on /test as "Open the beta app" |
 
 After changing it, run `python scripts/build_cloudflare_site.py`, commit, and push; Cloudflare redeploys by itself.

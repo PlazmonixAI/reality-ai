@@ -1,6 +1,6 @@
 {
   "domain": "",
   "contact_email": "support@plazmonix.ai",
-  "waitlist_endpoint": "",
+  "waitlist_endpoint": "/api/waitlist",
   "beta_app_url": ""
 }

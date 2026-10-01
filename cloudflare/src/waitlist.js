@@ -1,5 +1,5 @@
-// Pre-launch waitlist. With no endpoint configured this is a placeholder: it checks the address and says thank you,
-// but doesn't store anything. Set waitlist_endpoint in cloudflare/site.config.json to collect emails.
+// Pre-launch waitlist. The endpoint comes from waitlist_endpoint in cloudflare/site.config.json: "/api/waitlist"
+// stores emails in Cloudflare KV (functions/api/waitlist.js); empty makes the form a placeholder that stores nothing.
 const ENDPOINT = "__WAITLIST_ENDPOINT__";
 const EMAIL = /^[^@\s]{1,64}@[^@\s]{1,190}\.[A-Za-z]{2,24}$/;
 
@@ -15,7 +15,7 @@ document.querySelectorAll("form[data-waitlist]").forEach((form) => {
     try {
       if (ENDPOINT) {
         const body = new URLSearchParams({ email, source: location.pathname });
-        const r = await fetch(ENDPOINT, { method: "POST", body, mode: "cors" });
+        const r = await fetch(ENDPOINT, { method: "POST", body });
         if (!r.ok) throw new Error();
       }
       form.classList.add("done");
