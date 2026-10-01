@@ -1,2 +1,6 @@
 User-agent: *
+Allow: /
 Disallow: /test
+Disallow: /api/
+
+Sitemap: https://realityasm.com/sitemap.xml
