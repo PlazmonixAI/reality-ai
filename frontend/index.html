@@ -4,17 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reality ASM</title>
-  <meta name="description" content="Interactive physics, chemistry and mathematics simulations powered by Reality ASM (Advanced Simulation Machine).">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Ctext x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3ER%3C/text%3E%3C/svg%3E">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#/"><span class="brand-mark">R</span><span>Reality ASM <small>Advanced Simulation Machine</small></span></a>
+    <a class="brand" href="#/" aria-label="Reality ASM home"><img src="/static/brand/mark-light.svg" alt="" width="48" height="26"><span>Reality <b>ASM</b></span></a>
+    <nav class="app-nav" id="app-nav" aria-label="Main">
+      <a href="#/" data-route="home">Home</a>
+      <a href="#/sims" data-route="sims">Simulations</a>
+      <a href="#/sim/spaceflight" data-route="spaceflight">Spaceflight</a>
+      <a href="#/company" data-route="company">Mission Control</a>
+      <a href="#/challenges" data-route="challenges">Challenges</a>
+      <a href="#/history" data-route="history">History</a>
+      <a href="#/ask" data-route="ask">Ask AI</a>
+    </nav>
     <span class="crumb" id="crumb"></span>
     <span class="spacer"></span>
-    <a class="nav-link" href="#/ask">Ask AI</a>
-    <span class="api-status" id="api-status"><span class="status-dot"></span>engine</span>
+    <span class="api-status" id="api-status" title="Engine status"><span class="status-dot"></span><span>engine</span></span>
+    <div class="account" id="account"></div>
   </header>
   <main id="app"></main>
   <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }</script>

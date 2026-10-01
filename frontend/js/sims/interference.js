@@ -52,10 +52,10 @@ export default {
       onResult: (res) => {
         L.clearError(); data = res; fieldImg = null;
         const r = res.result;
-        out.set("fs", r.fringe_spacing ? `${fmt(r.fringe_spacing * 1000, 4)} mm` : "—");
-        out.set("cw", r.central_width ? `${fmt(r.central_width * 1000, 4)} mm` : "—");
+        out.set("fs", r.fringe_spacing ? `${fmt(r.fringe_spacing * 1000, 4)} mm` : "–");
+        out.set("cw", r.central_width ? `${fmt(r.central_width * 1000, 4)} mm` : "–");
         const m1 = r.maxima.filter((y) => y > 1e-12)[0];
-        out.set("m1", m1 ? `${fmt(m1 * 1000, 4)} mm` : "—");
+        out.set("m1", m1 ? `${fmt(m1 * 1000, 4)} mm` : "–");
         graph.setSeries([{ name: "Intensity", color: c1, x: res.pattern.y.map((y) => y * 1000), y: res.pattern.intensity }]);
       },
     });

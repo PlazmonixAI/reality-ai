@@ -21,7 +21,7 @@ export default {
     const pres = slider({ label: "Pressure", min: 10, max: 1e8, value: 101325, log: true, format: fmtP, onInput: () => recompute() });
     const out = readouts([{ key: "ph", label: "Phase" }, { key: "bp", label: "Boils at this pressure" }, { key: "mp", label: "Melts at this pressure" }, { key: "tp", label: "Triple point" }, { key: "cp", label: "Critical point" }]);
     L.side.append(
-      panel("State", sub.root, temp.root, pres.root, legend([{ label: "sublimation (solid ↔ gas)", color: c3 }, { label: "boiling (liquid ↔ gas)", color: c1 }, { label: "melting (solid ↔ liquid)", color: c2 }]), el("p", { class: "note" }, "Click the diagram to jump there. Water's melting line leans left: squeezing ice melts it. Dry ice (CO₂) never melts at 1 atm — it sublimes.")),
+      panel("State", sub.root, temp.root, pres.root, legend([{ label: "sublimation (solid ↔ gas)", color: c3 }, { label: "boiling (liquid ↔ gas)", color: c1 }, { label: "melting (solid ↔ liquid)", color: c2 }]), el("p", { class: "note" }, "Click the diagram to jump there. Water's melting line leans left: squeezing ice melts it. Dry ice (CO₂) never melts at 1 atm. It sublimes.")),
       panel("Phase (from the engine)", out.root),
     );
 
@@ -30,8 +30,8 @@ export default {
       onResult: (r) => {
         L.clearError(); res = r;
         const x = r.result, s = x.state;
-        out.set("ph", s.phase); out.set("bp", s.boiling_point ? `${fmt(s.boiling_point, 5)} K (${fmt(s.boiling_point - 273.15, 4)} °C)` : s.sublimation_point ? `sublimes at ${fmt(s.sublimation_point, 5)} K` : "— (no liquid–gas boundary here)");
-        out.set("mp", s.melting_point ? `${fmt(s.melting_point, 5)} K` : "—");
+        out.set("ph", s.phase); out.set("bp", s.boiling_point ? `${fmt(s.boiling_point, 5)} K (${fmt(s.boiling_point - 273.15, 4)} °C)` : s.sublimation_point ? `sublimes at ${fmt(s.sublimation_point, 5)} K` : "no liquid–gas boundary here");
+        out.set("mp", s.melting_point ? `${fmt(s.melting_point, 5)} K` : "–");
         out.set("tp", `${fmt(x.triple_point.temperature, 5)} K, ${fmtP(x.triple_point.pressure)}`); out.set("cp", `${fmt(x.critical_point.temperature, 5)} K, ${fmtP(x.critical_point.pressure)}`);
       },
     });

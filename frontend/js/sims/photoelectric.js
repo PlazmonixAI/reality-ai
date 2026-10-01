@@ -40,7 +40,7 @@ export default {
         L.clearError(); res = r;
         const x = r.result;
         out.set("e", `${fmt(x.photon_energy_ev, 4)} eV`); out.set("k", x.electrons_emitted ? `${fmt(x.max_kinetic_energy_ev, 4)} eV` : "no emission");
-        out.set("vs", x.electrons_emitted ? `${fmt(x.stopping_voltage, 4)} V` : "—"); out.set("th", `${fmt(x.threshold_wavelength_nm, 4)} nm`);
+        out.set("vs", x.electrons_emitted ? `${fmt(x.stopping_voltage, 4)} V` : "–"); out.set("th", `${fmt(x.threshold_wavelength_nm, 4)} nm`);
         out.set("i", `${fmt(sampleAt(r.iv_curve.voltage, r.iv_curve.current, volt.value) * 1e6, 4)} µA`);
         iv.setSeries([{ name: "Current", color: c1, x: r.iv_curve.voltage, y: r.iv_curve.current.map((c) => c * 1e6) }]);
         iv.setCursor(volt.value);

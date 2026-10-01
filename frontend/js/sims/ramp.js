@@ -46,7 +46,7 @@ export default {
       onResult: (r) => {
         L.clearError(); res = r;
         const f = r.forces;
-        out.set("moves", r.result.moves ? (r.result.stopped_at_end ? `yes, until the ${r.result.stopped_at_end}` : "yes") : "no — static friction holds");
+        out.set("moves", r.result.moves ? (r.result.stopped_at_end ? `yes, until the ${r.result.stopped_at_end}` : "yes") : "no, static friction holds");
         out.set("a", `${fmt(r.result.initial_acceleration, 4)} m/s²`);
         out.set("fr", `${fmt(f.friction, 4)} N (max static ${fmt(f.max_static_friction, 3)} N)`);
         out.set("n", `${fmt(f.normal, 4)} N`);

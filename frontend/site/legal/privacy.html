@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy · Reality ASM</title>
+  <meta name="robots" content="index">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
+      <span class="grow"></span>
+      <span data-auth-slot style="display:flex;gap:10px">
+        <a class="btn btn-ghost" href="/login">Sign in</a>
+        <a class="btn btn-primary" href="/signup">Join the beta</a>
+      </span>
+    </div>
+  </header>
+  <main class="legal">
+    <div class="wrap">
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated 30 September 2026 · Version {{TERMS_VERSION}}</p>
+      <p>This policy explains what personal data Reality ASM collects, why, and what you can do about it. Plazmonix AI is the data
+        fiduciary / controller for this data. We wrote it to be read, not to hide things.</p>
+
+      <h2>What we collect</h2>
+      <table>
+        <tr><th>Data</th><th>Why</th><th>Kept for</th></tr>
+        <tr><td>Name, email, password (stored only as a salted scrypt hash)</td><td>To create and secure your account</td><td>Until you delete your account</td></tr>
+        <tr><td>Google account ID, name and email (only if you sign in with Google)</td><td>To sign you in</td><td>Until you delete your account</td></tr>
+        <tr><td>Session records: when you signed in, browser user agent</td><td>To keep you signed in and spot misuse</td><td>Up to 30 days per session</td></tr>
+        <tr><td>Your saved history: designs, flights, missions, simulation snapshots, photos, AI questions you save</td><td>So you can come back to your work</td><td>Until you delete them or your account</td></tr>
+        <tr><td>Feedback you send from the app, with the page you were on and your browser type</td><td>To fix problems and decide what to build next</td><td>Until the beta ends, or until you delete your account</td></tr>
+        <tr><td>Your space company, spacecraft and challenge progress</td><td>To run those features</td><td>Until you delete them or your account</td></tr>
+        <tr><td>Simulation inputs you send to the engine</td><td>To compute results. Not stored unless you save them</td><td>Not kept, apart from short-lived server logs</td></tr>
+        <tr><td>Technical logs: IP address, time, requested path, errors</td><td>Security, rate limits and fixing bugs</td><td>Up to 30 days</td></tr>
+      </table>
+      <p>We don't use advertising, tracking pixels or third-party analytics, and we don't sell or rent personal data.</p>
+
+      <h2>Who else processes your data</h2>
+      <ul>
+        <li><strong>AI provider.</strong> When you ask the AI analyst a question, the question, the recent conversation and a compact
+          summary of the simulation on your screen are sent to the language-model provider we use (NVIDIA NIM, Groq or xAI,
+          depending on configuration) to write the answer. Don't put personal information in AI questions.</li>
+        <li><strong>NASA imagery.</strong> Satellite photos in the space company load public Earth imagery from NASA's GIBS service
+          directly in your browser. NASA sees your IP address and the map area requested, as with any website.</li>
+        <li><strong>Hosting and email.</strong> Our hosting provider stores the database and servers. If password-reset email is
+          switched on, our email provider delivers those messages.</li>
+        <li><strong>Google.</strong> Only if you choose "Continue with Google".</li>
+      </ul>
+      <p>These providers may process data outside India. Where they do, we rely on their contractual and legal safeguards.</p>
+
+      <h2>Your rights</h2>
+      <ul>
+        <li><strong>See and take your data:</strong> Account settings → Download my data gives you everything we hold about you as JSON.</li>
+        <li><strong>Correct it:</strong> change your name in Account settings, or write to us for anything else.</li>
+        <li><strong>Delete it:</strong> Account settings → Delete account removes your account, history, fleet, photos and sessions
+          straight away. Backups roll over within 30 days.</li>
+        <li><strong>Withdraw consent, complain or ask questions:</strong> write to <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.
+          You can also complain to your data-protection authority (in India, the Data Protection Board of India; in the EU or UK,
+          your local supervisory authority).</li>
+      </ul>
+      <p>We rely on your consent and on performing our agreement with you (the Terms) to process your data, and on our legitimate
+        interest in keeping the Service secure.</p>
+
+      <h2>Security</h2>
+      <p>Passwords are hashed with scrypt. Sessions use random tokens in HttpOnly cookies, and only a hash of each token is stored.
+        Traffic is encrypted with HTTPS in production. No system is perfectly secure; if a breach affects you, we'll tell you and
+        the authorities as the law requires.</p>
+
+      <h2>Children</h2>
+      <p>The Service is for people aged 13 and over. Users under 18 should have a parent or guardian's permission. If you believe a
+        child under 13 has an account, write to us and we'll delete it.</p>
+
+      <h2>Changes</h2>
+      <p>If we change how we use personal data in a meaningful way, we'll update this page and tell you by email or in the app
+        before the change applies.</p>
+
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Plazmonix AI. Built by Subham Agarwal.</span>
+      <span class="grow"></span>
+      <nav aria-label="Legal">
+        <a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a>
+        <a href="/acceptable-use">Acceptable use</a><a href="mailto:{{CONTACT_EMAIL}}">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script type="module" src="/static/site.js"></script>
+</body>
+</html>

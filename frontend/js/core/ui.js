@@ -153,13 +153,13 @@ export function readouts(rows) {
   const values = {};
   const dl = el("dl", { class: "readouts" });
   for (const r of rows) {
-    values[r.key] = el("dd", {}, "—");
+    values[r.key] = el("dd", {}, "–");
     dl.append(el("dt", {}, r.label), values[r.key]);
   }
   return {
     root: dl,
     set(key, text) { if (values[key]) values[key].textContent = text; },
-    clear() { Object.values(values).forEach((v) => { v.textContent = "—"; }); },
+    clear() { Object.values(values).forEach((v) => { v.textContent = "–"; }); },
   };
 }
 

@@ -1,0 +1,17 @@
+.waitlist { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 520px; margin: 0 auto; }
+.waitlist input { flex: 1 1 240px; height: 46px; padding: 0 14px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.waitlist input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(255,91,46,.18); }
+.waitlist .btn { height: 46px; }
+.wl-msg { flex-basis: 100%; margin: 4px 0 0; font-size: 15px; min-height: 1.4em; text-align: center; }
+.wl-msg.ok { color: var(--ok); font-weight: 550; }
+.wl-msg.error { color: var(--bad); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.soon { min-height: calc(100vh - 65px); display: grid; place-items: center; text-align: center; padding: 40px 20px; }
+.soon .mark { width: 120px; margin: 0 auto 26px; }
+.soon h1 { margin-bottom: 12px; }
+.soon .lede { margin: 0 auto 26px; }
+.soon .back { display: inline-block; margin-top: 22px; }
+.test-box { max-width: 720px; margin: 56px auto; padding: 0 24px; }
+.test-box ol { padding-left: 20px; color: #2B3446; }
+.test-box li { margin-bottom: 8px; }
+.test-note { background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }

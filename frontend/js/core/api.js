@@ -34,18 +34,22 @@ function remember(domain, name, args, data) {
 export const recentCalls = () => RECENT.slice();
 export const clearRecentCalls = () => { RECENT.length = 0; };
 
-export async function simulate(domain, name, args = {}, signal) {
+export async function simulate(domain, name, args = {}, signal, extra = {}) {
   let response;
   try {
-    response = await fetch("simulate", {
+    response = await fetch("/simulate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ domain, name, args }),
+      body: JSON.stringify({ domain, name, args, ...extra }),
       signal,
     });
   } catch (err) {
     if (err.name === "AbortError") throw err;
-    throw new EngineError("Cannot reach the Reality ASM engine. Is the server running?");
+    throw new EngineError("Can't reach the Reality ASM engine. Check your connection and try again.");
+  }
+  if (response.status === 401) {
+    location.href = location.pathname.startsWith("/teach") ? "/teach" : `/login?next=${encodeURIComponent("/app/" + location.hash)}`;
+    throw new EngineError("Please sign in again.");
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -89,7 +93,7 @@ export function liveRequest(compute, { onResult, onError, onBusy, delay = 120 } 
 }
 
 export async function health() {
-  const r = await fetch("health");
+  const r = await fetch("/health");
   if (!r.ok) throw new Error("unhealthy");
   return r.json();
 }

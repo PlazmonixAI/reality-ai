@@ -17,8 +17,10 @@ Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anyt
 - **LLM providers: NVIDIA NIM, Groq or xAI Grok** — all through the one OpenAI-compatible client in `app/agent/llm.py`, chosen with `LLM_PROVIDER` and keys pooled/rotated from `NIM_API_KEYS` / `GROQ_API_KEYS` / `XAI_API_KEYS`. Do **not** add other providers or SDKs.
 - Tools must never call the LLM. Only the agent layer talks to the LLM.
 - Stack: Python 3.11+, FastAPI, pydantic v2, numpy, scipy, sympy, httpx, pytest.
-- **Out of scope for now:** MongoDB/persistence, auth. Do not build these.
-- **Frontend (simulator UI)** lives in `frontend/`: plain HTML/CSS/ES-module JavaScript + Canvas, no build step and no npm dependencies. FastAPI serves it at `/`. The only vendored library is three.js (`frontend/vendor/three`, MIT, via an import map) for 3D views; textures live in `frontend/assets/textures` (see CREDITS.md); space catalogues live in `app/data/space` (rebuild with `scripts/build_space_catalogs.py`).
+- **Web app platform** lives in `app/platform/`: accounts and sessions (`auth.py`), saved history (`history.py`), the space company (`company.py`) and challenges (`challenges.py`), all on one SQLite file (`db.py`, stdlib `sqlite3`). No MongoDB, no ORM, no extra auth libraries. Platform code may call engine functions but must not do physics itself. Every secret comes from environment variables (see `.env.example`); never commit keys.
+- `/simulate`, `/ask`, `/tools` and everything under `/app/` require a signed-in user. Flight states from `rocket_launch_state`/`rocket_flight` are HMAC-signed in `app/main.py`; keep that when changing the flight API.
+- UI copy must read like a person wrote it: no em dashes, no emojis, no hype words. Brand colours: ink `#0B1526` and ember `#FF5B2E`.
+- **Frontend:** the public site (landing, sign in/up, legal pages) is `frontend/site/` served at `/`; the app is the rest of `frontend/`, served at `/app/` to signed-in users. App pages are in `frontend/js/pages/`. The simulator UI in `frontend/` is plain HTML/CSS/ES-module JavaScript + Canvas, no build step and no npm dependencies. The only vendored library is three.js (`frontend/vendor/three`, MIT, via an import map) for 3D views; textures live in `frontend/assets/textures` (see CREDITS.md); space catalogues live in `app/data/space` (rebuild with `scripts/build_space_catalogs.py`).
 - **Simulations never invent physics in the browser.** Every number a sim shows must come from an engine tool via `POST /simulate`; the browser only animates, interpolates and draws those results. If a sim needs a new number, add a tested backend tool first.
 - Prefer small, surgical edits to existing files over rewriting whole files.
 - Keep dependencies minimal; ask (in the PR description) before adding a new heavy library.
@@ -32,6 +34,10 @@ Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anyt
 6. Run `pytest` — everything must pass before you finish.
 
 See `app/modules/mathematics/algebra.py` for the reference example.
+
+## ASM Teach (classroom product)
+- Curriculum experiments live in `app/modules/teach/catalog_*.py` as `X(...)` entries (formulas as strings; see `core.py` for the format). Every entry needs equations, derivation steps and finite outputs at its defaults; `tests/test_teach.py` checks all of them and a set of textbook values.
+- The UI is `frontend/js/pages/teach.js` with `frontend/js/teach/scenes.js` (pictures) and `board.js` (whiteboard). Scenes draw only engine outputs and scene roles.
 
 ## How to add an interactive simulation
 1. Make sure the backend tools it needs exist and are tested (add them first if not).

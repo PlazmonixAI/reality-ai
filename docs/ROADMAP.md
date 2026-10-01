@@ -150,4 +150,53 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Engine classes (small/medium/large/heavy), payload fairings, interstages, example satellites
 - [x] Engine designer (`rocket_engine_design`) and satellite designer (`satellite_design`) whose designs fly as custom parts
 - [x] Rocket flight in 3D, connected to the Solar System: real launch date and site, real Moon/Sun/Earth rotation, true-scale Earth–Moon view, links both ways
-- [ ] Mars transfers with the Sun's gravity; inclined (3D) trajectories
+- [x] Mars, Venus, Jupiter and Saturn transfers with the Sun's gravity (Lambert solver, porkchop plots, probes in Mission Control)
+- [ ] Inclined (3D) ascent trajectories in the Spaceflight Lab
+
+## Phase 10: Full-stack web app (beta)
+- [x] Accounts: sign up, sign in, sign out, password change and reset (SMTP optional), Google sign-in (optional), invite codes, data export, account deletion
+- [x] Sessions in HttpOnly cookies, scrypt passwords, rate limits, CSP and security headers, API docs off in production
+- [x] Engine, AI and app files behind sign-in; HMAC-signed flight states
+- [x] Saved history for flights (autosave and resume), designs, missions, photos, simulation snapshots and challenges
+- [x] Public site: landing page, Terms, Privacy, Cookies, Acceptable Use, About, 404; cookie notice
+- [x] Brand: logo mark and favicon, ink and ember colours, IBM Plex fonts; UI copy without em dashes or emojis
+- [x] Real launch vehicles (ISRO, NASA, SpaceX, ESA, Roscosmos, CNSA, Rocket Lab) with strap-on boosters (parallel staging) and a payload check against published figures
+- [x] Real satellites with instruments (Cartosat-3, EOS-05, EOS-04, Landsat 9, Sentinel-2A, WorldView-3, INSAT-3DS, Starlink, GPS III, Hubble)
+- [x] Space company: launch service, fleet in real time (J2 drift, drag decay, re-entry), thruster burns, camera photos, deep-space probes
+- [x] Challenge mode (10 missions checked on the server) and sandbox
+- [x] Spaceflight Lab: pause, quick save and load, warp to apoapsis and periapsis, keyboard help, deploy satellites to the fleet
+- [x] Render deployment files (`render.yaml`, `.env.example`)
+- [ ] Email verification on sign-up
+- [x] Show the user's probes inside the 3D Solar System (along their transfer arcs, on any date)
+- [x] In-app beta feedback, saved AI conversations, saved Solar System views
+- [x] Beta admin page (sign-ups, usage, feedback)
+- [ ] Shared mission gallery
+
+## Phase 11: ASM Teach (the classroom product)
+- [x] Curriculum catalogue: 281 experiments across Class 9 to 12 physics, chemistry and maths, chapters following NCERT, with ICSE and state board topics tagged (`app/modules/teach/`)
+- [x] Engine tools `teach.catalog`, `teach.experiment` (outputs, swept graphs, equations, derivation), `teach.practice` (questions with engine-computed answers, choices and working), `teach.recognize` (reads an equation from the board and matches experiments, rearranges it)
+- [x] Classroom view: live picture, graph, inputs, results, equations, derivation, observation table (readings, CSV), practice, AI co-teacher, projector mode
+- [x] Whiteboard beside the experiment or drawn over it: pen, highlighter, eraser, colours, pages, undo, typed equations read by the engine
+- [x] Lessons saved to the history (inputs, board pages, readings) and reopened
+- [ ] Handwriting recognition on the board (today the board reads typed equations)
+- [ ] Class assignments and teacher reports
+- [ ] Hindi and regional language interface
+- [ ] Offline classroom mode
+- [x] Library shown as Coursework 1 to 4 instead of classes and boards, so it reads as one library for every syllabus
+- [x] Equation Lab (`teach.explore`): any equation is built from the mathematics, not looked up. Identities proved step by step, impossible statements caught with the reason, exact solutions (general solutions for trigonometry), function study, implicit curves and conics, z = f(x, y) contours, dimensional checks for physics formulas with live sliders, chemical equations balanced or rejected
+- [x] Listen mode (`teach.listen`): the teacher speaks, ASM Teach follows. Spoken maths ("T equals 2 pi root L by g", "into", "by"), topics and values ("length 2 metres") open the experiment with those values or build the equation; browser speech recognition, no extra libraries
+- [ ] Listen mode in Hindi (speech recognition hi-IN plus spoken Hindi maths)
+- [x] ASM Teach as its own product at /teach: sign-in for schools (private institutions marked coming soon); school admins sign up with Google, set a username and password and accept the ASM Teach Terms; teachers sign in with the username and password the school gives them
+- [x] School admin panel: add, pause, reset and remove teachers; usage per teacher (sessions, experiments, lessons, media) and the most used experiments
+- [x] Teacher board: full-width whiteboard with a folding tool rail (suggested experiments from the board and speech, Equation Lab, YouTube, web windows, the teacher's own files, listen mode, AI co-teacher only when tapped, save lesson)
+- [x] Teacher files (PDF, slides, pictures, video) with per-teacher storage; slides converted to PDF where LibreOffice is installed
+- [x] Teacher profile panel (works on phones): profile, password, usage, saved lessons
+- [ ] Private institutions sign-up
+- [ ] Files on object storage instead of SQLite once schools upload a lot
+- [ ] Equation Lab for calculus notation (d/dx, ∫) and differential equations
+
+## Phase 12: Relativity and quantum dynamics
+- [x] Schwarzschild black hole: radii, clocks, curvature, tidal stretch, light bending, orbits, fall to the singularity
+- [x] Time-dependent Schrödinger solver for wave packets; quantum harmonic oscillator; Rabi oscillations on the Bloch sphere
+- [ ] Rotating (Kerr) black hole and an accretion disc image
+- [ ] Two-dimensional wave packets (double slit)

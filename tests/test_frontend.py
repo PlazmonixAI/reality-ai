@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from tests.helpers import new_client
 
 client = TestClient(app)
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
@@ -25,11 +26,12 @@ def test_api_routes_still_win():
 
 
 def test_every_sim_module_exists_and_is_served():
+    signed_in, _ = new_client()
     modules = re.findall(r'import\("\./([\w.]+\.js)"\)', SIM_INDEX)
     assert len(modules) >= 12
     for m in modules:
         assert (FRONTEND / "js" / "sims" / m).is_file(), m
-        assert client.get(f"/js/sims/{m}").status_code == 200
+        assert signed_in.get(f"/app/js/sims/{m}").status_code == 200
 
 
 def test_sims_only_call_registered_tools():
@@ -42,6 +44,8 @@ def test_sims_only_call_registered_tools():
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
 def test_javascript_syntax():
     for f in FRONTEND.rglob("*.js"):
+        if "vendor" in f.parts:
+            continue
         r = subprocess.run(["node", "--check", "--input-type=module"], input=f.read_text(),
                            capture_output=True, text=True)
         assert r.returncode == 0, f"{f}: {r.stderr}"

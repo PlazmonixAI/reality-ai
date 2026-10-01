@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reality ASM · Physics, chemistry and maths you can see</title>
+  <meta name="description" content="A simulation engine for physics, chemistry and maths, and ASM Teach: every senior school derivation and practical, in four courseworks, as a live simulation. Every number is computed, not guessed.">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+  <link rel="stylesheet" href="/static/prelaunch.css">
+  <meta property="og:title" content="Reality ASM">
+  <meta property="og:description" content="From atoms to galaxies: physics, chemistry and maths simulated by a real engine, with ASM Teach for senior school classrooms.">
+  <meta property="og:image" content="/static/img/ss_saturn.jpg">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#teach">ASM Teach</a>
+        <a href="#sims">Simulations</a>
+        <a href="#explore">Solar System</a>
+        <a href="#spaceflight">Spaceflight</a>
+        <a href="#science">How it works</a>
+      </nav>
+      <span class="grow"></span>
+      <span data-auth-slot style="display:flex;gap:10px">
+        <a class="btn btn-primary" href="#waitlist">Join the waitlist</a>
+      </span>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="wrap">
+        <div>
+          <span class="eyebrow">Public beta</span>
+          <h1>From atoms to galaxies. Physics you can see move.</h1>
+          <p class="lede">Reality ASM is a simulation engine for physics, chemistry and maths. Ask a question or move a slider, and a
+            tested engine does the real calculation: pendulums and lenses, titrations and cell potentials, orbits and quantum wells.
+            With ASM Teach, every senior school derivation and practical runs live in the classroom.</p>
+          <div class="cta">
+            <a class="btn btn-primary" href="#waitlist">Join the waitlist</a>
+            <a class="btn btn-ghost" href="#teach">See ASM Teach</a>
+          </div>
+          <p class="hero-note">The public beta opens soon. Leave your email and we'll let you know first.</p>
+        </div>
+        <div>
+          <div class="shot"><img src="/static/img/ss_saturn.jpg" alt="Saturn and its rings in the 3D Solar System, lit by the Sun" width="1400" height="788"></div>
+          <p class="shot-caption">Saturn on today's date. Positions, spin and ring tilt come from the ephemeris.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="doors">
+      <div class="wrap">
+        <a class="door" href="#waitlist">
+          <span class="tag">Reality ASM</span>
+          <b>Open ASM</b>
+          <span>Simulations, the Spaceflight Lab, the 3D Solar System, Mission Control and the AI analyst.</span>
+          <span class="door-go">Open ASM ›</span>
+        </a>
+        <a class="door teach" href="#waitlist">
+          <span class="tag">For schools</span>
+          <b>Open ASM Teach</b>
+          <span>The classroom board: live experiments, the Equation Lab, teacher accounts and the school admin panel.</span>
+          <span class="door-go">Open ASM Teach ›</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="facts">
+      <div class="wrap">
+        <div class="fact"><b class="mono">280+</b><span>coursework simulations in ASM Teach</span></div>
+        <div class="fact"><b class="mono">82</b><span>research simulations</span></div>
+        <div class="fact"><b class="mono">144</b><span>engine tools across three sciences</span></div>
+        <div class="fact"><b class="mono">770+</b><span>checks against textbook values</span></div>
+      </div>
+    </div>
+
+    <section id="teach">
+      <div class="wrap">
+        <span class="tag">ASM Teach</span>
+        <h2>Every derivation and practical, live in class</h2>
+        <p class="sub">Physics, chemistry and maths across Coursework 1 to 4, chapter by chapter. One library for every school, whichever
+          syllabus it follows. Built for the teacher at the board.</p>
+        <div class="feature">
+          <div class="feature-text">
+            <h3>A whiteboard beside every experiment</h3>
+            <p>Draw, write and annotate next to the simulation or right on top of it. Write an equation like T = 2π√(L/g) and the board
+              reads it, opens the matching experiment and rearranges it for any quantity.</p>
+            <h3>The equations and the derivation, one click away</h3>
+            <p>Every experiment shows the formulas behind each number on screen and the derivation step by step, ready to put on the board.</p>
+            <h3>Practice with answers the engine has checked</h3>
+            <p>Fresh numbers every time, four answer choices, worked solutions, and an observation table for practicals. An AI co-teacher
+              explains, suggests questions and lists common mistakes.</p>
+          </div>
+          <div class="shot"><img src="/static/img/teach_room.jpg" alt="ASM Teach: a convex lens experiment with a ray diagram, a graph, a whiteboard with the derivation and the engine's results" loading="lazy" width="1440" height="860"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="spaceflight">
+      <div class="wrap">
+        <span class="tag">Spaceflight Lab</span>
+        <h2>Build it from parts. Then fly it.</h2>
+        <p class="sub">Design an engine from chamber pressure and nozzle size, stack stages, add strap-on boosters and a fairing,
+          and launch on a real date from a real pad.</p>
+
+        <div class="feature">
+          <div class="feature-text">
+            <h3>Real vehicles, real stages</h3>
+            <p>PSLV-XL, GSLV Mk II, LVM3 and SSLV sit next to Falcon 9, Saturn V, SLS, Ariane 5, Soyuz and Long March 5.
+              Each is built from its actual stages, so solid strap-ons burn out and drop away when they should.</p>
+            <ul class="ticks">
+              <li>Engine designer with nozzle theory checked against Merlin, RS-25 and Raptor</li>
+              <li>Staging, fairings, parachutes and landing legs that change the flight</li>
+              <li>Payload estimates you can compare with the published figures</li>
+            </ul>
+          </div>
+          <div class="shot"><img src="/static/img/sf_builder_moon.jpg" alt="Rocket builder with a super-heavy Moon rocket and its stage breakdown" loading="lazy"></div>
+        </div>
+
+        <div class="feature flip">
+          <div class="feature-text">
+            <h3>To orbit, to the Moon, and home</h3>
+            <p>Gravity, drag in a rotating atmosphere and the Moon's pull are integrated as you fly. The HUD tells you when the
+              trans-lunar window opens and how close you'll pass the Moon.</p>
+            <ul class="ticks">
+              <li>2D map and a true-scale 3D view over the real Earth</li>
+              <li>Time warp, holds for prograde and retrograde, quick save</li>
+              <li>Every flight is saved to your history, so you can pick it up tomorrow</li>
+            </ul>
+          </div>
+          <div class="shot"><img src="/static/img/sf_3d_moon.jpg" alt="3D view of a spacecraft approaching the Moon" loading="lazy"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="company" class="band">
+      <div class="wrap">
+        <span class="tag" style="color:var(--on-ink-muted)">Space company</span>
+        <h2>Your satellites keep flying after you log off.</h2>
+        <p class="sub">Found a company, buy a launch, and manage a fleet that lives in real time. Low orbits decay with drag;
+          thrusters cost propellant; cameras need daylight.</p>
+        <div class="proof">
+          <div><b>Orbit decay</b><span>Drag and Earth's oblateness act on every satellite, every day. Boost it or watch it re-enter.</span></div>
+          <div><b>Cameras</b><span>Point Cartosat-3 or EOS-05 at a place on Earth. Resolution follows the optics and the altitude.</span></div>
+          <div><b>Deep space</b><span>Find the next launch window to Mars or Jupiter and send a probe. Check on it while it cruises.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="explore">
+      <div class="wrap">
+        <div class="feature">
+          <div class="feature-text">
+            <span class="tag">Solar System and beyond</span>
+            <h3>From Earth to the edge of what we can see</h3>
+            <p>Every planet and major moon on any date between 1800 and 2050, then zoom out through 18,000 real stars, the Milky Way
+              and 11,000 galaxies to the observable universe.</p>
+            <ul class="ticks">
+              <li>Launch a mission from the Solar System on the date it shows</li>
+              <li>Comets, asteroids, the main belt and the Kuiper belt</li>
+            </ul>
+          </div>
+          <div class="shot"><img src="/static/img/uv_milkyway.jpg" alt="The Milky Way model with the Sun's position marked" loading="lazy"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sims" style="background:var(--paper-2);border-top:1px solid var(--line)">
+      <div class="wrap">
+        <span class="tag">Simulations</span>
+        <h2>82 simulations across physics, chemistry and maths</h2>
+        <p class="sub">Interference, chaos, quantum wave packets, a black hole down to its singularity, titration curves, fractals and more. Each one has an AI analyst beside
+          it that sees the numbers on your screen.</p>
+        <div class="grid-shots">
+          <figure><img src="/static/img/sim_interference.jpg" alt="" loading="lazy"><figcaption>Two-slit interference</figcaption></figure>
+          <figure><img src="/static/img/sim_doublependulum.jpg" alt="" loading="lazy"><figcaption>Double pendulum</figcaption></figure>
+          <figure><img src="/static/img/sim_hydrogen.jpg" alt="" loading="lazy"><figcaption>Hydrogen orbitals</figcaption></figure>
+          <figure><img src="/static/img/sim_molecules.jpg" alt="" loading="lazy"><figcaption>Molecular shapes</figcaption></figure>
+          <figure><img src="/static/img/sim_titration.jpg" alt="" loading="lazy"><figcaption>Acid and base titration</figcaption></figure>
+          <figure><img src="/static/img/sim_fractal.jpg" alt="" loading="lazy"><figcaption>Fractals</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section id="science" class="band">
+      <div class="wrap">
+        <span class="tag" style="color:var(--on-ink-muted)">How it works</span>
+        <h2>The browser draws. The engine computes.</h2>
+        <p class="sub">Every number you see comes from a tested server-side tool built on NumPy, SciPy and SymPy. Your browser only
+          animates the results. A few of the checks it has to pass:</p>
+        <div class="proof">
+          <div><b>pH 2.88</b><span>0.1 M acetic acid, from its Ka by solving the equilibrium exactly, not with the small-x shortcut.</span></div>
+          <div><b>C3 ≈ 9 km²/s²</b><span>The best Earth to Mars departure in November 2026, found by solving Lambert's problem.</span></div>
+          <div><b>2.007 s</b><span>Period of a 1 m pendulum with g = 9.8 m/s², the Class 11 practical value.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="beta">
+      <div class="wrap">
+        <h2>Join the waitlist</h2>
+        <p class="sub">Kindly leave your email. We'll write once, when the public beta opens.</p>
+        <div class="cta" style="justify-content:center">
+          <form class="waitlist" id="waitlist" data-waitlist novalidate>
+          <label class="sr-only" for="wl-email">Email</label>
+          <input id="wl-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+          <button class="btn btn-primary" type="submit">Notify me</button>
+          <p class="wl-msg" role="status" aria-live="polite"></p>
+        </form>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="44" height="24"><span>Reality <b>ASM</b></span></a>
+      <span>© 2026 Plazmonix AI. Built by Subham Agarwal.</span>
+      <span class="grow"></span>
+      <nav aria-label="Legal">
+        <a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a>
+        <a href="/acceptable-use">Acceptable use</a><a href="mailto:contact@plazmonixai.in">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script type="module" src="/static/waitlist.js"></script>
+</body>
+</html>

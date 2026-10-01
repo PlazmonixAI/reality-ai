@@ -45,7 +45,7 @@ export default {
         const x = r.result;
         if (mode.value === "path") {
           out.set("d", x.distance !== null ? `${fmt(x.distance, 4)} km from ${src} to ${dst}` : "unreachable");
-          out.set("p", x.path ? x.path.join(" → ") : "—"); out.set("n", `${r.order.length} towns settled`);
+          out.set("p", x.path ? x.path.join(" → ") : "–"); out.set("n", `${r.order.length} towns settled`);
           player.load(r.order.length + 0.999, Math.min(8, r.order.length * 0.6));
         } else {
           out.set("d", `total ${fmt(x.total_weight, 4)} km of road`); out.set("p", `${x.edges.length} roads join ${x.n_nodes} towns`);

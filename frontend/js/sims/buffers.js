@@ -63,7 +63,7 @@ export default {
       onBusy: L.busy, onError: (e) => L.error(e.message),
       onResult: ({ b, w, xs, sb, sw }) => {
         L.clearError(); buf = b; water = w;
-        out.set("bph", fmt(b.result, 4)); out.set("hh", b.henderson_hasselbalch === null ? "— (buffer used up)" : fmt(b.henderson_hasselbalch, 4));
+        out.set("bph", fmt(b.result, 4)); out.set("hh", b.henderson_hasselbalch === null ? "buffer used up" : fmt(b.henderson_hasselbalch, 4));
         out.set("cap", `${fmt(b.buffer_capacity, 3)} mol/(L·pH)`); out.set("wph", fmt(w.result, 4));
         addedLbl.textContent = net === 0 ? "Nothing added yet." : `Net added: ${fmt(Math.abs(net) * 1000, 3)} mmol ${net > 0 ? "HCl" : "NaOH"}`;
         const mm = xs.map((x) => x * 1000);

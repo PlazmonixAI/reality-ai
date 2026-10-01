@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create your account · Reality ASM</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <div class="auth">
+    <div class="auth-form">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
+      <div class="auth-box">
+        <h1>Create your account</h1>
+        <p>Free during the beta. It takes half a minute.</p>
+        <form data-form="signup" novalidate>
+          <div class="msg" role="alert"></div>
+          <a class="btn btn-ghost" data-google hidden href="#" style="width:100%;height:46px">Continue with Google</a>
+        <div class="divider" data-google hidden>or</div>
+          <label class="field"><span>Your name</span><input name="name" autocomplete="name" maxlength="60" required></label>
+          <label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required></label>
+          <label class="field"><span>Password</span><input name="password" type="password" autocomplete="new-password" minlength="8" required>
+            <small>At least 8 characters.</small></label>
+          <label class="field"><span>Repeat password</span><input name="confirm" type="password" autocomplete="new-password" required></label>
+          <label class="field" data-invite hidden><span>Invite code</span><input name="invite" autocomplete="off"></label>
+          <label class="check"><input type="checkbox" name="terms" required> <span>I agree to the <a class="link" href="/terms" target="_blank">Terms</a>
+            and have read the <a class="link" href="/privacy" target="_blank">Privacy Policy</a>.</span></label>
+          <button class="btn btn-primary" type="submit">Create account</button>
+          <p class="alt">Already have an account? <a class="link" href="/login">Sign in</a></p>
+        </form>
+      </div>
+      <p class="auth-foot"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/cookies">Cookies</a> · © 2026 Plazmonix AI</p>
+    </div>
+    <div class="auth-art" role="img" aria-label="Saturn in the Reality ASM Solar System">
+      <blockquote>Stack PSLV from its real stages, launch from Sriharikota, and put your own imaging satellite into a sun-synchronous orbit.<cite>Spaceflight Lab, Reality ASM</cite></blockquote>
+    </div>
+  </div>
+  <script type="module" src="/static/site.js"></script>
+</body>
+</html>

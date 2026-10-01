@@ -51,7 +51,7 @@ export default {
         const x = r.result;
         out.set("c", `${fmt(view.re, 8)} ${view.im >= 0 ? "+" : "−"} ${fmt(Math.abs(view.im), 8)}i`); out.set("w", fmt(view.width, 4));
         out.set("in", `${fmt(x.fraction_inside * 100, 3)} %`);
-        out.set("j", x.julia ? (x.julia.connected ? "yes (c is in the Mandelbrot set)" : "no — Cantor dust") : "—");
+        out.set("j", x.julia ? (x.julia.connected ? "yes (c is in the Mandelbrot set)" : "no, Cantor dust") : "–");
         draw();
       },
     });

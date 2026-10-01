@@ -36,7 +36,7 @@ export default {
       delay: 20, onError: (e) => L.error(e.message),
       onResult: (r) => {
         L.clearError(); res = r.result;
-        out.set("s", res.floats ? "yes" : "no — it sinks"); out.set("f", `${fmt(res.fraction_submerged * 100, 4)} %`);
+        out.set("s", res.floats ? "yes" : "no, it sinks"); out.set("f", `${fmt(res.fraction_submerged * 100, 4)} %`);
         out.set("b", `${fmt(res.buoyant_force, 4)} N`); out.set("w", `${fmt(res.weight, 4)} N`);
         out.set("a", `${fmt(res.apparent_weight, 4)} N`); out.set("c", `${fmt(res.extra_load_capacity, 4)} kg`);
       },

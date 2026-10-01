@@ -31,7 +31,7 @@ export default {
       { key: "ds", label: "ΔS_vap (Trouton ≈ 88)" },
     ]);
     L.side.append(
-      panel("Pot", liquid.root, place.root, pres.root, temp.root, el("p", { class: "note" }, "A liquid boils when its vapour pressure reaches the pressure above it — so water boils cooler on a mountain.")),
+      panel("Pot", liquid.root, place.root, pres.root, temp.root, el("p", { class: "note" }, "A liquid boils when its vapour pressure reaches the pressure above it, so water boils cooler on a mountain.")),
       panel("Result (from the engine)", out.root),
     );
     const graph = new LineGraph(L.bottom, { title: "Vapour pressure vs temperature", xLabel: "temperature (K)", yLabel: "pressure (kPa)", height: 160, includeZero: true });

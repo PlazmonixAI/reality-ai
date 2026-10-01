@@ -16,7 +16,7 @@ export default {
     const [c1] = SERIES();
     let res = null, simT = 0, spin = 0;
 
-    const craft = select({ label: "Spacecraft", value: "iss", options: Object.entries(CRAFT).map(([v, [l, b]]) => ({ value: v, label: `${l} — B ≈ ${b} kg/m²` })), onChange: (v) => { bc.set(CRAFT[v][1]); recompute(); } });
+    const craft = select({ label: "Spacecraft", value: "iss", options: Object.entries(CRAFT).map(([v, [l, b]]) => ({ value: v, label: `${l}, B ≈ ${b} kg/m²` })), onChange: (v) => { bc.set(CRAFT[v][1]); recompute(); } });
     const bc = slider({ label: "Ballistic coefficient B = m/(C_d·A)", min: 5, max: 1000, value: 140, log: true, unit: "kg/m²", onInput: () => recompute() });
     const alt = slider({ label: "Starting altitude", min: 150, max: 900, step: 5, value: 400, unit: "km", onInput: () => recompute() });
     const years = slider({ label: "Simulate up to", min: 0.1, max: 30, value: 5, log: true, unit: "years", onInput: () => recompute() });

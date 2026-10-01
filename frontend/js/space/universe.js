@@ -151,9 +151,9 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     const s = data.stars, year = new Date().getUTCFullYear();
     showPanel(s.name[i], s.color[i], [
       ["Distance", `${fmt(s.distance_ly[i], 4)} light years`], ["Light you see left it in", s.distance_ly[i] < year ? `${commas(year - s.distance_ly[i])} AD` : `${commas(s.distance_ly[i] - year)} BC`],
-      ["Spectral type", s.spectral_type[i] || "—"], ["Temperature", `${commas(s.temperature_k[i])} K`],
+      ["Spectral type", s.spectral_type[i] || "–"], ["Temperature", `${commas(s.temperature_k[i])} K`],
       ["Luminosity (V band)", `${fmt(s.luminosity_solar[i], 4)} × Sun`], ["Apparent magnitude", fmt(s.apparent_magnitude[i], 3)],
-      ["Absolute magnitude", fmt(s.absolute_magnitude[i], 3)], ["Constellation", s.constellation[i] || "—"],
+      ["Absolute magnitude", fmt(s.absolute_magnitude[i], 3)], ["Constellation", s.constellation[i] || "–"],
     ], "physics.star_catalog (HYG v4.1). Temperature from the B−V colour index.");
   }
   stars.onPick = (ndc) => { const s = data.stars, i = nearestPoint(stars, ndc, s.x_ly, s.y_ly, s.z_ly); if (i >= 0) starInfo(i); };
@@ -194,7 +194,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
       ["Sun's orbital speed", `${fmt(m.circular_speed_at_sun_km_s, 4)} km/s`], ["One galactic year", `${fmt(m.galactic_year_myr, 4)} million years`],
       ["Mass inside the Sun's orbit", `${fmt(m.mass_within_sun_orbit_msun, 3)} Suns`], ["Mass within 163,000 ly", `${fmt(m.mass_within_50kpc_msun, 3)} Suns`],
       ["Globular clusters shown", String(m.globular_clusters.name.length)],
-    ], "physics.milky_way: structural model with a bulge + disc + dark-halo rotation curve. The flat rotation curve needs far more mass than the stars — dark matter. Yellow dots are real globular clusters.");
+    ], "physics.milky_way: structural model with a bulge + disc + dark-halo rotation curve. The flat rotation curve needs far more mass than the stars: dark matter. Yellow dots are real globular clusters.");
   };
 
   // ---------- 3. Galaxies of the local universe (1 unit = 1 million ly) ----------
@@ -235,11 +235,11 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
   function galaxyInfo(i) {
     const r = data.galaxies;
     showPanel(r.name[i], "#cfe0ff", [
-      ["Type", r.type[i] || "—"], ["Distance", `${fmt(r.distance_mly[i], 4)} million ly`],
+      ["Type", r.type[i] || "–"], ["Distance", `${fmt(r.distance_mly[i], 4)} million ly`],
       ["Light left it", `${fmt(r.distance_mly[i], 4)} million years ago`], ["Radius", `${commas(r.radius_ly[i])} ly`],
       ["Absolute magnitude", fmt(r.absolute_magnitude[i], 3)],
-      ["Moving away (Hubble law)", r.hubble_velocity_km_s[i] === null ? "— (bound by local gravity)" : `${commas(r.hubble_velocity_km_s[i])} km/s`],
-      ["Redshift z", r.redshift[i] === null ? "—" : fmt(r.redshift[i], 4)],
+      ["Moving away (Hubble law)", r.hubble_velocity_km_s[i] === null ? "bound by local gravity" : `${commas(r.hubble_velocity_km_s[i])} km/s`],
+      ["Redshift z", r.redshift[i] === null ? "–" : fmt(r.redshift[i], 4)],
     ], "physics.galaxy_catalog: measured distance; recession speed from Hubble's law with H0 = 67.66 km/s/Mpc.");
   }
   galaxies.onPick = (ndc) => { const r = data.galaxies; if (!r) return; const i = nearestPoint(galaxies, ndc, r.x_mly, r.y_mly, r.z_mly); if (i >= 0) galaxyInfo(i); };

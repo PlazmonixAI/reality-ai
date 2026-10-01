@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · Reality ASM</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <div class="auth">
+    <div class="auth-form">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
+      <div class="auth-box">
+        <h1>Welcome back</h1>
+        <p>Sign in to pick up your flights, fleet and saved work.</p>
+        <form data-form="login" novalidate>
+          <div class="msg" role="alert"></div>
+          <a class="btn btn-ghost" data-google hidden href="#" style="width:100%;height:46px">Continue with Google</a>
+        <div class="divider" data-google hidden>or</div>
+          <label class="field"><span>Email</span><input name="email" type="email" autocomplete="email" required></label>
+          <label class="field"><span>Password</span><input name="password" type="password" autocomplete="current-password" required></label>
+          <label class="check"><input type="checkbox" name="remember" checked> Keep me signed in on this device</label>
+          <button class="btn btn-primary" type="submit">Sign in</button>
+          <p class="alt"><a class="link" href="/forgot">Forgot your password?</a></p>
+          <p class="alt">New here? <a class="link" href="/signup">Create an account</a></p>
+        </form>
+      </div>
+      <p class="auth-foot"><a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/cookies">Cookies</a> · © 2026 Plazmonix AI</p>
+    </div>
+    <div class="auth-art" role="img" aria-label="Saturn in the Reality ASM Solar System">
+      <blockquote>A satellite at 400 km falls around the Earth sixteen times a day. In Reality ASM you can watch that orbit shrink, metre by metre, until you fire the thrusters.<cite>Mission Control, Reality ASM</cite></blockquote>
+    </div>
+  </div>
+  <script type="module" src="/static/site.js"></script>
+</body>
+</html>

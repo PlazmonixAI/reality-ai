@@ -59,9 +59,9 @@ export default {
       onResult: ({ tr, fr }) => {
         L.clearError(); data = tr;
         const r = tr.result, T = tr.trajectory, ms = T.t.map((t) => t * 1000);
-        out.set("tau", r.time_constant ? fmtTime(r.time_constant) : "—");
-        out.set("f0", r.natural_frequency_hz ? `${fmt(r.natural_frequency_hz, 4)} Hz` : "—");
-        out.set("q", r.quality_factor ? fmt(r.quality_factor, 3) : "—");
+        out.set("tau", r.time_constant ? fmtTime(r.time_constant) : "–");
+        out.set("f0", r.natural_frequency_hz ? `${fmt(r.natural_frequency_hz, 4)} Hz` : "–");
+        out.set("q", r.quality_factor ? fmt(r.quality_factor, 3) : "–");
         out.set("regime", r.regime || (kind.value === "rc" ? "exponential charging" : "exponential rise"));
         const series = [{ name: "V across R", color: c1, x: ms, y: T.v_resistor }];
         if (kind.value !== "rc") series.push({ name: "V across L", color: c2, x: ms, y: T.v_inductor, dash: true });

@@ -206,3 +206,57 @@
 - Links: 🚀 in the Solar System launches a mission on the date it shows; ☉ SOLAR SYSTEM in the 3D flight view opens the Solar System on the mission date
 - 619 tests passing
 - **Known issues:** flights stay in the equatorial plane (real sites are projected onto the equator; the Moon's ±28° declination is flattened)
+
+## 2026-09-30: Phase 10, the full-stack web app for the beta
+- Platform (`app/platform/`): SQLite storage, accounts and sessions (scrypt, HttpOnly cookies, Origin check, rate limits), history API, space company API, challenges API. `/simulate`, `/ask`, `/tools` and `/app/*` need a session; `/docs` is off unless enabled; CSP and security headers on every response. Flight states are HMAC-signed so challenge results and fleet deployments can be trusted.
+- Engine: parallel staging with strap-on boosters (design Δv and flight, solid boosters can't be throttled), 13 real vehicles and 10 real satellites (`vehicle_data.py`, `launch_vehicle_catalog`, `launch_vehicle_performance`, `launch_azimuth`), satellite orbits in real time (`satellite_track` with J2 and drag, `satellite_manoeuvre`, `satellite_imaging`, `orbit_from_parameters`), interplanetary missions (`interplanetary_porkchop`, `interplanetary_mission`: Lambert solver matches Curtis example 5.2; Mars 2026 window C3 ≈ 9 to 10 km²/s²), time to apoapsis and periapsis in flight telemetry.
+- Frontend: public site in `frontend/site/` (landing, auth pages, legal pages, 404, cookie notice); app at `/app/` with navigation, account menu, Home, History, Account, Challenges and Mission Control pages; Spaceflight Lab with real rockets, booster drawing and exhaust, autosave and resume, save design, deploy to fleet, challenge banner with automatic checks, pause, quick save and load, warp to apsides and a keyboard help panel; Save button on every simulation.
+- Brand from the new logo (SVG mark, favicon, light variant), IBM Plex fonts, em dashes and emojis removed from UI copy, AI analyst told to write plainly.
+- 697 tests passing; every simulation and app page opens in the browser without console errors.
+- **Fixed on the way:** Greenwich sidereal time in the fleet model (IAU W is measured from RA 90°, so GMST = W + 90°); signatures now survive the browser's number formatting.
+- **Known issues:** the Spaceflight Lab still flies in a plane (inclination is chosen when a satellite is deployed); satellite photos use NASA GIBS imagery in the browser (250 m at best), so very sharp cameras show their footprint and resolution correctly but the picture is limited by the imagery; the static atmosphere ignores solar activity; SQLite on Render needs a persistent disk.
+- **Next:** email verification, probes and fleet shown in the 3D Solar System, inclined ascents.
+
+## 2026-09-30 (later): closing the history loop, probes in the Solar System, feedback
+- Ask AI conversations save themselves to the history and reopen with their engine cards; the AI-not-configured message no longer mentions server settings.
+- Solar System: "Save this view" (date, scale, speed, selected body) and reopening from the history; your company's probes appear on their Lambert transfer arcs at the date shown, and their labels open Mission Control on that probe.
+- Send feedback from the account menu (stored in a `feedback` table, included in the data export, listed in the Privacy Policy).
+- Beta admin page (`#/admin`, `/api/admin/overview`) for the emails in `ADMIN_EMAILS`: account and usage counts, feedback, challenge completions, newest accounts.
+- **Next:** email verification, inclined ascents.
+
+## 2026-09-30 (evening): pre-launch site for Cloudflare
+- `cloudflare/`: static site for Cloudflare Pages built from the real landing page by `scripts/build_cloudflare_site.py`. Only `/` is live; every other address serves a "Coming soon" page (Cloudflare's 404.html); all "Join" buttons go to a waitlist form (placeholder until `waitlist_endpoint` is set); `/test` is guarded by a Pages Function asking for `TEST_USERNAME`/`TEST_PASSWORD`. Checked with wrangler: `/` 200, other paths show Coming soon, `/test` 401 without and 200 with the right password.
+- Backend: `POST /api/waitlist` (form or JSON, CORS only for `WAITLIST_ORIGINS`, rate limited, stored in a `waitlist` table and listed on the admin page with "Copy all emails"); optional private-testing gate for the whole Render app (`TEST_GATE_USERNAME`/`TEST_GATE_PASSWORD`, `/health` stays open).
+
+## 2026-09-30 (night): ASM Teach
+- New part of the app at `#/teach`: 281 Class 9 to 12 experiments (140 physics, 64 chemistry, 77 maths), each a derivation, law, practical or graph from the syllabus. Chapters follow NCERT; CBSE, ICSE and state boards are mapped and ICSE-only topics (machines, calorimetry, banking, mole concept) are tagged.
+- Engine (`app/modules/teach/`): experiments are data (inputs, formulas, graphs, equations, steps) parsed with the shared safe parser and compiled with numpy. Tools: `teach.catalog`, `teach.experiment`, `teach.practice`, `teach.recognize` (symbolic, time-limited). `log10` added to the shared parser.
+- Classroom view: 20 kinds of picture (ray diagrams, circuits, pendulum, spring, waves, gas, pH beaker, Bohr atom, vectors, incline, decay, prism, lever, solids and more), graph, results, equations, derivation, readings table, practice with checked answers, AI co-teacher with teaching prompts, projector mode, whiteboard beside or over the experiment, lessons saved to the history.
+- Home and landing page now lead with physics and ASM Teach; spaceflight is one feature among several. Cloudflare pre-launch site rebuilt.
+- 761 tests passing (58 new, including 36 textbook values); the library and 34 classroom scenes open in the browser without console errors.
+- **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
+- **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
+
+## 2026-10-01 (evening): ASM Teach as a separate product with school and teacher accounts
+- The landing page has two doors: Open ASM (simulations, Spaceflight, Solar System, Mission Control) and Open ASM Teach. ASM Teach left the ASM navigation and lives at /teach (sign-in) and /teach/app.
+- Accounts (app/platform/teach.py): schools sign up through Google (the existing OAuth client, in a "teach" mode; Google proves the email, a signed 30-minute cookie carries it to set-up), then choose a username and password and must tick the ASM Teach Terms (frontend/site/legal/teach-terms.html). School admins add teachers with username and password; usernames share one namespace. Each school admin and teacher is backed by an internal users row, so sessions, /simulate, the AI and saved lessons work unchanged.
+- Admin panel: teacher table with 30-day usage, pause/resume (signs the teacher out), new password (signs out everywhere), remove (deletes account, lessons and files), most used experiments. Teacher panel: profile, password, usage, saved lessons; responsive for phones.
+- Teacher board: the whiteboard fills the screen; a rail opens suggested experiments (from equations written on the board and from listen mode), the Equation Lab, YouTube (privacy-enhanced embed), web windows (with an open-in-new-tab fallback for sites that refuse framing), the teacher's files in movable windows, the AI co-teacher (only when tapped) and Save. The board autosaves locally and saves as a lesson.
+- Files: PDF, PPT/PPTX, DOC/DOCX, images, MP4/WebM up to 25 MB, 300 MB per teacher, stored in SQLite; Office files become PDF when LibreOffice (Impress/Writer) is on the server. Served with frame-ancestors 'self' so they open inside ASM Teach only.
+- Tests: tests/test_platform_teach.py (sign-up needs Google proof and terms, roles, isolation between schools, pausing, files, Google callback in school mode). Browser run through sign-up, admin, teacher board, files, profile and a phone viewport with no console errors.
+- Known limits: YouTube search opens youtube.com in a new tab (in-app search would need a YouTube API key); some websites refuse to be shown inside other pages; Render's Python runtime has no LibreOffice.
+
+## 2026-10-01 (later): Equation Lab and listen mode for ASM Teach
+- `teach.explore` (app/modules/teach/explore.py): the board builds any equation. It proves identities with a chain of rewrites plus random-point checks, flags statements that can never hold (sin²x + cos²x = 2, 2 + 2 = 5), solves over the reals with general solutions (sin x = 1/2), explains a missing real solution by the range of the function (sin x = 2), studies y = f(x) (derivative, zeros, turning points, period, domain), draws implicit curves by marching squares and names conics, draws z = f(x, y) as contours, checks physics formulas for dimensional consistency (F = mv is rejected; T in PV = nRT is read as temperature) and turns them into live formulas, and balances or rejects chemical equations. Board notation such as sin x, sinx, sin²x and sin^2 x is understood.
+- `teach.listen` (app/modules/teach/listen.py): one spoken sentence becomes an experiment with values or an Equation Lab equation. Indian classroom phrasing is handled ("into" multiplies, "by" divides, "root" covers the rest of the term), case is restored from the textbook equations, units are converted (cm to m, g to kg) and values clamped.
+- UI: Equation Lab card on the library reader and in the board reader; Listen button in the library and classroom (browser speech recognition, en-IN), one listener across pages. Both tools are also available to the AI co-teacher.
+- Tests: tests/test_teach_explore.py, tests/test_teach_listen.py (813 passing overall). Checked in the browser with a simulated microphone, no console errors.
+- Next: Hindi listen mode, calculus notation in the Equation Lab, handwriting recognition.
+
+## 2026-10-01: Coursework, black hole and singularity, quantum dynamics, promo videos
+- Solar System: the time controls are now a mission clock panel at the top left (ISO date, a rate slider, Forward/Hold/Now), and the tools moved to a row along the bottom, so the layout no longer resembles other planetarium apps.
+- ASM Teach now shows Coursework 1 to 4 instead of classes, and no board names, so it reads as one library for every syllabus (UI, landing page, deck).
+- New tools: `physics.black_hole` (horizon, photon sphere, ISCO, Hawking temperature and lifetime, clock rate, escape speed, tidal stretch, Kretschmann curvature, proper time to fall to r = 0), `physics.black_hole_light` (null geodesics; exact deflection integral gives 1.75" at the Sun's limb), `physics.black_hole_orbit` (timelike geodesics, precession, plunging), `physics.wave_packet` (split-step Schrödinger solver: barrier, step, well, double barrier, trap), `physics.quantum_oscillator`, `physics.rabi_oscillation`.
+- New simulations: Black Hole & Singularity, Quantum Wave Packets, Quantum Harmonic Oscillator, Spin & Rabi Oscillations (82 in total).
+- Promo videos for physics, the Spaceflight Lab and the Solar System, made from frame-by-frame recordings of the app (fake browser clock, 30 fps) in the reel's design.
+- 771 tests passing.

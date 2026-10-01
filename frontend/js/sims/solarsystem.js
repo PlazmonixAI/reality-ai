@@ -6,6 +6,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { simulate } from "../core/api.js";
 import { el } from "../core/ui.js";
 import { fmt } from "../core/format.js";
+import { api, history as saved, toast } from "../core/session.js";
 import { planetMaterial, atmosphereMaterial, ringMaterial, sunMaterial, glowTexture, pointsMaterial, hexToRgb, tailMaterial } from "../space/shaders.js";
 import { createUniverseLevels } from "../space/universe.js";
 import { buildSky } from "../space/sky.js";
@@ -98,7 +99,7 @@ function lumpyGeometry(amount, seed) { // irregular small bodies: a sphere with 
   return g;
 }
 
-export function mountAt(root, startLevel = 0) {
+export function mountAt(root, startLevel = 0, params = {}) {
   const loader = new THREE.TextureLoader();
   const texCache = {};
   const tex = (name, srgb = true) => {
@@ -130,25 +131,37 @@ export function mountAt(root, startLevel = 0) {
   const bMinor = tool("☄", "Dwarf planets, asteroids and comets", () => { showMinor = !showMinor; bMinor.classList.toggle("off", !showMinor); minorGroup.visible = showMinor; minorOrbits.visible = showMinor; });
   const bBelts = tool("⁘", "Asteroid belt, trojans and Kuiper belt", () => { showBelts = !showBelts; bBelts.classList.toggle("off", !showBelts); beltPoints.visible = showBelts; });
   const bList = tool("☰", "All bodies", () => list.classList.toggle("hidden"));
-  const bLaunch = tool("🚀", "Launch a rocket on this date (Spaceflight Lab)", () => {
+  const bLaunch = tool("⇧", "Launch a rocket on this date (Spaceflight Lab)", () => {
     try { localStorage.setItem("reality-asm.mission-date", jdToDate(simJd).toISOString()); } catch { /* storage unavailable */ }
     location.hash = "#/sim/spaceflight";
   });
   const bHome = tool("⌂", "Whole Solar System", () => select(null));
-  const bPlay = el("button", { class: "ss-btn", type: "button", "aria-label": "Play or pause", onclick: () => { playing = !playing; bPlay.textContent = playing ? "❚❚" : "▶"; } }, "❚❚");
-  const slower = el("button", { class: "ss-btn", type: "button", "aria-label": "Slower", onclick: () => setSpeed(speedIdx - 1) }, "◀◀");
-  const faster = el("button", { class: "ss-btn", type: "button", "aria-label": "Faster", onclick: () => setSpeed(speedIdx + 1) }, "▶▶");
-  const reverse = el("button", { class: "ss-btn", type: "button", title: "Run time backwards", onclick: () => { dir = -dir; reverse.classList.toggle("on", dir < 0); window_ = null; } }, "⇆");
-  const today = el("button", { class: "ss-btn text", type: "button", onclick: () => { simJd = dateToJd(new Date()); window_ = null; } }, "Today");
+  const bSave = tool("⇩", "Save this view to your history", async () => {
+    const date = jdToDate(simJd);
+    try {
+      await saved.create({ kind: "space_view", sim_id: "solarsystem",
+        title: `${selected && bodies[selected] ? bodies[selected].data.name : "Solar System"}, ${date.toLocaleDateString(undefined, { dateStyle: "medium", timeZone: "UTC" })}`,
+        payload: { jd: simJd, selected, level, real_scale: realScale, speed: speedIdx }, summary: { date: date.toISOString() } });
+      toast("View saved to your history.");
+    } catch (e) { toast(e.message, "error"); }
+  });
+  // the clock panel: date, rate and time controls in one place (top left)
+  const bPlay = el("button", { class: "ss-btn", type: "button", "aria-label": "Play or pause", onclick: () => { playing = !playing; bPlay.textContent = playing ? "Hold" : "Run"; bPlay.classList.toggle("on", !playing); } }, "Hold");
+  const rate = el("input", { class: "ss-rate", type: "range", min: 1, max: SPEEDS.length - 1, step: 1, value: speedIdx, "aria-label": "Rate of time", oninput: () => setSpeed(+rate.value) });
+  const reverse = el("button", { class: "ss-btn", type: "button", title: "Run time backwards", onclick: () => { dir = -dir; reverse.classList.toggle("on", dir < 0); reverse.textContent = dir < 0 ? "Backward" : "Forward"; window_ = null; } }, "Forward");
+  const today = el("button", { class: "ss-btn", type: "button", onclick: () => { simJd = dateToJd(new Date()); window_ = null; } }, "Now");
   const dateInput = el("input", { class: "ss-dateinput", type: "date", min: "1800-01-01", max: "2050-12-31", "aria-label": "Jump to date", onchange: () => { if (dateInput.value) { simJd = dateToJd(new Date(dateInput.value + "T12:00:00Z")); window_ = null; } } });
-  const toolbar = el("div", { class: "ss-toolbar" }, bList, bHome, bOrbits, bLabels, bMinor, bBelts, bScale, bLaunch);
-  const timebar = el("div", { class: "ss-timebar" }, reverse, slower, bPlay, faster, speedText, today, dateInput);
+  const toolbar = el("div", { class: "ss-toolbar" }, bList, bHome, bOrbits, bLabels, bMinor, bBelts, bScale, bLaunch, bSave);
+  const timebar = el("div", { class: "ss-clock" },
+    el("div", { class: "ss-clock-head" }, el("span", {}, "Mission clock"), speedText), dateBig, timeSmall,
+    el("div", { class: "ss-clock-rate" }, el("span", {}, "Rate"), rate),
+    el("div", { class: "ss-clock-row" }, reverse, bPlay, today, dateInput));
   const ladder = el("nav", { class: "ss-ladder", "aria-label": "Scale" });
-  const credit = el("div", { class: "ss-credit" }, "Engine: JPL elements, HYG stars, Celestia catalogues, ΛCDM · textures: NASA/JPL, USGS, Celestia — see CREDITS");
-  const rootEl = el("div", { class: "ss-root" }, view, labels, el("div", { class: "ss-top" }, brand, dateBig, timeSmall),
+  const credit = el("div", { class: "ss-credit" }, "Engine: JPL elements, HYG stars, Celestia catalogues, ΛCDM · textures: NASA/JPL, USGS, Celestia (see CREDITS)");
+  const rootEl = el("div", { class: "ss-root" }, view, labels, el("div", { class: "ss-top" }, brand),
     toolbar, ladder, list, info, status, timebar, credit, fade);
   root.append(rootEl);
-  function setSpeed(i) { speedIdx = Math.max(1, Math.min(SPEEDS.length - 1, i)); speedText.textContent = SPEEDS[speedIdx][1]; window_ = null; }
+  function setSpeed(i) { speedIdx = Math.max(1, Math.min(SPEEDS.length - 1, i)); speedText.textContent = SPEEDS[speedIdx][1]; rate.value = speedIdx; window_ = null; }
   let dir = 1;
   setSpeed(speedIdx);
 
@@ -458,11 +471,12 @@ export function mountAt(root, startLevel = 0) {
       labels.replaceChildren();
       if (level === 0) {
         for (const b of Object.values(bodies)) if (b?.label) labels.append(b.label);
+        for (const p of probes) labels.append(p.label);
         controls.enabled = true;
         camera.position.set(0, 1800, 4200); controls.target.set(0, 0, 0); select(null); // glide in from the stars
       } else { controls.enabled = false; universe.levels[level - 1].enter(i < prevLevel ? "in" : "out"); }
       prevLevel = level;
-      for (const x of [toolbar, timebar, dateBig, timeSmall]) x.style.display = level === 0 ? "" : "none";
+      for (const x of [toolbar, timebar]) x.style.display = level === 0 ? "" : "none";
       brand.replaceChildren(level === 0 ? "SOLAR SYSTEM " : "", el("b", {}, level === 0 ? "3D" : LEVELS[level].name.toUpperCase()));
       ladderBtns.forEach((b, k) => b.classList.toggle("on", k === level));
       resize();
@@ -492,7 +506,63 @@ export function mountAt(root, startLevel = 0) {
   const ro = new ResizeObserver(resize); ro.observe(view); resize();
   let last = performance.now(), raf = 0;
   const tmp = new THREE.Vector3(), q = new THREE.Quaternion(), mtx = new THREE.Matrix4();
+  // ---------- your company's probes, drawn along their engine-computed transfer arcs ----------
+  const probes = [];
+  const probeGeo = new THREE.OctahedronGeometry(1, 0), probeMat = new THREE.MeshBasicMaterial({ color: 0xff5b2e });
+  async function loadProbes() {
+    let fleet;
+    try { fleet = (await api("/api/company/fleet")).fleet; } catch { return; } // no company yet
+    for (const s of fleet.filter((x) => x.kind === "probe")) {
+      try {
+        const d = await api(`/api/company/spacecraft/${s.id}`);
+        const m = d.mission;
+        if (!m?.path_au?.length) continue;
+        const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(m.path_au.map((p) => compress(p, realScale))),
+          new THREE.LineBasicMaterial({ color: 0xff5b2e, transparent: true, opacity: 0.75 }));
+        line.userData.raw = m.path_au;
+        orbitsGroup.add(line);
+        const marker = new THREE.Mesh(probeGeo, probeMat);
+        scene.add(marker);
+        const label = el("button", { class: "ss-label probe", type: "button", title: `${d.name}: open in Mission Control`, onclick: () => { location.hash = `#/company?craft=${d.id}`; } }, d.name);
+        label.style.setProperty("--c", "#FF5B2E");
+        if (level === 0) labels.append(label);
+        probes.push({ id: d.id, name: d.name, path: m.path_au, dep: dateToJd(new Date(m.depart)), arr: dateToJd(new Date(m.arrive)), target: m.target, capture: m.capture, line, marker, label });
+      } catch { /* skip a probe that can't be loaded */ }
+    }
+  }
+  function updateProbes() {
+    const w = view.clientWidth, h = view.clientHeight;
+    for (const p of probes) {
+      let pos = null;
+      if (simJd >= p.dep && simJd <= p.arr) { // between engine samples (evenly spaced in time), interpolate
+        const f = ((simJd - p.dep) / (p.arr - p.dep)) * (p.path.length - 1), i = Math.min(p.path.length - 2, Math.floor(f)), u = f - i;
+        const a = p.path[i], b = p.path[i + 1];
+        pos = compress([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u], realScale);
+      } else if (simJd > p.arr && p.capture && bodies[p.target]?.group) pos = bodies[p.target].group.position.clone();
+      p.marker.visible = !!pos && level === 0;
+      if (pos) { p.marker.position.copy(pos); p.marker.scale.setScalar(Math.max(0.05, camera.position.distanceTo(pos) * 0.008)); }
+      const v = pos ? pos.clone().project(camera) : null;
+      const show = v && showLabels && level === 0 && v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+      p.label.style.display = show ? "" : "none";
+      if (show) p.label.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -140%)`;
+    }
+  }
+  loadProbes();
+  // A saved view (from the history): date, scale, speed, then the selected body once it exists
+  let pendingSelect = null;
+  if (params.view) {
+    saved.get(params.view).then((run) => {
+      const v = run.payload;
+      simJd = v.jd; window_ = null;
+      if (v.real_scale && !realScale) bScale.click();
+      if (v.speed) setSpeed(v.speed);
+      if (v.level) goLevel(v.level); else pendingSelect = v.selected || null;
+      toast(`Opened your saved view of ${jdToDate(v.jd).toLocaleDateString(undefined, { dateStyle: "medium", timeZone: "UTC" })}.`);
+    }).catch((e) => toast(e.message, "error"));
+  }
+
   function updateSolar(dt, now) {
+    if (pendingSelect && bodies[pendingSelect]?.group && window_) { select(pendingSelect); pendingSelect = null; }
     if (playing) simJd = Math.min(2469807, Math.max(2378497, simJd + SPEEDS[speedIdx][0] * dir * dt));
     if (!window_ && !loading) loadWindow(simJd);
     if (window_) {
@@ -524,8 +594,8 @@ export function mountAt(root, startLevel = 0) {
       }
       if (fx.clouds) fx.clouds.rotation.y += dt * 0.004 * Math.sign(SPEEDS[speedIdx][0]);
       const date = jdToDate(simJd);
-      dateBig.textContent = date.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
-      timeSmall.textContent = `${date.toISOString().slice(11, 19)} UTC · JD ${simJd.toFixed(3)}`;
+      dateBig.textContent = date.toISOString().slice(0, 10);
+      timeSmall.textContent = `${date.toISOString().slice(11, 19)} UTC   JD ${simJd.toFixed(3)}`;
     }
     // Lighting uniforms, rings and the Sun
     for (const b of Object.values(bodies)) for (const m of b?.mats || []) m.uniforms.sunPos.value.copy(SUN_POS);
@@ -545,6 +615,7 @@ export function mountAt(root, startLevel = 0) {
     }
     updateBelts();
     updateTails();
+    updateProbes();
     // Camera: fly to the selected body, then ride along with it
     if (fly) {
       fly.t = Math.min(1, fly.t + dt * 1.1);
@@ -598,4 +669,4 @@ export function mountAt(root, startLevel = 0) {
   };
 }
 
-export default { mount: (root) => mountAt(root, 0) };
+export default { mount: (root, params) => mountAt(root, 0, params) };

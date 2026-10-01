@@ -45,7 +45,7 @@ export default {
       delay: 20, onError: (e) => L.error(e.message),
       onResult: (r) => {
         L.clearError(); res = r;
-        if (!r) { ["eq", "prod"].forEach((k) => out.set(k, "—")); out.set("lim", "a reactant is missing: no reaction"); out.set("left", "everything"); draw(); return; }
+        if (!r) { ["eq", "prod"].forEach((k) => out.set(k, "–")); out.set("lim", "a reactant is missing: no reaction"); out.set("left", "everything"); draw(); return; }
         const x = r.result;
         out.set("eq", r.balanced_equation.split(/\s*->\s*/).map((side) => side.split(/\s+\+\s+/).map(pretty).join(" + ")).join(" → ")); out.set("lim", pretty(x.limiting_reagent));
         out.set("prod", Object.entries(x.products).map(([k, v]) => `${fmt(v.moles, 3)} ${pretty(k)}`).join(", ") || "none");

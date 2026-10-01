@@ -1,0 +1,18 @@
+// Cloudflare Workers config for the Reality ASM pre-launch site (deploy command: npx wrangler deploy).
+// The site itself is cloudflare/public (rebuild with: python3 scripts/build_cloudflare_site.py).
+// Secrets are not stored here: set TEST_USERNAME and TEST_PASSWORD in the Worker's Settings > Variables and Secrets.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "plazmonixai-reality-asm",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./cloudflare/public",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/api/*", "/test", "/test/*"]
+  },
+  // Emails from the waitlist form. Wrangler creates this KV namespace on the first deploy.
+  "kv_namespaces": [{ "binding": "WAITLIST" }],
+  "observability": { "enabled": true }
+}

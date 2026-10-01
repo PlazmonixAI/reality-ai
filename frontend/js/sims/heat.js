@@ -79,7 +79,7 @@ export default {
       for (let i = 0; i <= 100; i++) { ctx.fillStyle = heatColor(lo + ((hi - lo) * i) / 100, lo, hi); ctx.fillRect(x0 + ((x1 - x0) * i) / 100, h - 40, (x1 - x0) / 100 + 1, 12); }
       label(ctx, `${fmt(lo, 3)} °C`, x0, h - 16, { font: "11px system-ui", color: "#4b5868" });
       label(ctx, `${fmt(hi, 3)} °C`, x1, h - 16, { align: "right", font: "11px system-ui", color: "#4b5868" });
-      label(ctx, `${MATERIALS[mat.value]} rod, ${fmt(len.value * 100, 3)} cm — t = ${fmtTime(res.frames.t[k])}`, 16, 20, { font: "bold 13px system-ui" });
+      label(ctx, `${MATERIALS[mat.value]} rod, ${fmt(len.value * 100, 3)} cm, t = ${fmtTime(res.frames.t[k])}`, 16, 20, { font: "bold 13px system-ui" });
     }
 
     recompute();

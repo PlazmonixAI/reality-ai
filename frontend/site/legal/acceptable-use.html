@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceptable Use Policy · Reality ASM</title>
+  <meta name="robots" content="index">
+  <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/site.css">
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
+      <span class="grow"></span>
+      <span data-auth-slot style="display:flex;gap:10px">
+        <a class="btn btn-ghost" href="/login">Sign in</a>
+        <a class="btn btn-primary" href="/signup">Join the beta</a>
+      </span>
+    </div>
+  </header>
+  <main class="legal">
+    <div class="wrap">
+      <h1>Acceptable Use Policy</h1>
+      <p class="updated">Last updated 30 September 2026 · Version {{TERMS_VERSION}}</p>
+      <p>Reality ASM is shared by everyone in the beta. To keep it working and safe, don't:</p>
+      <ul>
+        <li>Try to break in: probe for vulnerabilities, get around sign-in, rate limits or verification, or access other people's data.
+          (Found a security problem? Tell us at <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>. We appreciate responsible reports.)</li>
+        <li>Copy the engine: bulk-query the API to rebuild, extract or clone our models, or resell access to them.</li>
+        <li>Scrape, spam or overload the Service with automated traffic.</li>
+        <li>Forge results: edit flight states or submissions to pass challenges. Challenges only count flights the engine produced.</li>
+        <li>Use the Service to plan harm: weapons, attacks on real infrastructure or satellites, or anything illegal.</li>
+        <li>Put other people's personal data, or anything abusive or unlawful, in names, notes or AI questions.</li>
+        <li>Share your account or sell it.</li>
+      </ul>
+      <p>We may remove content, limit features or suspend accounts that break these rules. For serious or repeated cases we may close
+        the account.</p>
+
+    </div>
+  </main>
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Plazmonix AI. Built by Subham Agarwal.</span>
+      <span class="grow"></span>
+      <nav aria-label="Legal">
+        <a href="/about">About</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/cookies">Cookies</a>
+        <a href="/acceptable-use">Acceptable use</a><a href="mailto:{{CONTACT_EMAIL}}">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <script type="module" src="/static/site.js"></script>
+</body>
+</html>

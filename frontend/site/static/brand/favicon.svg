@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="190 -70 760 760">
+  <defs>
+    <mask id="fav-behind" maskUnits="userSpaceOnUse" x="-100" y="-200" width="1250" height="1000">
+      <rect x="-100" y="-200" width="1250" height="1000" fill="#fff"/>
+      <circle cx="509" cy="278" r="302" fill="#000"/>
+      <circle cx="889" cy="64" r="102" fill="#000"/>
+    </mask>
+    <mask id="fav-cut" maskUnits="userSpaceOnUse" x="-100" y="-200" width="1250" height="1000">
+      <rect x="-100" y="-200" width="1250" height="1000" fill="#fff"/>
+      <path transform="rotate(-17.6 513 270)" d="M -27 270 A 540 122 0 0 0 1053 270" fill="none" stroke="#000" stroke-width="110"/>
+    </mask>
+  </defs>
+  <g mask="url(#fav-behind)"><ellipse transform="rotate(-17.6 513 270)" cx="513" cy="270" rx="540" ry="122" fill="none" stroke="#0B1526" stroke-width="58"/></g>
+  <g mask="url(#fav-cut)"><circle cx="509" cy="278" r="276" fill="#0B1526"/></g>
+  <path transform="rotate(-17.6 513 270)" d="M -27 270 A 540 122 0 0 0 1053 270" fill="none" stroke="#0B1526" stroke-width="58"/>
+  <circle cx="889" cy="64" r="78" fill="#FF5B2E"/>
+</svg>

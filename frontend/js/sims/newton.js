@@ -39,8 +39,8 @@ export default {
       onResult: ({ r, c }) => {
         L.clearError(); res = r; fcurve = c.result; shown = 1;
         const x = r.result;
-        out.set("status", x.status); out.set("root", x.root === null ? "—" : fmt(x.root, 12));
-        out.set("it", String(x.iterations)); out.set("ord", x.convergence_order === null ? "—" : fmt(x.convergence_order, 3));
+        out.set("status", x.status); out.set("root", x.root === null ? "–" : fmt(x.root, 12));
+        out.set("it", String(x.iterations)); out.set("ord", x.convergence_order === null ? "–" : fmt(x.convergence_order, 3));
         list(); draw();
       },
     });

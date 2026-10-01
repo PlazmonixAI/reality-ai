@@ -1,7 +1,13 @@
+import base64
+import hashlib
+import hmac
+import logging
+import re
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -11,15 +17,97 @@ from app.agent.llm import LLMError, NIMClient, NoKeysError
 from app.config import settings
 from app.core import runner
 from app.core.registry import get_tool, list_tools
+from app.platform import admin, auth, company, challenges, history, teach, waitlist
+from app.platform.auth import current_user, session_user
+from app.platform.security import RateLimiter, check, sign
 
-app = FastAPI(title="Reality ASM", version="0.1.0",
-              description="Reality ASM (Advanced Simulation Machine): Plazmonix AI's physics, chemistry and mathematics research-simulation engine")
+log = logging.getLogger("reality")
+
+app = FastAPI(title="Reality ASM", version="0.9.0-beta",
+              description="Reality ASM (Advanced Simulation Machine): physics, chemistry and mathematics simulations",
+              docs_url="/docs" if settings.enable_api_docs else None, redoc_url=None,
+              openapi_url="/openapi.json" if settings.enable_api_docs else None)
+
+ROOT = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = ROOT / "frontend"
+SITE_DIR = FRONTEND_DIR / "site"
+
+simulate_limit = RateLimiter(settings.simulate_rate_per_s, per=1.0, burst=settings.simulate_rate_per_s * 4)
+ask_limit = RateLimiter(settings.ask_rate_per_min, per=60.0)
 
 
+# ---------------------------------------------------------------- security middleware
+def _importmap_hash() -> str:
+    try:
+        html = (FRONTEND_DIR / "index.html").read_text()
+        m = re.search(r'<script type="importmap">(.*?)</script>', html, re.S)
+        if m:
+            return "'sha256-" + base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode() + "'"
+    except OSError:
+        pass
+    return ""
+
+
+CSP = ("default-src 'self'; script-src 'self' " + _importmap_hash() + "; style-src 'self' 'unsafe-inline'; "
+       "img-src 'self' data: blob: https://gibs.earthdata.nasa.gov; font-src 'self'; connect-src 'self'; "
+       "worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; "
+       "form-action 'self' https://accounts.google.com")
+
+
+def _gate_ok(request: Request) -> bool:
+    """Private-testing gate: when TEST_GATE_USERNAME/PASSWORD are set, every page needs them (HTTP Basic)."""
+    if not (settings.test_gate_username and settings.test_gate_password):
+        return True
+    if request.url.path in ("/health", "/api/waitlist"):
+        return True
+    header = request.headers.get("authorization", "")
+    if not header.startswith("Basic "):
+        return False
+    try:
+        user, _, pw = base64.b64decode(header[6:]).decode().partition(":")
+    except (ValueError, UnicodeDecodeError):
+        return False
+    return hmac.compare_digest(user, settings.test_gate_username) & hmac.compare_digest(pw, settings.test_gate_password)
+
+
+@app.middleware("http")
+async def security(request: Request, call_next):
+    if not _gate_ok(request):
+        return Response("Reality ASM is in private testing.", status_code=401,
+                        headers={"WWW-Authenticate": 'Basic realm="Reality ASM testing", charset="UTF-8"'})
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.url.path != "/api/waitlist":
+        origin = request.headers.get("origin")
+        host = request.headers.get("host", "")
+        if origin and origin != "null" and re.sub(r"^https?://", "", origin) != host:
+            return JSONResponse({"detail": "Cross-site request blocked"}, status_code=403)
+    response = await call_next(request)
+    h = response.headers
+    h.setdefault("Content-Security-Policy", CSP)
+    h.setdefault("X-Content-Type-Options", "nosniff")
+    h.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    h.setdefault("X-Frame-Options", "DENY")
+    h.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+    h.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+    if settings.cookie_secure:
+        h.setdefault("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+    return response
+
+
+app.include_router(auth.router)
+app.include_router(history.router)
+app.include_router(company.router)
+app.include_router(challenges.router)
+app.include_router(admin.router)
+app.include_router(waitlist.router)
+app.include_router(teach.router)
+
+
+# ---------------------------------------------------------------- engine API (signed-in users only)
 class SimulateRequest(BaseModel):
     domain: str
     name: str
     args: dict[str, Any] = Field(default_factory=dict)
+    signature: str | None = None  # flight states come back signed; send the signature with the next step
 
 
 @app.get("/health")
@@ -28,25 +116,54 @@ def health():
 
 
 @app.get("/tools")
-def tools():
+def tools(user=Depends(current_user)):
     grouped: dict[str, list[dict]] = {}
     for t in list_tools():
         grouped.setdefault(t.domain, []).append({"name": t.name, "description": t.description})
     return grouped
 
 
-@app.post("/simulate")
-def simulate(req: SimulateRequest):
+FLIGHT_TOOLS = {"physics.rocket_launch_state", "physics.rocket_flight"}
+
+
+def flight_seal(user_id: str, state: dict, args: dict) -> str:
+    """Signature over a flight state and the rocket it belongs to, so challenges can trust a reported flight."""
+    return sign("flight", {"u": user_id, "s": state, "p": args.get("parts"), "c": args.get("custom_parts") or {}})
+
+
+def run_tool(domain: str, name: str, args: dict) -> dict:
     try:
-        t = get_tool(req.domain, req.name)
+        t = get_tool(domain, name)
     except KeyError as e:
         raise HTTPException(status_code=404, detail=str(e))
     try:
-        return {"tool": t.key, **runner.run(t, req.args, timeout=settings.tool_timeout_s)}
+        return {"tool": t.key, **runner.run(t, args, timeout=settings.tool_timeout_s)}
     except runner.ToolInputError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:  # noqa: BLE001 - a bug in a tool: report it as JSON, not a bare 500 page
-        raise HTTPException(status_code=500, detail=f"internal error in {t.key}: {e.__class__.__name__}: {e}")
+        log.exception("tool %s failed", t.key)
+        raise HTTPException(status_code=500, detail=f"internal error in {t.key}: {e.__class__.__name__}")
+
+
+@app.post("/simulate")
+def simulate(req: SimulateRequest, user=Depends(current_user)):
+    if not simulate_limit.allow(user["id"]):
+        raise HTTPException(429, "Too many engine calls at once. Slow down a little.")
+    out = run_tool(req.domain, req.name, req.args)
+    key = f"{req.domain}.{req.name}"
+    if key in FLIGHT_TOOLS and isinstance(out.get("result"), dict):
+        # A launch starts a verified flight; each step stays verified only if it continues a verified state
+        trusted = key == "physics.rocket_launch_state" or (
+            isinstance(req.args.get("state"), dict) and check_flight(user["id"], req.args["state"], req.args, req.signature))
+        state = out["result"] if key == "physics.rocket_launch_state" else out["result"].get("state")
+        out["verified"] = bool(trusted)
+        if trusted and isinstance(state, dict):
+            out["signature"] = flight_seal(user["id"], state, req.args)
+    return out
+
+
+def check_flight(user_id: str, state: dict, args: dict, signature: str | None) -> bool:
+    return check("flight", {"u": user_id, "s": state, "p": args.get("parts"), "c": args.get("custom_parts") or {}}, signature)
 
 
 class AskRequest(BaseModel):
@@ -59,7 +176,7 @@ _client: NIMClient | None = None
 
 
 def get_llm_client() -> NIMClient:
-    """One shared NIM client so the key rotation state is kept across requests."""
+    """One shared client so the key rotation state is kept across requests."""
     global _client
     if _client is None:
         _client = NIMClient(settings.key_list, settings.base_url, settings.model, keys_env=settings.keys_env)
@@ -67,18 +184,19 @@ def get_llm_client() -> NIMClient:
 
 
 @app.get("/llm/status")
-def llm_status():
-    """Which LLM provider/model the AI representative uses and whether keys are configured (never the keys)."""
+def llm_status(user=Depends(current_user)):
+    """Whether the AI representative is configured (never the keys)."""
     try:
-        return {"provider": settings.provider, "model": settings.model, "configured": bool(settings.key_list),
-                "keys": len(settings.key_list), "keys_env": settings.keys_env}
+        return {"provider": settings.provider, "model": settings.model, "configured": bool(settings.key_list)}
     except ValueError as e:
         return {"provider": settings.llm_provider, "configured": False, "error": str(e)}
 
 
 @app.post("/ask")
-def ask(req: AskRequest, client=Depends(get_llm_client)):
-    """Answer a research question in natural language using the engine's tools (NVIDIA NIM)."""
+def ask(req: AskRequest, client=Depends(get_llm_client), user=Depends(current_user)):
+    """Answer a research question in natural language using the engine's tools."""
+    if not ask_limit.allow(user["id"]):
+        raise HTTPException(429, "You're asking faster than the AI can keep up. Wait a moment and try again.")
     try:
         return representative.ask(req.question, client, history=req.history, context=req.context)
     except NoKeysError as e:
@@ -89,7 +207,88 @@ def ask(req: AskRequest, client=Depends(get_llm_client)):
         raise HTTPException(status_code=422, detail=str(e))
 
 
-# Interactive simulator UI (plain HTML/JS, no build step). Mounted last so API routes win.
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
-if FRONTEND_DIR.is_dir():
-    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
+# ---------------------------------------------------------------- public site
+PAGES = {"": "index.html", "login": "login.html", "signup": "signup.html", "forgot": "forgot.html", "reset": "reset.html",
+         "terms": "legal/terms.html", "privacy": "legal/privacy.html", "cookies": "legal/cookies.html",
+         "acceptable-use": "legal/acceptable-use.html", "about": "about.html", "teach-terms": "legal/teach-terms.html"}
+
+
+def _page(name: str) -> HTMLResponse:
+    html = (SITE_DIR / PAGES[name]).read_text()
+    html = html.replace("{{CONTACT_EMAIL}}", settings.contact_email).replace("{{TERMS_VERSION}}", auth.TERMS_VERSION)
+    html = html.replace("{{TEACH_TERMS_VERSION}}", teach.TEACH_TERMS_VERSION)
+    return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return RedirectResponse("/static/brand/favicon.svg", status_code=301)
+
+
+@app.get("/", include_in_schema=False)
+def landing():
+    return _page("")
+
+
+# ---------------------------------------------------------------- ASM Teach (its own sign-in and app, separate from ASM)
+TEACH_CSP = CSP.replace("default-src 'self';", "default-src 'self'; frame-src 'self' https:; media-src 'self' blob:;")
+
+
+@app.get("/teach", include_in_schema=False)
+def teach_signin(request: Request):
+    user = session_user(request.cookies.get(auth.COOKIE))
+    if user is not None and teach._role(user["id"])[0] is not None:
+        return RedirectResponse("/teach/app", status_code=302)
+    html = (SITE_DIR / "teach.html").read_text().replace("{{CONTACT_EMAIL}}", settings.contact_email)
+    return HTMLResponse(html.replace("{{TEACH_TERMS_VERSION}}", teach.TEACH_TERMS_VERSION), headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/teach/app", include_in_schema=False)
+def teach_app(request: Request):
+    user = session_user(request.cookies.get(auth.COOKIE))
+    if user is None or teach._role(user["id"])[0] is None:
+        return RedirectResponse("/teach", status_code=302)
+    return FileResponse(FRONTEND_DIR / "teach.html", headers={"Cache-Control": "no-cache", "Content-Security-Policy": TEACH_CSP})
+
+
+@app.get("/{page}", include_in_schema=False)
+def site_page(page: str, request: Request):
+    if page not in PAGES:
+        raise HTTPException(404)
+    if page in ("login", "signup") and session_user(request.cookies.get(auth.COOKIE)) is not None:
+        return RedirectResponse("/app/", status_code=302)
+    return _page(page)
+
+
+if (SITE_DIR / "static").is_dir():
+    app.mount("/static", StaticFiles(directory=SITE_DIR / "static"), name="static")
+
+
+# ---------------------------------------------------------------- the app itself (signed-in users only)
+@app.get("/app", include_in_schema=False)
+def app_root():
+    return RedirectResponse("/app/", status_code=301)
+
+
+@app.get("/app/{path:path}", include_in_schema=False)
+def app_files(path: str, request: Request):
+    if session_user(request.cookies.get(auth.COOKIE)) is None:
+        if path in ("", "index.html"):
+            return RedirectResponse("/login?next=/app/", status_code=302)
+        raise HTTPException(401, "Please sign in to continue.")
+    target = (FRONTEND_DIR / (path or "index.html")).resolve()
+    if target.is_dir():
+        target = target / "index.html"
+    if (FRONTEND_DIR not in target.parents) or SITE_DIR in target.parents or target == SITE_DIR or not target.is_file():
+        raise HTTPException(404)
+    heavy = "/assets/" in f"/{path}" or path.startswith("vendor/")
+    return FileResponse(target, headers={"Cache-Control": "private, max-age=86400" if heavy else "no-cache"})
+
+
+@app.exception_handler(404)
+async def not_found(request: Request, exc):
+    detail = getattr(exc, "detail", None) or "Not found"
+    if request.method == "GET" and "text/html" in request.headers.get("accept", "") and (SITE_DIR / "404.html").is_file():
+        return HTMLResponse((SITE_DIR / "404.html").read_text(), status_code=404)
+    return JSONResponse({"detail": detail}, status_code=404)
+

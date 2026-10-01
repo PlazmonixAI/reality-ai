@@ -37,8 +37,8 @@ export default {
         L.clearError(); res = r;
         const x = r.result;
         out.set("di", x.image_distance === null ? "∞" : `${fmt(x.image_distance * 100, 4)} cm`);
-        out.set("m", x.magnification === null ? "—" : `${fmt(x.magnification, 4)}×`);
-        out.set("hi", x.image_height === null ? "—" : `${fmt(x.image_height * 100, 4)} cm`);
+        out.set("m", x.magnification === null ? "–" : `${fmt(x.magnification, 4)}×`);
+        out.set("hi", x.image_height === null ? "–" : `${fmt(x.image_height * 100, 4)} cm`);
         out.set("type", x.orientation ? `${x.image_type}, ${x.orientation}` : x.image_type);
         draw();
       },

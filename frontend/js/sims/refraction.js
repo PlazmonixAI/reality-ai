@@ -47,7 +47,7 @@ export default {
       delay: 60, onBusy: L.busy, onError: (e) => L.error(e.message),
       onResult: ({ main, angles, sweep }) => {
         L.clearError(); res = main.result;
-        out.set("t2", res.total_internal_reflection ? "— (total internal reflection)" : `${fmt(res.refraction_deg, 4)}°`);
+        out.set("t2", res.total_internal_reflection ? "total internal reflection" : `${fmt(res.refraction_deg, 4)}°`);
         out.set("R", `${fmt(res.reflectance * 100, 3)} %`); out.set("T", `${fmt(res.transmittance * 100, 3)} %`);
         out.set("crit", res.critical_angle_deg ? `${fmt(res.critical_angle_deg, 4)}°` : "none (n₁ ≤ n₂)");
         out.set("brew", `${fmt(res.brewster_angle_deg, 4)}°`);

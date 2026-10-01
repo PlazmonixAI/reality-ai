@@ -39,7 +39,7 @@ export default {
         const x = r.result, c = x.catalysed;
         out.set("er", `${fmt(x.reverse_activation_energy / 1000, 4)} kJ/mol`); out.set("k", `${fmt(x.k_forward, 3)} s⁻¹`);
         out.set("t", fmtTime(x.half_life_forward)); out.set("f", fmt(x.fraction_above_barrier, 3));
-        out.set("x", c ? `×${fmt(c.rate_enhancement, 3)}` : "—"); out.set("tc", c ? fmtTime(c.half_life_forward) : "—");
+        out.set("x", c ? `×${fmt(c.rate_enhancement, 3)}` : "–"); out.set("tc", c ? fmtTime(c.half_life_forward) : "–");
         // Log scale so the tiny high-energy tail that actually reacts is visible
         const keep = r.distribution.density.map((d, i) => (d > 0 ? i : -1)).filter((i) => i >= 0);
         dist.setSeries([{ name: "molecules", color: c1, x: keep.map((i) => r.distribution.energy[i] / 1000), y: keep.map((i) => Math.log10(r.distribution.density[i] * 1000)) }]);

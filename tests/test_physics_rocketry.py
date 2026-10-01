@@ -145,3 +145,19 @@ def test_parts_catalogue():
     assert {"capsule", "tank_l", "engine_booster", "decoupler"} <= ids
     assert r["bodies"]["earth"]["surface_gravity"] == pytest.approx(9.82, abs=0.01)
     assert r["bodies"]["moon"]["surface_gravity"] == pytest.approx(1.62, abs=0.01)
+
+
+def test_time_to_apsides():
+    import math
+    from app.modules.physics.rocketry import _elements, BODIES
+    b = BODIES["earth"]
+    mu, R = b["mu"], b["radius"]
+    rp, ra = R + 200e3, R + 2000e3
+    a = (rp + ra) / 2
+    v = math.sqrt(mu * (2 / rp - 1 / a))
+    el = _elements(b, 0.0, rp, -v, 0.0)  # at periapsis, moving prograde (counter-clockwise here: h > 0)
+    period = 2 * math.pi * math.sqrt(a**3 / mu)
+    assert el["time_to_apoapsis"] == pytest.approx(period / 2, rel=1e-6)
+    assert el["time_to_periapsis"] == pytest.approx(0.0, abs=1e-3) or el["time_to_periapsis"] == pytest.approx(period, rel=1e-6)
+    el2 = _elements(b, 0.0, -rp, v, 0.0)  # the same orbit flown clockwise
+    assert el2["time_to_apoapsis"] == pytest.approx(period / 2, rel=1e-6)

@@ -37,7 +37,7 @@ export default {
         const x = r.result;
         out.set("e", x.energies_ev.map((e) => fmt(e, 3)).join(", ") + " eV");
         out.set("n", well.value === "finite" ? `${x.bound_states} (of the first 6 asked)` : `${x.bound_states} shown`);
-        out.set("l", x.transition_wavelengths_nm.length ? `${fmt(x.transition_wavelengths_nm[0], 4)} nm` : "—");
+        out.set("l", x.transition_wavelengths_nm.length ? `${fmt(x.transition_wavelengths_nm[0], 4)} nm` : "–");
       },
     });
 

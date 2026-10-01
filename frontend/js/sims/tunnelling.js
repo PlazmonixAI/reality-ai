@@ -28,7 +28,7 @@ export default {
         L.clearError(); res = r;
         const x = r.result;
         out.set("t", fmt(x.transmission, 4)); out.set("r", fmt(x.reflection, 4));
-        out.set("d", x.decay_length_nm ? `${fmt(x.decay_length_nm, 3)} nm` : "— (above the barrier)"); out.set("l", `${fmt(x.wavelength_nm, 3)} nm`);
+        out.set("d", x.decay_length_nm ? `${fmt(x.decay_length_nm, 3)} nm` : "above the barrier"); out.set("l", `${fmt(x.wavelength_nm, 3)} nm`);
         graph.setSeries([{ name: "T", color: c1, x: r.curve.energy_ev, y: r.curve.transmission }]);
         graph.setCursor(e.value);
         draw();
