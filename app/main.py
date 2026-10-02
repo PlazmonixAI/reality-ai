@@ -122,7 +122,7 @@ def _database_state() -> str:
     try:
         with db.connect() as conn:
             conn.execute("SELECT 1 FROM users LIMIT 1").fetchall()
-        return "ok"
+        return f"ok (temporary: {db.storage_note})" if db.storage_note else "ok"
     except Exception as e:  # noqa: BLE001 (reported, not raised: the engine still works without the database)
         return f"{type(e).__name__}: {str(e)[:160]}"
 
