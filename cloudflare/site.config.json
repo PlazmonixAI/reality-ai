@@ -2,5 +2,5 @@
   "domain": "realityasm.com",
   "contact_email": "contact@plazmonixai.in",
   "waitlist_endpoint": "/api/waitlist",
-  "beta_app_url": ""
+  "beta_app_url": "https://reality-ai.onrender.com"
 }
