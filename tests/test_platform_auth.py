@@ -217,3 +217,8 @@ def test_owner_account_is_created_from_settings(monkeypatch):
     assert c.get("/tools").status_code == 200
     monkeypatch.setattr(settings, "owner_password", "")
     assert auth.ensure_owner_account() is None  # not configured: nothing happens
+
+
+def test_health_reports_the_database():
+    body = fresh().get("/health").json()
+    assert body["status"] == "ok" and body["database"] == "ok" and body["owner_account"] in ("set", "not set")

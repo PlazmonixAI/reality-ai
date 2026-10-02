@@ -17,7 +17,7 @@ from app.agent.llm import LLMError, NIMClient, NoKeysError
 from app.config import settings
 from app.core import runner
 from app.core.registry import get_tool, list_tools
-from app.platform import admin, auth, company, challenges, history, teach, waitlist
+from app.platform import admin, auth, company, challenges, db, history, teach, waitlist
 from app.platform.auth import current_user, session_user
 from app.platform.security import RateLimiter, check, sign
 
@@ -106,6 +106,8 @@ try:  # the owner's account from OWNER_EMAIL / OWNER_PASSWORD, so it signs in wi
     teach.ensure_owner_school()
 except HTTPException as e:
     log.warning("owner account not created: %s", e.detail)
+except Exception:  # noqa: BLE001 (a broken database must not stop the app from starting; /health reports it)
+    log.exception("owner account not created")
 
 
 # ---------------------------------------------------------------- engine API (signed-in users only)
@@ -116,9 +118,25 @@ class SimulateRequest(BaseModel):
     signature: str | None = None  # flight states come back signed; send the signature with the next step
 
 
+def _database_state() -> str:
+    try:
+        with db.connect() as conn:
+            conn.execute("SELECT 1 FROM users LIMIT 1").fetchall()
+        return "ok"
+    except Exception as e:  # noqa: BLE001 (reported, not raised: the engine still works without the database)
+        return f"{type(e).__name__}: {str(e)[:160]}"
+
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "reality-asm", "tools": len(list_tools())}
+    return {"status": "ok", "service": "reality-asm", "tools": len(list_tools()), "database": _database_state(),
+            "owner_account": "set" if settings.owner_email and settings.owner_password else "not set"}
+
+
+@app.exception_handler(Exception)
+async def server_error(request: Request, exc: Exception):
+    log.exception("unhandled error on %s %s", request.method, request.url.path)
+    return JSONResponse({"detail": f"Server error ({type(exc).__name__}). The details are in the server log."}, status_code=500)
 
 
 @app.get("/tools")
