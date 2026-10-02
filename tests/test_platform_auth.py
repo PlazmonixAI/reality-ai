@@ -222,3 +222,19 @@ def test_owner_account_is_created_from_settings(monkeypatch):
 def test_health_reports_the_database():
     body = fresh().get("/health").json()
     assert body["status"] == "ok" and body["database"] == "ok" and body["owner_account"] in ("set", "not set")
+
+
+def test_unusable_database_folder_falls_back(monkeypatch, tmp_path):
+    """DATABASE_PATH on a disk that isn't attached (Render: PermissionError on /var/data) must not crash the app:
+    it uses a local database and /health says so."""
+    from app.platform import db
+    blocker = tmp_path / "not-a-folder"
+    blocker.write_text("x")
+    monkeypatch.setattr(db, "FALLBACK_PATH", tmp_path / "fallback" / "reality.db")
+    monkeypatch.setattr(db, "_usable", {})
+    monkeypatch.setattr(db, "storage_note", "")
+    monkeypatch.setenv("REALITY_DATABASE_PATH", str(blocker / "reality.db"))
+    assert db.db_path() == tmp_path / "fallback" / "reality.db"
+    assert "unusable" in db.storage_note
+    health = fresh().get("/health").json()
+    assert health["database"].startswith("ok (temporary")

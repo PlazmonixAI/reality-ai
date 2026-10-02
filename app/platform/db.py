@@ -107,8 +107,32 @@ _init_lock = threading.Lock()
 _initialised: set[str] = set()
 
 
+FALLBACK_PATH = Path(__file__).resolve().parents[2] / "data" / "reality.db"
+_usable: dict[str, Path] = {}
+storage_note = ""  # set when the configured path couldn't be used; /health shows it
+
+
 def db_path() -> Path:
-    return Path(os.environ.get("REALITY_DATABASE_PATH") or settings.database_path)
+    """The configured database file, or a local one when its folder can't be created (e.g. DATABASE_PATH on a disk
+    that isn't attached). The fallback keeps the app running; its data lasts until the next deploy."""
+    global storage_note
+    want = Path(os.environ.get("REALITY_DATABASE_PATH") or settings.database_path)
+    key = str(want)
+    if key not in _usable:
+        try:
+            want.parent.mkdir(parents=True, exist_ok=True)
+            if not os.access(want.parent, os.W_OK):
+                raise PermissionError(f"can't write to {want.parent}")
+            _usable[key] = want
+        except OSError as e:
+            if want == FALLBACK_PATH:
+                raise
+            FALLBACK_PATH.parent.mkdir(parents=True, exist_ok=True)
+            storage_note = f"{want} unusable ({e.__class__.__name__}); using {FALLBACK_PATH}, wiped on each deploy"
+            import logging
+            logging.getLogger("reality.db").warning("database: %s", storage_note)
+            _usable[key] = FALLBACK_PATH
+    return _usable[key]
 
 
 def _connect(path: Path) -> sqlite3.Connection:
