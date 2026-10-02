@@ -22,7 +22,8 @@ const TEMPLATES = {
 const GROUPS = [
   ["My designs", (p) => p.custom], ["Command & crew", (p) => p.category === "command" && !p.agency], ["Satellites", (p) => p.category === "satellite" && !p.custom && !p.agency],
   ["Real satellites", (p) => p.category === "satellite" && p.agency && !p.custom],
-  ["Real stages & strap-on boosters", (p) => (p.category === "stage" || p.category === "booster")],
+  ["Side boosters (attach to a stage)", (p) => p.category === "booster" && !p.agency],
+  ["Real stages & strap-on boosters", (p) => (p.category === "stage" || (p.category === "booster" && p.agency))],
   ["Real spacecraft", (p) => p.category === "command" && p.agency],
   ["Fuel tanks", (p) => p.category === "tank"],
   ["Engines · small", (p) => p.category === "engine" && !p.custom && p.class === "small"], ["Engines · medium", (p) => p.category === "engine" && !p.custom && p.class === "medium"],
@@ -38,7 +39,7 @@ const STORE = "reality-asm.spaceflight.custom-parts";
 const SITES = [[-52.77, "Kourou (Guiana)"], [80.23, "Sriharikota (India)"], [-80.6, "Cape Canaveral (USA)"], [63.3, "Baikonur (Kazakhstan)"], [110.95, "Wenchang (China)"],
   [177.86, "Mahia (New Zealand)"], [-120.61, "Vandenberg (USA)"], [130.97, "Tanegashima (Japan)"]];
 const SITE_ID_LON = { kourou: -52.77, sriharikota: 80.23, canaveral: -80.6, baikonur: 63.3, wenchang: 110.95, mahia: 177.86, vandenberg: -120.61, tanegashima: 130.97 };
-const KEYS = [["Z / X", "Full throttle / cut engines"], ["Shift / Ctrl", "Throttle up / down"], ["A D or ← →", "Rotate"], ["Space", "Stage"],
+const KEYS = [["Z / X", "Full throttle / cut engines"], ["Shift / Ctrl", "Throttle up / down"], ["A D or ← →", "Turn left / right"], ["Q / E", "Nudge 1° left / right"], ["Space", "Stage"],
   ["F", "Drop the fairing"], ["M", "Map"], ["V", "3D view (Earth flights)"], [", .", "Slower / faster time"], ["P", "Pause"],
   ["K", "Quick save"], ["L", "Quick load"], ["H", "Show or hide these keys"]];
 const takeStored = (key) => { try { const v = localStorage.getItem(key); localStorage.removeItem(key); return v; } catch { return null; } };
@@ -190,8 +191,9 @@ function drawStack(ctx, parts, cx, yb, s, opts = {}) { // → [[top, bottom], �
   for (const i of boosters) { // bottom-aligned with the first part of their stage, one each side (×n when more)
     const p = parts[i];
     let first = i; while (first > 0 && !isDecoupler(parts[first - 1])) first--;
-    let core = first; while (core < parts.length && isBooster(parts[core])) core++;
-    const base = layout[first][1], coreW = (parts[core]?.width || p.width) * s;
+    let last = first; while (last < parts.length - 1 && !isDecoupler(parts[last])) last++;
+    const coreW = Math.max(0, ...parts.slice(first, last + 1).filter((q) => !isBooster(q) && !isDecoupler(q) && !isFairing(q)).map((q) => q.width)) * s || p.width * s;
+    const base = layout[first][1];
     for (const side of [-1, 1]) drawPart(ctx, { ...p, count: 1 }, cx + side * (coreW / 2 + (p.width * s) / 2), base, s, { selected: i === opts.selected });
     if ((p.count || 1) > 2) { ctx.save(); ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.max(10, s * 1.2)}px system-ui`; ctx.textAlign = "left"; ctx.fillText(`×${p.count}`, cx + coreW / 2 + p.width * s + 6, base - p.height * s * 0.5); ctx.restore(); }
     layout[i] = [base - p.height * s, base];
@@ -262,7 +264,8 @@ export default {
         const items = parts.filter(test);
         if (!items.length) return label === "My designs" ? [el("div", { class: "sf-cat" }, el("div", { class: "sf-cat-title" }, label), el("p", { class: "sf-hint small" }, "Design an engine or a satellite (buttons above) and it appears here."))] : [];
         return [el("div", { class: "sf-cat" }, el("div", { class: "sf-cat-title" }, label), ...items.map((p) => el("div", { class: "sf-part-wrap" },
-          el("button", { class: "sf-part", type: "button", title: p.name, onclick: () => { stack.push({ part: p.id }); selected = stack.length - 1; refresh(); } },
+          el("button", { class: "sf-part", type: "button", title: p.name, draggable: "true", onclick: () => addPart(p),
+            ondragstart: (e) => { e.dataTransfer.setData("text/plain", p.id); e.dataTransfer.effectAllowed = "copy"; } },
             iconCanvas(p), el("span", {}, p.name), el("small", {}, p.thrust_vac && p.category === "engine" ? `${fmt(p.thrust_vac / 1000, 3)} kN · Isp ${fmt(p.isp_vac, 3)} s` : p.prop ? `${fmt(p.prop / 1000, 3)} t fuel` : `${fmt(p.mass, 3)} kg`)),
           p.custom ? el("button", { class: "sf-del", type: "button", title: "Delete design", "aria-label": `Delete ${p.name}`, onclick: () => { delete customs[p.id]; saveCustom(customs); stack = stack.filter((q) => q.part !== p.id); renderPalette(); refresh(); } }, "✕") : "")))];
       }));
@@ -270,9 +273,25 @@ export default {
     const partOf = (e) => { const p = allParts().find((q) => q.id === e.part) || { id: e.part, name: e.part, category: "structural", mass: 0, height: 1, width: 1 }; return { ...p, count: e.count || 1 }; };
 
     function renderPartBox() {
-      if (selected < 0 || !stack[selected]) { partBox.replaceChildren(el("p", { class: "sf-hint" }, "Tap a part on the left to stack it on top. Tap a part on the rocket to edit it. Decouplers split stages; the lowest stage fires first. Put an interstage under a decoupler to cover the next engine, and a fairing on top to protect satellites.")); return; }
+      if (attachStage >= 0) return renderAttachBox();
+      if (selected < 0 || !stack[selected]) { partBox.replaceChildren(el("p", { class: "sf-hint" }, "Tap a part on the left to add it above the selected part (or on top). Drag parts on the rocket up or down to reorder them, or drag one from the left onto the rocket. Tap a + beside a stage to attach side boosters. Decouplers split stages; the lowest stage fires first. Put an interstage under a decoupler to cover the next engine, and a fairing on top to protect satellites.")); return; }
       const p = partOf(stack[selected]);
       const row = [el("div", { class: "sf-part-name" }, p.name)];
+      if (isBooster(p)) {
+        const k = stageOf(selected), n = stageRanges().length;
+        row.push(el("div", { class: "sf-row" }, el("span", {}, "Boosters"),
+          el("button", { class: "sf-small", type: "button", onclick: () => { stack[selected].count = Math.max(1, (stack[selected].count || 1) - 1); refresh(); } }, "−"),
+          el("b", {}, String(p.count)), el("button", { class: "sf-small", type: "button", onclick: () => { stack[selected].count = Math.min(9, (stack[selected].count || 1) + 1); refresh(); } }, "+")),
+          el("div", { class: "sf-row" }, el("span", {}, `On stage ${k + 1}`),
+            el("button", { class: "sf-small", type: "button", disabled: k <= 0, onclick: () => moveBooster(selected, k - 1) }, "Stage below"),
+            el("button", { class: "sf-small", type: "button", disabled: k >= n - 1, onclick: () => moveBooster(selected, k + 1) }, "Stage above"),
+            el("button", { class: "sf-small danger", type: "button", onclick: () => { stack.splice(selected, 1); selected = -1; refresh(); } }, "Remove")));
+        const facts = [["Mass each (dry + fuel)", `${fmt(p.mass, 4)} + ${fmt(p.prop, 4)} kg`], ["Thrust each (sea level / vacuum)", `${fmt(p.thrust_sl / 1000, 4)} / ${fmt(p.thrust_vac / 1000, 4)} kN`],
+          ["Type", p.solid ? "Solid: burns until empty" : "Liquid"]];
+        partBox.replaceChildren(...row, ...facts.map(([a, b]) => el("div", { class: "sf-fact" }, el("span", {}, a), el("b", {}, b))),
+          el("p", { class: "sf-hint small" }, "Side boosters fire with their stage's core engines and drop away when empty."));
+        return;
+      }
       if (isEngine(p)) row.push(el("div", { class: "sf-row" }, el("span", {}, "Engines"),
         el("button", { class: "sf-small", type: "button", onclick: () => { stack[selected].count = Math.max(1, (stack[selected].count || 1) - 1); refresh(); } }, "−"),
         el("b", {}, String(p.count)), el("button", { class: "sf-small", type: "button", onclick: () => { stack[selected].count = Math.min(9, (stack[selected].count || 1) + 1); refresh(); } }, "+")));
@@ -285,6 +304,37 @@ export default {
       if (p.prop) facts.push(["Propellant", `${fmt(p.prop, 4)} kg`]);
       if (p.thrust_vac) facts.push(["Thrust (sea level / vacuum)", `${fmt((p.thrust_sl * p.count) / 1000, 4)} / ${fmt((p.thrust_vac * p.count) / 1000, 4)} kN`], ["Isp (sea level / vacuum)", `${fmt(p.isp_sl, 3)} / ${fmt(p.isp_vac, 3)} s`]);
       partBox.replaceChildren(...row, ...facts.map(([k, v]) => el("div", { class: "sf-fact" }, el("span", {}, k), el("b", {}, v))));
+    }
+
+    // ---------- stacking helpers: stages (split after each decoupler), adding parts, side boosters
+    function stageRanges() { const out = []; let a = 0; stack.forEach((q, i) => { if (isDecoupler(partOf(q))) { out.push([a, i]); a = i + 1; } }); if (a < stack.length || !out.length) out.push([a, Math.max(a, stack.length - 1)]); return out; }
+    function stageOf(i) { return Math.max(0, stageRanges().findIndex(([a, b]) => i >= a && i <= b)); }
+    function addPart(p, at = null) {
+      if (isBooster(p)) { attachBooster(p.id, at === null ? (selected >= 0 ? stageOf(selected) : 0) : stageOf(Math.min(at, stack.length - 1))); return; }
+      const i = at ?? (selected >= 0 ? selected + 1 : stack.length);
+      stack.splice(i, 0, { part: p.id }); selected = i; attachStage = -1; refresh();
+    }
+    function attachBooster(id, k) {
+      if (!stack.some((q) => !isBooster(partOf(q)))) { notify("Add an engine and a fuel tank first, then attach boosters to their sides."); return; }
+      const [a, b] = stageRanges()[Math.min(k, stageRanges().length - 1)];
+      const same = stack.findIndex((q, i) => i >= a && i <= b && q.part === id);
+      if (same >= 0) { stack[same].count = Math.min(9, (stack[same].count || 1) + 2); selected = same; }
+      else { stack.splice(a + 1, 0, { part: id, count: 2 }); selected = a + 1; } // one each side
+      attachStage = -1; refresh();
+    }
+    function moveBooster(i, k) {
+      const [q] = stack.splice(i, 1);
+      const ranges = stageRanges(), [a] = ranges[Math.max(0, Math.min(k, ranges.length - 1))];
+      stack.splice(a + 1, 0, q); selected = a + 1; refresh();
+    }
+    let attachStage = -1;
+    function renderAttachBox() {
+      const boosters = allParts().filter(isBooster);
+      partBox.replaceChildren(el("div", { class: "sf-part-name" }, `Side boosters for stage ${attachStage + 1}`),
+        el("p", { class: "sf-hint small" }, "Pick a booster. Two are attached, one on each side; tap again to add another pair."),
+        ...boosters.map((b) => el("button", { class: "sf-part sf-attach-pick", type: "button", onclick: () => attachBooster(b.id, attachStage) },
+          iconCanvas(b), el("span", {}, b.name), el("small", {}, `${fmt(b.thrust_sl / 1000, 4)} kN · ${fmt((b.mass + b.prop) / 1000, 3)} t`))),
+        el("button", { class: "sf-small", type: "button", onclick: () => { attachStage = -1; renderPartBox(); drawBuild(); } }, "Cancel"));
     }
 
     let designSeq = 0;
@@ -316,7 +366,7 @@ export default {
         ...d.warnings.map((w) => el("p", { class: "sf-warn" }, w)));
     }
 
-    let bLayout = [];
+    let bLayout = [], attachHits = [], dropY = null, bGeom = null;
     function drawBuild() {
       const c = bCanvas, W = c.clientWidth, H = c.clientHeight;
       if (!W || !catalogue) return;
@@ -347,10 +397,72 @@ export default {
       let st = 1, from = yb; // stage brackets
       parts.forEach((p, i) => { if (isDecoupler(p) || i === parts.length - 1) { const to = bLayout[i][0], bx = W / 2 + maxW * s / 2 + 26; ctx.strokeStyle = "rgba(255,138,99,.7)"; ctx.beginPath(); ctx.moveTo(bx, from); ctx.lineTo(bx + 6, from); ctx.lineTo(bx + 6, to); ctx.lineTo(bx, to); ctx.stroke(); ctx.fillStyle = "#FFB199"; ctx.font = "600 11px Plex, system-ui"; ctx.fillText(`Stage ${st}`, bx + 12, (from + to) / 2 + 4); st++; from = to; } });
       if (!parts.length) { ctx.fillStyle = "#cfe0f5"; ctx.font = "15px system-ui"; ctx.textAlign = "center"; ctx.fillText("Add an engine, a fuel tank and a capsule or satellite", W / 2, H / 2); ctx.textAlign = "left"; }
+      bGeom = { W, s, yb };
+      // attach points: a + on each side of every stage for strap-on boosters
+      attachHits = [];
+      if (parts.length && dropY === null) stageRanges().forEach(([a, b], k) => {
+        const core = parts.slice(a, b + 1).filter((q) => !isBooster(q) && !isDecoupler(q) && !isFairing(q));
+        if (!core.length) return;
+        const cw = Math.max(...core.map((q) => q.width)) * s, bw = Math.max(0, ...parts.slice(a, b + 1).filter(isBooster).map((q) => q.width)) * s;
+        const bottom = bLayout[a][1], top = bLayout[b][0], y = Math.max(top + 10, bottom - Math.min((bottom - top) * 0.35, 60));
+        for (const side of [-1, 1]) {
+          const x = W / 2 + side * (cw / 2 + bw + 16);
+          const on = attachStage === k;
+          ctx.fillStyle = on ? "#FF5B2E" : "rgba(255,91,46,.18)"; ctx.strokeStyle = "#FF5B2E"; ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.strokeStyle = on ? "#fff" : "#FFB199"; ctx.beginPath(); ctx.moveTo(x - 5, y); ctx.lineTo(x + 5, y); ctx.moveTo(x, y - 5); ctx.lineTo(x, y + 5); ctx.stroke();
+          attachHits.push({ x, y, k });
+        }
+      });
+      if (dropY !== null) { // where a dragged part will land
+        const i = insertIndex(dropY), y = i < parts.length ? bLayout[i][1] : (bLayout.length ? Math.min(...bLayout.map((l) => l[0])) : yb);
+        ctx.strokeStyle = "#FF5B2E"; ctx.lineWidth = 3; ctx.setLineDash([8, 5]);
+        ctx.beginPath(); ctx.moveTo(W / 2 - 90, y); ctx.lineTo(W / 2 + 90, y); ctx.stroke(); ctx.setLineDash([]);
+      }
     }
-    bCanvas.addEventListener("click", (e) => {
-      const r = bCanvas.getBoundingClientRect(), y = e.clientY - r.top;
-      selected = bLayout.findIndex(([t, b]) => y >= t && y <= b); refresh();
+    function insertIndex(y) { // stack index a part dropped at screen height y goes to (index 0 is the bottom)
+      for (let i = 0; i < bLayout.length; i++) { if (isBooster(partOf(stack[i]))) continue; const [t, b] = bLayout[i]; if (y > (t + b) / 2) return i; }
+      return stack.length;
+    }
+    // Tap to select, drag a part up or down to move it, tap a + to attach side boosters, drop parts from the left
+    let bDrag = null;
+    const local = (e) => { const r = bCanvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    const hitPart = (x, y) => { // the part under (x, y): boosters by their own box, core parts by height
+      const sc = bGeom?.s || 1;
+      for (let i = 0; i < bLayout.length; i++) { const p = partOf(stack[i]); if (!isBooster(p)) continue; const [t, b] = bLayout[i]; if (y >= t && y <= b && Math.abs(x - (bGeom?.W || 0) / 2) > 4) { const core = Math.max(...stack.map(partOf).filter((q) => !isBooster(q)).map((q) => q.width)) * sc / 2; if (Math.abs(x - bGeom.W / 2) > core) return i; } }
+      return bLayout.findIndex(([t, b], i) => !isBooster(partOf(stack[i])) && y >= t && y <= b);
+    };
+    bCanvas.addEventListener("pointerdown", (e) => {
+      const [x, y] = local(e);
+      const node = attachHits.find((h) => Math.hypot(h.x - x, h.y - y) < 14);
+      if (node) { attachStage = node.k; selected = -1; renderPartBox(); drawBuild(); return; }
+      const i = hitPart(x, y);
+      bDrag = { i, y0: y, moved: false };
+      if (i >= 0 && !isBooster(partOf(stack[i]))) bCanvas.setPointerCapture(e.pointerId);
+    });
+    bCanvas.addEventListener("pointermove", (e) => {
+      if (!bDrag || bDrag.i < 0 || isBooster(partOf(stack[bDrag.i]))) return;
+      const [, y] = local(e);
+      if (!bDrag.moved && Math.abs(y - bDrag.y0) < 8) return;
+      bDrag.moved = true; dropY = y; bCanvas.style.cursor = "grabbing"; drawBuild();
+    });
+    bCanvas.addEventListener("pointerup", (e) => {
+      const d = bDrag; bDrag = null; bCanvas.style.cursor = "";
+      if (!d) return;
+      if (d.moved) {
+        const to = insertIndex(local(e)[1]), [q] = stack.splice(d.i, 1), at = to > d.i ? to - 1 : to;
+        stack.splice(at, 0, q); selected = at; dropY = null; attachStage = -1; refresh(); return;
+      }
+      selected = d.i; attachStage = -1; refresh();
+    });
+    bCanvas.addEventListener("pointercancel", () => { bDrag = null; dropY = null; drawBuild(); });
+    bCanvas.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; dropY = local(e)[1]; drawBuild(); });
+    bCanvas.addEventListener("dragleave", () => { dropY = null; drawBuild(); });
+    bCanvas.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData("text/plain"), y = local(e)[1]; dropY = null;
+      const p = allParts().find((q) => q.id === id);
+      if (p) addPart(p, insertIndex(y)); else drawBuild();
     });
 
     // ======================= DESIGNERS (engine and satellite) =======================
@@ -483,8 +595,14 @@ export default {
     const warpLabel = el("span", { class: "sf-warp-label" }, "1×");
     const focusBtn = el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapFocus = mapFocus === "earth" ? "moon" : mapFocus === "moon" ? "auto" : "earth"; focusBtn.textContent = `FOCUS: ${mapFocus.toUpperCase()}`; } }, "FOCUS: AUTO");
     const sasBtns = ["free", "prograde", "retrograde", "up"].map((m) => el("button", { class: "sf-sas", type: "button", onclick: () => setSas(m) }, { free: "Free", prograde: "Prograde", retrograde: "Retro", up: "Up" }[m]));
-    const hold = (dirn) => { const b = el("button", { class: "sf-rot", type: "button", "aria-label": dirn < 0 ? "Rotate left" : "Rotate right" }, dirn < 0 ? "‹" : "›");
-      b.addEventListener("pointerdown", () => { rotating = dirn; setSas("free"); }); ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, () => { rotating = 0; })); return b; };
+    // Steering: a tap turns the rocket 1°, holding turns it smoothly (20° a second) for as long as you hold
+    const NUDGE = Math.PI / 180;
+    const nudge = (dirn) => { setSas("free"); rel += dirn * NUDGE; };
+    const hold = (dirn) => { const b = el("button", { class: "sf-rot", type: "button", title: `Tap: turn 1° ${dirn < 0 ? "left" : "right"} · hold: keep turning`, "aria-label": dirn < 0 ? "Turn left" : "Turn right" }, dirn < 0 ? "‹" : "›");
+      let t = 0;
+      b.addEventListener("pointerdown", (e) => { e.preventDefault(); nudge(dirn); clearTimeout(t); t = setTimeout(() => { rotating = dirn * 0.3; }, 280); });
+      ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, () => { clearTimeout(t); rotating = 0; })); return b; };
+    const pitchOut = el("div", { class: "sf-pitch" }, "0.0°");
     const fairingBtn = el("button", { class: "sf-fairbtn", type: "button", onclick: () => { fairingReq = true; } }, "FAIRING");
     const btn3d = el("button", { class: "sf-btn wide accent", type: "button", title: "See the flight in 3D over the real Earth and Moon", onclick: () => show3d(!view3dOn) }, "3D");
     const deployBtn = el("button", { class: "sf-btn wide accent", type: "button", title: "Release the satellite into your Mission Control fleet", style: "display:none", onclick: () => openDeploy() }, "DEPLOY");
@@ -512,7 +630,7 @@ export default {
         el("button", { class: "sf-btn wide", type: "button", onclick: () => toBuild() }, "BUILD")), keysBox,
       el("div", { class: "sf-throttle-box" }, el("div", { class: "sf-thr-title" }, "THROTTLE"), thr, thrLabel,
         el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(1) }, "Full"), el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(0) }, "Cut")),
-      el("div", { class: "sf-bottomleft" }, hold(-1), hold(1), el("div", { class: "sf-sas-row" }, ...sasBtns)),
+      el("div", { class: "sf-bottomleft" }, pitchOut, hold(-1), hold(1), el("div", { class: "sf-sas-row" }, ...sasBtns)),
       el("div", { class: "sf-bottomright" }, fairingBtn,
         el("button", { class: "sf-stagebtn", type: "button", onclick: () => { stageReq = true; } }, "STAGE"),
         el("button", { class: "sf-chutebtn", type: "button", onclick: () => { chuteReq = true; } }, "CHUTE")));
@@ -727,9 +845,10 @@ export default {
     const onKey = (e, down) => {
       if (mode !== "flight" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
       const k = e.key.toLowerCase();
-      if (["arrowleft", "a"].includes(k)) { rotating = down ? -1 : 0; if (down) setSas("free"); e.preventDefault(); }
-      if (["arrowright", "d"].includes(k)) { rotating = down ? 1 : 0; if (down) setSas("free"); e.preventDefault(); }
+      if (["arrowleft", "a"].includes(k)) { rotating = down ? -0.6 : 0; if (down) setSas("free"); e.preventDefault(); }
+      if (["arrowright", "d"].includes(k)) { rotating = down ? 0.6 : 0; if (down) setSas("free"); e.preventDefault(); }
       if (!down) return;
+      if (k === "q") nudge(-1); if (k === "e") nudge(1);
       if (k === "z") setThrottle(1); if (k === "x") setThrottle(0);
       if (k === "shift") setThrottle(Math.min(1, throttle + 0.1)); if (k === "control") setThrottle(Math.max(0, throttle - 0.1));
       if (k === " ") { stageReq = true; e.preventDefault(); } if (k === "m") { mapView = !mapView; show3d(false); } if (k === "f") fairingReq = true;
@@ -761,7 +880,8 @@ export default {
       raf = requestAnimationFrame(frame);
       const dt = Math.min(0.1, (now - lastT) / 1000 || 0); lastT = now;
       if (mode === "flight" && flight) {
-        if (rotating) rel += rotating * dt * 1.2;
+        if (rotating) rel += rotating * dt;
+        if (flight.state) { const deg = (rel * 180) / Math.PI; pitchOut.textContent = Math.abs(deg) < 0.05 ? "Straight up" : `${fmt(Math.abs(deg), 3)}° ${deg < 0 ? "left" : "right"} of vertical`; }
         const tel = flight.tel, inAir = tel && flight.local && tel.altitude < flight.local.atmosphere_top; // limit time warp while thrusting or in air
         const maxWarp = (throttle > 0 && !ended) || inAir ? 5 : Infinity;
         if (WARPS[warpIdx] > maxWarp) setWarp(WARPS.findIndex((w) => w >= maxWarp));
@@ -816,8 +936,17 @@ export default {
           const padA = Math.PI / 2 + OMEGA[body] * s.t;
           const [px, py] = toScreen(R * Math.cos(padA), R * Math.sin(padA));
           ctx.save(); ctx.translate(px, py); ctx.rotate(-(padA - up));
-          ctx.fillStyle = "#4b5563"; ctx.fillRect(-9 * scale, -1.2 * scale, 18 * scale, 1.2 * scale);
-          ctx.fillStyle = "#8a93a3"; ctx.fillRect(6 * scale, -rocketH * 1.05 * scale, 1.6 * scale, rocketH * 1.05 * scale);
+          // the pad and its lattice service tower are part of the ground: they stay behind when the rocket lifts off
+          const coreW = Math.max(3, ...flight.parts.filter((q) => !isBooster(q)).map((q) => q.width)) + 2 * Math.max(0, ...flight.parts.filter(isBooster).map((q) => q.width));
+          const padW = Math.max(18, coreW * 3), tw = Math.max(2.4, rocketH * 0.05), th = rocketH * 1.08, tx = coreW / 2 + 3;
+          ctx.fillStyle = "#4b5563"; ctx.fillRect(-padW / 2 * scale, -1.2 * scale, padW * scale, 1.2 * scale);
+          ctx.fillStyle = "#FF5B2E"; ctx.fillRect(-padW / 2 * scale, -1.2 * scale, padW * scale, Math.max(1, 0.25 * scale));
+          ctx.strokeStyle = "#9aa3b2"; ctx.lineWidth = Math.max(1, 0.22 * scale);
+          ctx.strokeRect(tx * scale, -th * scale, tw * scale, th * scale);
+          ctx.beginPath();
+          for (let y = 0; y + tw <= th; y += tw) { ctx.moveTo(tx * scale, -y * scale); ctx.lineTo((tx + tw) * scale, -(y + tw) * scale); ctx.moveTo((tx + tw) * scale, -y * scale); ctx.lineTo(tx * scale, -(y + tw) * scale); }
+          for (const f of [0.35, 0.62, 0.9]) { ctx.moveTo(tx * scale, -th * f * scale); ctx.lineTo((coreW / 2 + 0.3) * scale * (s.landed ? 1 : 0) + tx * scale * (s.landed ? 0 : 0.85), -th * f * scale); } // swing arms (pulled back after lift-off)
+          ctx.stroke();
           ctx.restore();
         }
       }
@@ -833,9 +962,9 @@ export default {
         ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-fw / 2, 0); ctx.quadraticCurveTo(-fw * (vac ? 1.3 : 0.7), fl * 0.5, 0, fl); ctx.quadraticCurveTo(fw * (vac ? 1.3 : 0.7), fl * 0.5, fw / 2, 0); ctx.fill();
       }
       if (tel?.boosters?.attached && tel.boosters.lit && tel.boosters.fuel_fraction > 0 && !s.crashed) { // strap-on booster exhaust
-        const st0 = flight.stages[s.stage], bp = st0.find(isBooster), core = st0.find((p) => !isBooster(p));
-        if (bp && core) for (const side of [-1, 1]) {
-          const bx = side * (core.width / 2 + bp.width / 2) * scale, fw = bp.width * scale * 0.6, fl = (0.8 + 0.2 * Math.random()) * Math.max(4, bp.width * 5) * scale;
+        const st0 = flight.stages[s.stage], bp = st0.find(isBooster), coreW = Math.max(0, ...st0.filter((p) => !isBooster(p) && !isDecoupler(p) && !isFairing(p)).map((p) => p.width));
+        if (bp && coreW) for (const side of [-1, 1]) { // beside the widest core part, where drawStack puts the boosters
+          const bx = side * (coreW / 2 + bp.width / 2) * scale, fw = bp.width * scale * 0.6, fl = (0.8 + 0.2 * Math.random()) * Math.max(4, bp.width * 5) * scale;
           const g = ctx.createLinearGradient(0, 0, 0, fl); g.addColorStop(0, "rgba(255,250,220,.95)"); g.addColorStop(0.35, bp.solid ? "rgba(255,190,90,.9)" : "rgba(255,160,60,.85)"); g.addColorStop(1, "rgba(255,90,20,0)");
           ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(bx - fw / 2, 0); ctx.quadraticCurveTo(bx - fw * 0.8, fl * 0.5, bx, fl); ctx.quadraticCurveTo(bx + fw * 0.8, fl * 0.5, bx + fw / 2, 0); ctx.fill();
         }

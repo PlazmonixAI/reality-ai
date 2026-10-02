@@ -369,7 +369,7 @@ table.ice thead th { color: var(--text-2); font-weight: 600; }
 .sf3d-labels { position: absolute; inset: 0; pointer-events: none; }
 .sf3d-label { pointer-events: none; }
 .sf3d-bar { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); display: flex; gap: 6px; }
-.sf3d-date { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); font-size: 20px; font-weight: 300; letter-spacing: .03em; color: #e8ecf2; text-shadow: 0 0 6px #000; }
+.sf3d-date { position: absolute; right: 16px; top: 64px; font-size: 20px; font-weight: 300; letter-spacing: .03em; color: #e8ecf2; text-shadow: 0 0 6px #000; }
 .sf3d-note { position: absolute; left: 50%; bottom: 72px; transform: translateX(-50%); font-size: 11px; color: #7b8fa8; white-space: nowrap; }
 .sf-flight > .sf-hud, .sf-flight > .sf-toast, .sf-flight > .sf-topright, .sf-flight > .sf-throttle-box, .sf-flight > .sf-bottomleft, .sf-flight > .sf-bottomright { z-index: 2; }
 
@@ -580,6 +580,7 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .sf-build { grid-template-rows: auto 1fr !important; }
 .sf-build-top { flex-wrap: wrap; padding: 8px 14px !important; min-height: 56px; row-gap: 8px; }
 .sf-toast { top: 64px !important; }
+.sf-flight .sf-toast { left: auto; right: 16px; transform: none; top: 112px !important; text-align: right; max-width: 360px; }
 .sf-challenge { top: 110px; }
 .sf-challenge { top: auto !important; bottom: 96px; }
 .btn { font: inherit; font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--text); }
@@ -777,6 +778,9 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 /* attitude controls: one compact pad */
 .sf-bottomleft { gap: 6px; padding: 6px; border-radius: 8px; background: rgba(7,13,24,.82); border: 1px solid #1f2f4c; }
 .sf-rot { width: 46px; height: 40px; border-radius: 6px; font-size: 22px; background: #101d33; border: 1px solid #263856; }
+.sf-pitch { flex-basis: 100%; font: 600 12px/1.2 "Plex Mono", ui-monospace, monospace; color: #FFB199; padding: 0 2px 2px; }
+.sf-attach-pick { margin-bottom: 4px; }
+.sf-build-canvas { touch-action: none; }
 .sf-sas { border-radius: 6px; background: #101d33; border-color: #263856; font-size: 12px; }
 .sf-sas.on { background: #FF5B2E; border-color: #FF5B2E; color: #0B1526; }
 /* sequence buttons: a column on the right edge */

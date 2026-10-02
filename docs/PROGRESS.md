@@ -237,6 +237,14 @@
 - **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
 - **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
 
+## 2026-10-02 (evening): Spaceflight Lab fixes from testing
+- Solid bodies: the 3D flight view keeps the camera outside the Earth and the Moon, and the Solar System keeps it outside every planet and moon (not only the one in focus).
+- Steering: a tap on ‹ or › turns the rocket 1°, holding turns it at 20° a second; Q / E nudge 1° from the keyboard; the panel shows the angle from vertical.
+- Launch pad: a lattice service tower and a wider pad drawn as part of the ground, so they stay behind at lift-off.
+- Builder: tapping a part adds it above the selected part; parts can be dragged up and down on the rocket, or dragged from the list onto it; a + beside each stage attaches side boosters (two at a time, one each side), with a count, a stage switch and remove. Three generic side boosters (two solid, one liquid) join the real ones; boosters and their flames sit beside the widest part of their stage.
+- Gravity was checked: with the engines off the rocket stays on the pad; after cut-off gravity and drag slow it at about 10 m/s per second.
+- Next: free placement of any part on the sides (radial tanks and engines need engine support), symmetry choices (3 or 4 boosters around the core).
+
 ## 2026-10-02 (later): owner account from host settings
 - OWNER_EMAIL and OWNER_PASSWORD (Render environment, never in the code) create that account on startup if it is missing, so the team signs in at /login without signing up. An existing account and its password are left alone. Test in tests/test_platform_auth.py.
 - Automatic sign-in from the /test desk was considered and left out: every app page still needs a normal sign-in.
