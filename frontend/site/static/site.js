@@ -6,7 +6,7 @@ async function api(path, body, method = "POST") {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const d = data.detail;
-    throw new Error(typeof d === "string" ? d : Array.isArray(d) ? d.map((x) => x.msg.replace(/^Value error, /, "")).join(" ") : "Something went wrong. Try again.");
+    throw new Error(typeof d === "string" ? d : Array.isArray(d) ? d.map((x) => x.msg.replace(/^Value error, /, "")).join(" ") : `Something went wrong (error ${res.status}). Try again.`);
   }
   return data;
 }

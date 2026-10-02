@@ -32,7 +32,8 @@ async function backend(url) {
   try {
     const res = await fetch(new URL("/health", url), { headers: { Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
     const body = res.ok ? await res.json().catch(() => ({})) : {};
-    return { configured: true, url, ok: res.ok && body.status === "ok", status: res.status, tools: body.tools ?? null, ms: Date.now() - t0 };
+    return { configured: true, url, ok: res.ok && body.status === "ok", status: res.status, tools: body.tools ?? null, ms: Date.now() - t0,
+             database: body.database ?? null, owner_account: body.owner_account ?? null };
   } catch (err) {
     return { configured: true, url, ok: false, error: String(err && err.name === "TimeoutError" ? "No answer in 8 s (Render may be waking up)" : err), ms: Date.now() - t0 };
   }

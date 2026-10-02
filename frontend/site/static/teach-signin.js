@@ -6,7 +6,7 @@ const say = (text, ok = false) => { msg.textContent = text || ""; msg.className 
 async function post(url, body) {
   const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Something went wrong. Please try again.");
+  if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : `Something went wrong (error ${r.status}). Please try again.`);
   return data;
 }
 

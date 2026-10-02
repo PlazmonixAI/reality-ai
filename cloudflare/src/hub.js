@@ -57,7 +57,8 @@ function showWaitlist(w) {
 
 function showBackend(b) {
   if (!b.configured) { card("backend", "warn", "Not live yet. Simulations, AI, accounts and ASM Teach need it. The waitlist site works without it."); return; }
-  if (b.ok) card("backend", "ok", `Answering in ${b.ms} ms with ${b.tools} engine tools.`);
+  if (b.ok && b.database && b.database !== "ok") card("backend", "bad", `Running, but the database fails: ${b.database}. Check the disk at /var/data on Render.`);
+  else if (b.ok) card("backend", "ok", `Answering in ${b.ms} ms with ${b.tools} engine tools. Database ${b.database || "unknown"}, owner account ${b.owner_account || "unknown"}.`);
   else card("backend", "bad", b.error ? `${b.error}.` : `Health check answered ${b.status}.`);
 }
 
