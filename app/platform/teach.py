@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import json
 import re
+import secrets
 import shutil
 import subprocess
 import tempfile
@@ -245,6 +246,8 @@ def login(body: LoginIn, request: Request, response: Response):
     username = body.username.strip().lower()
     if not login_ip_limit.allow(client_ip(request)) or not login_name_limit.allow(username):
         raise HTTPException(429, "Too many attempts. Wait a minute and try again.")
+    if "@" in username:
+        return _owner_login(username, body, request, response)
     table = "teach_schools" if body.role == "school" else "teach_teachers"
     with db.connect() as conn:
         row = conn.execute(f"SELECT x.*, u.password_hash FROM {table} x JOIN users u ON u.id = x.user_id "  # noqa: S608 (fixed names)
@@ -260,6 +263,70 @@ def login(body: LoginIn, request: Request, response: Response):
     if body.role == "teacher":
         _event(row["school_id"], row["id"], "board", "sign-in")
     return {"role": body.role, "next": "/teach/app#/admin" if body.role == "school" else "/teach/app#/board"}
+
+
+# ---------------------------------------------------------------- the owner (OWNER_EMAIL) in ASM Teach
+OWNER_SCHOOL_SUB = "owner-school"
+
+
+def ensure_owner_school() -> None:
+    """Give the OWNER_EMAIL account a school ("Plazmonix AI") in which it is also the first teacher, so the same email
+    and password open ASM Teach as school admin or as teacher. Runs on startup after auth.ensure_owner_account()."""
+    from app.config import settings
+    if not (settings.owner_email and settings.owner_password):
+        return
+    email = settings.owner_email.strip().lower()
+    with db.transaction() as conn:
+        owner = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if owner is None or conn.execute("SELECT 1 FROM teach_schools WHERE google_sub = ?", (OWNER_SCHOOL_SUB,)).fetchone():
+            return
+        if conn.execute("SELECT 1 FROM teach_schools WHERE google_email = ? OR user_id = ?", (email, owner["id"])).fetchone():
+            return  # the owner already set up a school the normal way
+        if conn.execute("SELECT 1 FROM teach_teachers WHERE user_id = ?", (owner["id"],)).fetchone():
+            return
+        admin_uid = _shadow_user(conn, "school", "Plazmonix AI", secrets.token_urlsafe(32))  # reached only via the owner
+        sid = db.new_id("sch")
+        conn.execute("INSERT INTO teach_schools (id, user_id, name, city, google_email, google_sub, username, created_at, terms_version) "
+                     "VALUES (?,?,?,?,?,?,?,?,?)", (sid, admin_uid, "Plazmonix AI", "Rourkela", email, OWNER_SCHOOL_SUB,
+                                                    _free_name(conn, "plazmonix.admin"), db.now(), TEACH_TERMS_VERSION))
+        conn.execute("INSERT INTO teach_teachers (id, user_id, school_id, name, email, username, subject, created_at) VALUES (?,?,?,?,?,?,?,?)",
+                     (db.new_id("tch"), owner["id"], sid, "Subham Agarwal", email, _free_name(conn, "plazmonix.owner"), "Physics", db.now()))
+
+
+def _free_name(conn, base: str) -> str:
+    name, n = base, 1
+    while not _username_free(conn, name):
+        n += 1
+        name = f"{base}{n}"
+    return name
+
+
+def _not_owner(conn, t) -> None:
+    """The owner's teacher row is the owner's main Reality ASM account: never paused, re-passworded or deleted from here."""
+    u = conn.execute("SELECT email FROM users WHERE id = ?", (t["user_id"],)).fetchone()
+    if u and not u["email"].endswith(".asm-teach.internal"):
+        raise HTTPException(403, "This is the owner's own account. Change its password from the main app.")
+
+
+def _owner_login(email: str, body: LoginIn, request: Request, response: Response):
+    """Sign in to ASM Teach with the owner's email and the owner's account password, as school admin or teacher."""
+    from app.config import settings
+    with db.connect() as conn:
+        owner = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        school = conn.execute("SELECT * FROM teach_schools WHERE google_sub = ?", (OWNER_SCHOOL_SUB,)).fetchone()
+        t = conn.execute("SELECT * FROM teach_teachers WHERE user_id = ?", (owner["id"],)).fetchone() if owner else None
+    is_owner = bool(settings.owner_email) and email == settings.owner_email.strip().lower()
+    if not (is_owner and owner and school and t and t["school_id"] == school["id"]):
+        verify_password(body.password, DUMMY_HASH)
+        raise HTTPException(401, "Username or password is incorrect.")
+    if not verify_password(body.password, owner["password_hash"]):
+        raise HTTPException(401, "Username or password is incorrect.")
+    if body.role == "school":
+        start_session(response, school["user_id"], request, body.remember)
+        return {"role": "school", "next": "/teach/app#/admin"}
+    start_session(response, owner["id"], request, body.remember)
+    _event(school["id"], t["id"], "board", "sign-in")
+    return {"role": "teacher", "next": "/teach/app#/board"}
 
 
 @router.get("/me")
@@ -360,6 +427,8 @@ def update_teacher(teacher_id: str, body: TeacherPatch, school=Depends(school_ad
             conn.execute("UPDATE teach_teachers SET name = ? WHERE id = ?", (_clean_name(body.name), t["id"]))
         if body.subject is not None:
             conn.execute("UPDATE teach_teachers SET subject = ? WHERE id = ?", (" ".join(body.subject.split())[:60], t["id"]))
+        if body.password is not None or body.active is not None:
+            _not_owner(conn, t)
         if body.password is not None:
             _check_password(body.password, t["username"])
             conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (hash_password(body.password), t["user_id"]))
@@ -376,6 +445,7 @@ def update_teacher(teacher_id: str, body: TeacherPatch, school=Depends(school_ad
 def remove_teacher(teacher_id: str, school=Depends(school_admin)):
     with db.transaction() as conn:
         t = _own_teacher(conn, school["id"], teacher_id)
+        _not_owner(conn, t)
         conn.execute("DELETE FROM users WHERE id = ?", (t["user_id"],))  # cascades to the teacher, sessions, lessons, files
     return Response(status_code=204)
 
