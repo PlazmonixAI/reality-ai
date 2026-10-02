@@ -7,7 +7,7 @@ Settings come from cloudflare/site.config.json:
   contact_email      shown on the page
   waitlist_endpoint  empty = the waitlist form is a dummy that only says thank you; set it to
                      https://<render app>/api/waitlist to store emails in the Render backend
-  beta_app_url       where the /test page sends testers (the Render app), e.g. https://app.realityasm.com
+  beta_app_url       the Render app, e.g. https://app.realityasm.com: the /test team desk links to it and checks its /health
 
 Run:  python scripts/build_cloudflare_site.py
 """
@@ -75,10 +75,12 @@ def main() -> None:
     for name in ("404.html",):
         (OUT / name).write_text((CF / "src" / "coming-soon.html").read_text().replace("{{CONTACT_EMAIL}}", email))
     (OUT / "test").mkdir()
-    test = (CF / "src" / "test.html").read_text().replace("{{BETA_APP_URL}}", cfg.get("beta_app_url", "")).replace("{{CONTACT_EMAIL}}", email)
+    test = (CF / "src" / "test.html").read_text().replace("{{BETA_APP_URL}}", cfg.get("beta_app_url", "").rstrip("/")).replace("{{CONTACT_EMAIL}}", email)
     drop = "data-noapp" if cfg.get("beta_app_url") else "data-app"  # show the link, or the note that it's coming
     test = re.sub(rf'\s*<p[^>]*{drop}>.*?</p>', "", test, flags=re.S)
     (OUT / "test" / "index.html").write_text(test)
+    shutil.copy(CF / "src" / "hub.js", OUT / "test" / "hub.js")
+    (OUT / "test" / "config.json").write_text(json.dumps({"beta_app_url": cfg.get("beta_app_url", "").rstrip("/")}) + "\n")
     shutil.copy(CF / "src" / "_headers", OUT / "_headers")
     robots = "User-agent: *\nAllow: /\nDisallow: /test\nDisallow: /api/\n"
     if domain:

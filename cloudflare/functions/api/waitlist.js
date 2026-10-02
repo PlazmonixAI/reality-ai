@@ -13,7 +13,8 @@ export async function onRequestPost({ request, env }) {
   if (!EMAIL.test(email)) return new Response("Kindly enter a valid email address.", { status: 422 });
   const key = `email:${email}`;
   if (!(await env.WAITLIST.get(key))) {
-    await env.WAITLIST.put(key, JSON.stringify({ email, source, at: new Date().toISOString(), country: request.cf?.country || "" }));
+    const entry = { at: new Date().toISOString(), country: request.cf?.country || "", source };
+    await env.WAITLIST.put(key, JSON.stringify({ email, ...entry }), { metadata: entry });  // metadata lets /test list without extra reads
   }
   return new Response("ok", { headers: { "Cache-Control": "no-store" } });
 }

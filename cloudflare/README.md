@@ -3,7 +3,8 @@
 What visitors get now:
 - **`/`**: the main page. Every "Join" button leads to the waitlist form ("Kindly leave your email").
 - **Any other address** (`/login`, `/app`, `/terms`, ...): a "Coming soon" page with the same email form.
-- **`/test`**: a private page for the team, behind a username and password.
+- **`/test`**: the private team desk, behind a username and password: live status of the site, search files, waitlist
+  storage and the Render backend; waitlist numbers, the latest sign-ups and the CSV; a launch checklist; team links.
 
 The site is plain files in `cloudflare/public`, rebuilt from the real landing page with
 `python scripts/build_cloudflare_site.py`. Commit the rebuilt files before deploying.
