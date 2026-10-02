@@ -185,6 +185,23 @@ def auth_config():
             "contact_email": settings.contact_email, "terms_version": TERMS_VERSION}
 
 
+def ensure_owner_account() -> str | None:
+    """Create the account named by OWNER_EMAIL / OWNER_PASSWORD (set on the host, never in the code) if it doesn't
+    exist yet. It signs in like any other account; an existing account, and its password, are left as they are."""
+    if not (settings.owner_email and settings.owner_password):
+        return None
+    email = _clean_email(settings.owner_email)
+    _check_password(settings.owner_password, email)
+    with db.connect() as conn:
+        if conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone():
+            return None
+        uid = db.new_id("usr")
+        conn.execute("INSERT INTO users (id, email, name, password_hash, created_at, terms_version) VALUES (?,?,?,?,?,?)",
+                     (uid, email, "Plazmonix AI", hash_password(settings.owner_password), db.now(), TERMS_VERSION))
+    log.info("created the owner account %s", email)
+    return uid
+
+
 @router.post("/auth/signup", status_code=201)
 def signup(body: SignupIn, request: Request, response: Response):
     if not signup_limit.allow(client_ip(request)):

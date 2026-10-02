@@ -38,6 +38,10 @@ services:
         sync: false
       - key: WAITLIST_ORIGINS
         sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: OWNER_PASSWORD
+        sync: false
       - key: TEST_GATE_USERNAME
         sync: false
       - key: TEST_GATE_PASSWORD
