@@ -103,6 +103,7 @@ app.include_router(teach.router)
 
 try:  # the owner's account from OWNER_EMAIL / OWNER_PASSWORD, so it signs in without a sign-up
     auth.ensure_owner_account()
+    teach.ensure_owner_school()
 except HTTPException as e:
     log.warning("owner account not created: %s", e.detail)
 

@@ -194,3 +194,30 @@ def test_google_callback_in_school_mode(monkeypatch):
     r = c2.get(f"/api/auth/google/callback?code=abc&state={state}", follow_redirects=False)
     assert r.headers["location"] == "/teach/app#/admin"
     assert c2.get("/api/teach/me").json()["role"] == "school"
+
+
+def test_owner_email_opens_asm_teach_as_admin_and_teacher(monkeypatch):
+    """With OWNER_EMAIL / OWNER_PASSWORD set, the same email and password sign in to ASM Teach in either role, and the
+    owner's account can't be paused or removed from the school panel."""
+    from app.config import settings
+    from app.platform import auth
+    monkeypatch.setattr(settings, "owner_email", "Boss@Plazmonix-Teach.in")
+    monkeypatch.setattr(settings, "owner_password", "owner-pass-2026")
+    auth.ensure_owner_account()
+    teach.ensure_owner_school()
+    teach.ensure_owner_school()  # a second start changes nothing
+    c = fresh()
+    assert c.post("/api/teach/login", json={"username": "boss@plazmonix-teach.in", "password": "wrong-one-123", "role": "teacher"}).status_code == 401
+    r = c.post("/api/teach/login", json={"username": "Boss@Plazmonix-Teach.in", "password": "owner-pass-2026", "role": "teacher"})
+    assert r.status_code == 200 and r.json()["next"] == "/teach/app#/board"
+    assert c.get("/api/teach/me").json()["role"] == "teacher"
+    assert c.get("/teach/app", follow_redirects=False).status_code == 200
+    a = fresh()
+    r = a.post("/api/teach/login", json={"username": "boss@plazmonix-teach.in", "password": "owner-pass-2026", "role": "school"})
+    assert r.status_code == 200 and r.json()["next"] == "/teach/app#/admin"
+    owner_row = [t for t in a.get("/api/teach/school").json()["teachers"] if t["email"] == "boss@plazmonix-teach.in"][0]
+    assert a.delete(f"/api/teach/teachers/{owner_row['id']}").status_code == 403
+    assert a.patch(f"/api/teach/teachers/{owner_row['id']}", json={"active": False}).status_code == 403
+    # the same account still opens the main app
+    m = fresh()
+    assert m.post("/api/auth/login", json={"email": "boss@plazmonix-teach.in", "password": "owner-pass-2026"}).status_code == 200
