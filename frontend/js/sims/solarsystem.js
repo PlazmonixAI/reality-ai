@@ -633,6 +633,11 @@ export function mountAt(root, startLevel = 0, params = {}) {
     const focus = bodies[follow || (fly && fly.id) || "sun"];
     if (focus?.group) controls.minDistance = focus.group.scale.x * (focus.data.id === "sun" ? 1.6 : 1.25); // never fly inside a body
     controls.update();
+    for (const b of Object.values(bodies)) { // every planet and moon is solid, not only the one in focus
+      if (!b?.group?.visible) continue;
+      const c = b.group.position, min = b.group.scale.x * (b.data.id === "sun" ? 1.15 : 1.03), d = camera.position.distanceTo(c);
+      if (d < min && d > 0) camera.position.sub(c).multiplyScalar(min / d).add(c);
+    }
     sky.position.copy(camera.position);
     if (showLabels) {
       const w = view.clientWidth, h = view.clientHeight, camD = (b) => camera.position.distanceTo(b.group.position);

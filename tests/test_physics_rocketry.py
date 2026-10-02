@@ -161,3 +161,23 @@ def test_time_to_apsides():
     assert el["time_to_periapsis"] == pytest.approx(0.0, abs=1e-3) or el["time_to_periapsis"] == pytest.approx(period, rel=1e-6)
     el2 = _elements(b, 0.0, -rp, v, 0.0)  # the same orbit flown clockwise
     assert el2["time_to_apoapsis"] == pytest.approx(period / 2, rel=1e-6)
+
+
+def test_generic_side_boosters_add_thrust_and_burn_with_the_core():
+    """Two solid side boosters on the first stage: more lift-off thrust, the booster burn time is prop / mass flow
+    (Isp g0 = exhaust speed), and they are listed on stage 1 only."""
+    base = rocket_design(TWO_STAGE)["result"]
+    with_srb = TWO_STAGE[:1] + [{"part": "srb_medium", "count": 2}] + TWO_STAGE[1:]
+    r = rocket_design(with_srb)["result"]
+    s0 = r["stages"][0]
+    b = PARTS["srb_medium"]
+    assert s0["boosters"]["count"] == 2 and s0["boosters"]["solid"]
+    assert s0["boosters"]["burn_time"] == pytest.approx(b["prop"] / (b["thrust_vac"] / (b["isp_vac"] * G0)), rel=1e-6)
+    g = BODIES["earth"]["mu"] / BODIES["earth"]["radius"] ** 2
+    thrust = lambda st: st["twr_surface"] * st["mass_start"] * g  # noqa: E731
+    assert thrust(s0) == pytest.approx(thrust(base["stages"][0]) + 2 * b["thrust_sl"], rel=1e-6)  # sea-level thrust adds up
+    assert r["total_mass"] == pytest.approx(base["total_mass"] + 2 * (b["mass"] + b["prop"]))
+    assert r["stages"][1]["boosters"] is None
+    for pid in ("srb_small", "srb_medium", "lrb_kerolox"):
+        p = PARTS[pid]  # burn times in the range of real strap-ons (about 1 to 2 minutes)
+        assert 50 < p["prop"] * p["isp_vac"] * G0 / p["thrust_vac"] < 130

@@ -119,6 +119,11 @@ export function createFlight3D(host, { onSolarSystem, rocketHeight = 50 } = {}) 
     dateBox.textContent = `${date.toUTCString().slice(5, 22)} UTC`;
   }
 
+  // Push a point back out to `radius + margin` (scene units) if it went inside a body centred at `centre`
+  function keepOutside(pos, centre, radius, margin) {
+    const d = pos.distanceTo(centre), min = radius + margin;
+    if (d < min) { if (d < 1e-9) pos.set(centre.x, centre.y + min, centre.z); else pos.sub(centre).multiplyScalar(min / d).add(centre); }
+  }
   function lerpVec(a, b, f) { return a && b ? [0, 1, 2].map((k) => a[k] + (b[k] - a[k]) * f) : (b || a); }
   function render(f) {
     const w = wrap.clientWidth, h = wrap.clientHeight;
@@ -160,6 +165,8 @@ export function createFlight3D(host, { onSolarSystem, rocketHeight = 50 } = {}) 
       const d = target.clone().sub(lastFocusPos); camera.position.add(d); controls.target.add(d); lastFocusPos.copy(target);
     }
     controls.update();
+    keepOutside(camera.position, new THREE.Vector3(), EARTH_R / 1000, 3e-6); // planets are solid: the camera stops at the surface
+    if (moonP) keepOutside(camera.position, moonP, MOON_R / 1000, 3e-6);
     skyHolder.position.copy(camera.position);
     renderer.render(scene, camera);
     // Labels

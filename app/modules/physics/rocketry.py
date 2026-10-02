@@ -65,8 +65,16 @@ PARTS: dict[str, dict] = {
                      "thrust_sl": 3830e3, "thrust_vac": 4150e3, "isp_sl": 311, "isp_vac": 338},
     "engine_f1": {"name": "Colossus heavy engine", "category": "engine", "class": "heavy", "mass": 8400, "height": 5.8, "width": 3.7,
                   "thrust_sl": 6770e3, "thrust_vac": 7825e3, "isp_sl": 263, "isp_vac": 304},
+    # strap-on side boosters: attach to a stage, burn with its core and drop away when empty (sized like real ones:
+    # small ≈ GEM-40 / PSOM class, medium ≈ GEM-63 class, the liquid one carries three Kestrel engines)
+    "srb_small": {"name": "Side booster S (solid)", "category": "booster", "mass": 1500, "prop": 9000, "height": 9.0, "width": 0.9,
+                  "thrust_sl": 300e3, "thrust_vac": 320e3, "isp_sl": 240, "isp_vac": 260, "solid": True},
+    "srb_medium": {"name": "Side booster M (solid)", "category": "booster", "mass": 4500, "prop": 36000, "height": 16.0, "width": 1.6,
+                   "thrust_sl": 1100e3, "thrust_vac": 1200e3, "isp_sl": 245, "isp_vac": 268, "solid": True},
+    "lrb_kerolox": {"name": "Side booster L (liquid, 3 Kestrel)", "category": "booster", "mass": 6000, "prop": 90000, "height": 22.0,
+                    "width": 2.6, "thrust_sl": 2535e3, "thrust_vac": 2742e3, "isp_sl": 282, "isp_vac": 311, "solid": False},
     # structure and aerodynamics
-    "decoupler": {"name": "Stage decoupler", "category": "structural", "mass": 150, "height": 0.5, "width": 3.2},
+    "decoupler":{"name": "Stage decoupler", "category": "structural", "mass": 150, "height": 0.5, "width": 3.2},
     "interstage_s": {"name": "Interstage S", "category": "structural", "mass": 80, "height": 0.8, "width": 1.3},
     "interstage": {"name": "Interstage (covers the upper-stage engine)", "category": "structural", "mass": 600, "height": 1.5, "width": 3.7},
     "nose": {"name": "Nose cone", "category": "aero", "mass": 300, "height": 3.0, "width": 3.2},
