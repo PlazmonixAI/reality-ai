@@ -201,3 +201,19 @@ def test_admin_page_only_for_admin_emails(monkeypatch):
     assert data["stats"]["users"] >= 1 and data["stats"]["feedback"] >= 1
     assert any(f["message"] == "Please add Vega-C" for f in data["feedback"])
     assert c.get("/api/auth/me").json()["user"]["admin"] is True
+
+
+def test_owner_account_is_created_from_settings(monkeypatch):
+    """OWNER_EMAIL / OWNER_PASSWORD on the host give a ready account: sign in works with no sign-up, and a restart
+    doesn't overwrite a password changed in the app."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "owner_email", "Owner@Plazmonix-Test.in")
+    monkeypatch.setattr(settings, "owner_password", "starting-pass-77")
+    assert auth.ensure_owner_account() is not None
+    assert auth.ensure_owner_account() is None  # second start: already there
+    c = fresh()
+    r = c.post("/api/auth/login", json={"email": "owner@plazmonix-test.in", "password": "starting-pass-77"})
+    assert r.status_code == 200
+    assert c.get("/tools").status_code == 200
+    monkeypatch.setattr(settings, "owner_password", "")
+    assert auth.ensure_owner_account() is None  # not configured: nothing happens

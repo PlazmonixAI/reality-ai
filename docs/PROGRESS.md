@@ -237,6 +237,10 @@
 - **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
 - **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
 
+## 2026-10-02 (later): owner account from host settings
+- OWNER_EMAIL and OWNER_PASSWORD (Render environment, never in the code) create that account on startup if it is missing, so the team signs in at /login without signing up. An existing account and its password are left alone. Test in tests/test_platform_auth.py.
+- Automatic sign-in from the /test desk was considered and left out: every app page still needs a normal sign-in.
+
 ## 2026-10-02: /test team desk
 - /test (behind TEST_USERNAME / TEST_PASSWORD) is now a team desk: status cards for the website, robots.txt and sitemap, waitlist storage and the Render backend (checked server-side through /health, via the new /test/status.json); waitlist totals (all, 24 hours, 7 days), the latest ten sign-ups and the CSV; a launch checklist kept in the browser; links to Cloudflare, GitHub, Render, Search Console, Bing, PageSpeed, the rich results test and a share preview.
 - New waitlist entries store their date, country and page as KV metadata so the desk can list them without one read per email.
