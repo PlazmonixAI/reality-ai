@@ -171,13 +171,54 @@ function drawShells(ctx, parts, layout, cx, s, ghost) {
     const top = isFairing(p) ? layout[i][1] : stageTop ?? layout[i + 2][0], bottom = isFairing(p) ? layout[from][1] : layout[i][0];
     const g = ctx.createLinearGradient(x, 0, x + w, 0);
     if (isFairing(p)) { g.addColorStop(0, "#c9d1dc"); g.addColorStop(0.45, "#ffffff"); g.addColorStop(1, "#9aa6b5"); } else { g.addColorStop(0, "#2a2f36"); g.addColorStop(0.5, "#5b6270"); g.addColorStop(1, "#23272e"); }
-    ctx.globalAlpha = ghost ? 0.5 : 1; ctx.fillStyle = g; ctx.fillRect(x, top, w, bottom - top);
-    ctx.globalAlpha = 1; ctx.strokeRect(x, top, w, bottom - top);
+    ctx.globalAlpha = ghost ? 0.5 : 1; ctx.fillStyle = g;
+    const bw = isFairing(p) && p.baseW && p.baseW * s < w - 0.1 * s ? p.baseW * s : w, taper = bw < w ? Math.min((w - bw) * 0.9, (bottom - top) * 0.3) : 0;
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x + w, top); ctx.lineTo(x + w, bottom - taper); ctx.lineTo(cx + bw / 2, bottom); ctx.lineTo(cx - bw / 2, bottom); ctx.lineTo(x, bottom - taper); ctx.closePath();
+    ctx.fill(); ctx.globalAlpha = 1; ctx.stroke();
     if (ghost) { ctx.setLineDash([4, 4]); ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx, bottom); ctx.stroke(); ctx.setLineDash([]); }
   });
   ctx.restore();
 }
+// Covers fit what they cover: a nose, decoupler or interstage takes the width of the part under it, and a fairing is as
+// wide as the stage below or, for a wider payload, a little wider than the payload (a hammerhead with a tapered base).
+function fitCovers(parts) {
+  const below = (i) => { for (let j = i - 1; j >= 0; j--) if (!isBooster(parts[j])) return parts[j]; return null; };
+  return parts.map((p, i) => {
+    const b = below(i);
+    if ((p.id === "nose" || isDecoupler(p) || p.id.startsWith("interstage")) && b && !isEngine(b) && b.category !== "satellite") return { ...p, width: b.width };
+    if (isFairing(p)) {
+      let from = i; while (from > 0 && !isDecoupler(parts[from - 1])) from--;
+      const payload = parts.slice(from, i).filter((q) => !isBooster(q)), base = from > 0 ? parts[from - 1] : null;
+      const baseW = base ? (below(from - 1) && !isEngine(below(from - 1)) ? below(from - 1).width : base.width) : p.width;
+      const payW = Math.max(0, ...payload.map((q) => q.width));
+      return { ...p, width: Math.max(baseW, payW * 1.1, payload.length ? 0 : p.width), baseW };
+    }
+    return p;
+  });
+}
+const BODY = (p) => p && (p.category === "tank" || p.category === "stage" || isDecoupler(p) || p.id.startsWith("interstage"));
+function drawAdapters(ctx, parts, layout, cx, s) { // conical skirts where stacked parts change width
+  ctx.save(); ctx.lineWidth = Math.max(1, s * 0.05); ctx.strokeStyle = "rgba(20,30,45,.6)";
+  let prev = -1;
+  parts.forEach((p, i) => {
+    if (isBooster(p)) return;
+    const a = prev; prev = i;
+    if (a < 0 || !BODY(parts[a]) || !BODY(p)) return;
+    const wl = parts[a].width * s, wu = p.width * s;
+    if (Math.abs(wl - wu) < 0.15 * s) return;
+    const joint = layout[i][1], narrowerUp = wu < wl;
+    const room = narrowerUp ? layout[i][1] - layout[i][0] : layout[a][1] - layout[a][0];
+    const hh = Math.min(1.5 * s, room * 0.35, Math.abs(wl - wu) * 0.9);
+    const yLow = narrowerUp ? joint : joint + hh, yHigh = narrowerUp ? joint - hh : joint;
+    const g = ctx.createLinearGradient(cx - Math.max(wl, wu) / 2, 0, cx + Math.max(wl, wu) / 2, 0);
+    g.addColorStop(0, "#c9d1dc"); g.addColorStop(0.45, "#ffffff"); g.addColorStop(1, "#9aa6b5");
+    ctx.fillStyle = g; ctx.beginPath();
+    ctx.moveTo(cx - wl / 2, yLow); ctx.lineTo(cx + wl / 2, yLow); ctx.lineTo(cx + wu / 2, yHigh); ctx.lineTo(cx - wu / 2, yHigh); ctx.closePath(); ctx.fill(); ctx.stroke();
+  });
+  ctx.restore();
+}
 function drawStack(ctx, parts, cx, yb, s, opts = {}) { // → [[top, bottom], …] per part
+  parts = fitCovers(parts);
   const layout = [], covered = new Set(); // parts inside a closed (non-cutaway) fairing are hidden
   if (!opts.ghost && !opts.hideFairing) parts.forEach((p, i) => { if (isFairing(p)) for (let j = i - 1; j >= 0 && !isDecoupler(parts[j]); j--) covered.add(j); });
   const boosters = [];
@@ -198,6 +239,7 @@ function drawStack(ctx, parts, cx, yb, s, opts = {}) { // → [[top, bottom], �
     if ((p.count || 1) > 2) { ctx.save(); ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.max(10, s * 1.2)}px system-ui`; ctx.textAlign = "left"; ctx.fillText(`×${p.count}`, cx + coreW / 2 + p.width * s + 6, base - p.height * s * 0.5); ctx.restore(); }
     layout[i] = [base - p.height * s, base];
   }
+  drawAdapters(ctx, parts, layout, cx, s);
   drawShells(ctx, opts.hideFairing ? parts.map((p) => (isFairing(p) ? { ...p, id: "gone" } : p)) : parts, layout, cx, s, opts.ghost);
   return layout;
 }
@@ -312,7 +354,14 @@ export default {
     function addPart(p, at = null) {
       if (isBooster(p)) { attachBooster(p.id, at === null ? (selected >= 0 ? stageOf(selected) : 0) : stageOf(Math.min(at, stack.length - 1))); return; }
       const i = at ?? (selected >= 0 ? selected + 1 : stack.length);
-      stack.splice(i, 0, { part: p.id }); selected = i; attachStage = -1; refresh();
+      stack.splice(i, 0, { part: p.id }); selected = i; attachStage = -1;
+      // a satellite or probe put on top gets a fairing that fits it (remove it if you want it bare)
+      if ((p.category === "satellite" || p.id === "probe") && i === stack.length - 1) {
+        const fit = ["fairing_s", "fairing", "fairing_xl"].map((id) => allParts().find((q) => q.id === id)).find((f) => f && f.width >= p.width * 1.05);
+        if (fit && i > 0 && !isDecoupler(partOf(stack[i - 1]))) { stack.splice(i, 0, { part: "decoupler" }); selected = i + 1; } // the payload separates from the rocket
+        if (fit) { stack.push({ part: fit.id }); notify(`Added a ${fit.name.toLowerCase()} to cover the ${p.name.toLowerCase()}. Its size adjusts to the payload; remove it if you want it bare.`); }
+      }
+      refresh();
     }
     function attachBooster(id, k) {
       if (!stack.some((q) => !isBooster(partOf(q)))) { notify("Add an engine and a fuel tank first, then attach boosters to their sides."); return; }
@@ -604,6 +653,10 @@ export default {
       ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, () => { clearTimeout(t); rotating = 0; })); return b; };
     const pitchOut = el("div", { class: "sf-pitch" }, "0.0°");
     const fairingBtn = el("button", { class: "sf-fairbtn", type: "button", onclick: () => { fairingReq = true; } }, "FAIRING");
+    const stagePick = el("select", { class: "sf-stagepick", "aria-label": "Which stage to separate" });
+    const CAMS = { follow: "CAM: FOLLOW", launch: "CAM: LAUNCH VIEW", onboard: "CAM: ON THE ROCKET" };
+    const camBtn = el("button", { class: "sf-btn wide", type: "button", title: "Follow the rocket, watch from the launch pad like a TV broadcast, or ride on the rocket (3D)", onclick: () => cycleCam() }, CAMS.follow);
+    const camNote = el("div", { class: "sf-cam-note" });
     const btn3d = el("button", { class: "sf-btn wide accent", type: "button", title: "See the flight in 3D over the real Earth and Moon", onclick: () => show3d(!view3dOn) }, "3D");
     const deployBtn = el("button", { class: "sf-btn wide accent", type: "button", title: "Release the satellite into your Mission Control fleet", style: "display:none", onclick: () => openDeploy() }, "DEPLOY");
     const pauseBtn = el("button", { class: "sf-btn wide", type: "button", title: "Pause (P)", onclick: () => togglePause() }, "PAUSE");
@@ -622,22 +675,53 @@ export default {
       }
       if (f3d) f3d.show(view3dOn);
       if (on) mapView = false;
+      if (!on && camMode === "onboard") { camMode = "follow"; camBtn.textContent = CAMS.follow; }
     }
-    const flightView = el("div", { class: "sf-flight hidden" }, fCanvas, hud, toast,
+    const flightView = el("div", { class: "sf-flight hidden" }, fCanvas, hud, toast, camNote,
       el("div", { class: "sf-topright" },
         el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx - 1) }, "«"), warpLabel, el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx + 1) }, "»"),
-        el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapView = !mapView; show3d(false); } }, "MAP"), focusBtn, btn3d, pauseBtn, apBtn, peBtn, deployBtn, helpBtn,
+        el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapView = !mapView; show3d(false); } }, "MAP"), focusBtn, camBtn, btn3d, pauseBtn, apBtn, peBtn, deployBtn, helpBtn,
         el("button", { class: "sf-btn wide", type: "button", onclick: () => toBuild() }, "BUILD")), keysBox,
       el("div", { class: "sf-throttle-box" }, el("div", { class: "sf-thr-title" }, "THROTTLE"), thr, thrLabel,
         el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(1) }, "Full"), el("button", { class: "sf-small", type: "button", onclick: () => setThrottle(0) }, "Cut")),
       el("div", { class: "sf-bottomleft" }, pitchOut, hold(-1), hold(1), el("div", { class: "sf-sas-row" }, ...sasBtns)),
       el("div", { class: "sf-bottomright" }, fairingBtn,
-        el("button", { class: "sf-stagebtn", type: "button", onclick: () => { stageReq = true; } }, "STAGE"),
+        stagePick,
+        el("button", { class: "sf-stagebtn", type: "button", title: "Separate the stage chosen above (Space: the next one)", onclick: () => separate(+stagePick.value) }, "STAGE"),
         el("button", { class: "sf-chutebtn", type: "button", onclick: () => { chuteReq = true; } }, "CHUTE")));
     rootEl.append(flightView);
 
     let flight = null, prev = null, throttle = 0, rel = 0, rotating = 0, sas = "free", warpIdx = 0, mapView = false, mapFocus = "auto";
-    let paused = false, autoWarp = null, quick = null;
+    let paused = false, autoWarp = null, quick = null, stageQueue = 0, camMode = "follow", rocketHit = null, stagePop = null;
+    function separate(upTo) { // drop every stage from the current one up to stage `upTo` (0-based), one per step
+      if (!flight) return;
+      const k = flight.state.stage, last = flight.stages.length - 1;
+      const to = Number.isFinite(upTo) ? upTo : k;
+      if (to >= last) { say("That is the top stage: there is nothing above it to keep."); return; }
+      if (to < k) { say("That stage has already gone."); return; }
+      stageQueue = to - k + 1;
+      say(to === k ? `Separating stage ${k + 1}.` : `Separating stages ${k + 1} to ${to + 1}.`);
+      stagePop?.remove(); stagePop = null;
+    }
+    function fillStagePick() {
+      if (!flight) return;
+      const k = flight.state.stage, last = flight.stages.length - 1, key = `${k}/${last}`;
+      if (stagePick.dataset.key === key) return;
+      stagePick.dataset.key = key;
+      const opts = [];
+      for (let j = k; j < last; j++) opts.push(el("option", { value: j }, j === k ? `Next: stage ${j + 1}` : `Stages ${k + 1}–${j + 1}`));
+      stagePick.replaceChildren(...(opts.length ? opts : [el("option", { value: last }, "Top stage only")]));
+      stagePick.disabled = !opts.length;
+    }
+    function cycleCam() {
+      const order = body === "earth" ? ["follow", "launch", "onboard"] : ["follow", "launch"];
+      camMode = order[(order.indexOf(camMode) + 1) % order.length];
+      camBtn.textContent = CAMS[camMode];
+      if (camMode === "onboard") { show3d(true).then(() => f3d?.setFocus("onboard")); }
+      else if (view3dOn) show3d(false);
+      if (camMode !== "follow") mapView = false;
+      panY = 0;
+    }
     let stageReq = false, chuteReq = false, fairingReq = false, busy = false, stepStart = 0, stepLen = 0.1, zoom = 1, raf = 0, lastT = 0, log = [], ended = false;
     const setThrottle = (v) => { throttle = v; thr.value = Math.round(v * 100); thrLabel.textContent = `${thr.value}%`; };
     function setSas(m) { sas = m; sasBtns.forEach((b, i) => b.classList.toggle("on", ["free", "prograde", "retrograde", "up"][i] === m)); }
@@ -819,7 +903,8 @@ export default {
       if (busy || !flight) return;
       busy = true;
       const s = flight.state;
-      const wantStage = stageReq, wantChute = chuteReq, wantFairing = fairingReq; stageReq = chuteReq = fairingReq = false;
+      const wantStage = stageReq || stageQueue > 0, wantChute = chuteReq, wantFairing = fairingReq; stageReq = chuteReq = fairingReq = false;
+      if (stageQueue > 0) stageQueue--;
       try {
         const r = await simulate("physics", "rocket_flight", { state: s, parts: stack, throttle: ended ? 0 : throttle, angle: commandAngle(), dt, stage: wantStage, deploy_chute: wantChute,
           jettison_fairing: wantFairing, custom_parts: flight.custom, predict: mapView || view3dOn || warpIdx > 0 || !!autoWarp || Math.random() < 0.2 }, undefined, { signature: flight.sig });
@@ -838,7 +923,7 @@ export default {
         if (challenge && !challenge.done && CH_CHECK[challenge.id]?.(tel, flight.state) && !flight.checked[challenge.id]) { flight.checked[challenge.id] = true; submitChallenge(); }
         saveFlight();
         stepStart = performance.now(); stepLen = autoWarp ? 0.08 : Math.max(0.05, dt / WARPS[warpIdx]);
-      } catch (e) { say(`Engine error: ${e.message}`); } finally { busy = false; }
+      } catch (e) { console.error(e); say(`Engine error: ${e.message}`); } finally { busy = false; }
     }
 
     // Keyboard
@@ -851,7 +936,7 @@ export default {
       if (k === "q") nudge(-1); if (k === "e") nudge(1);
       if (k === "z") setThrottle(1); if (k === "x") setThrottle(0);
       if (k === "shift") setThrottle(Math.min(1, throttle + 0.1)); if (k === "control") setThrottle(Math.max(0, throttle - 0.1));
-      if (k === " ") { stageReq = true; e.preventDefault(); } if (k === "m") { mapView = !mapView; show3d(false); } if (k === "f") fairingReq = true;
+      if (k === " ") { separate(flight?.state.stage); e.preventDefault(); } if (k === "m") { mapView = !mapView; show3d(false); } if (k === "f") fairingReq = true;
       if (k === "v" && body === "earth") show3d(!view3dOn);
       if (k === "p") togglePause(); if (k === "k") quickSave(); if (k === "l") quickLoad(); if (k === "h" || k === "?") keysBox.classList.toggle("hidden");
       if (k === "." || k === ">") setWarp(warpIdx + 1); if (k === "," || k === "<") setWarp(warpIdx - 1);
@@ -859,7 +944,24 @@ export default {
     const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     let panY = 0, drag = null; // drag the flight view along the rocket to inspect it; double-click recentres
-    fCanvas.addEventListener("pointerdown", (e) => { if (!mapView) drag = [e.clientY, panY]; });
+    let dragMoved = false;
+    fCanvas.addEventListener("pointerdown", (e) => { dragMoved = false; if (!mapView) drag = [e.clientY, panY]; });
+    fCanvas.addEventListener("pointermove", (e) => { if (drag && Math.abs(e.clientY - drag[0]) > 6) dragMoved = true; });
+    // Tap a stage on the rocket to separate it (and everything below it)
+    fCanvas.addEventListener("click", (e) => {
+      stagePop?.remove(); stagePop = null;
+      if (dragMoved || mapView || !rocketHit || !flight || ended) return;
+      const r = fCanvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, h = rocketHit;
+      const dx = x - h.cx, dy = y - h.cy, c = Math.cos(h.rot), sn = Math.sin(h.rot);
+      const lx = dx * c + dy * sn, ly = -dx * sn + dy * c; // into the rocket's own frame
+      const i = h.layout.findIndex(([t, b], j) => ly >= t - 4 && ly <= b + 4 && Math.abs(lx) <= (h.parts[j].width * h.scale) / 2 + (isBooster(h.parts[j]) ? h.parts[j].width * h.scale * 2.5 : 6));
+      if (i < 0) return;
+      const st = h.partStage[i], last = flight.stages.length - 1, k = flight.state.stage;
+      const label = st >= last ? `STAGE ${st + 1} · TOP STAGE` : st === k ? `SEPARATE STAGE ${st + 1}` : `SEPARATE STAGES ${k + 1}–${st + 1}`;
+      stagePop = el("button", { class: "sf-stage-pop", type: "button", style: `left:${x}px;top:${y}px`, onclick: (ev) => { ev.stopPropagation(); separate(st); } }, label);
+      flightView.append(stagePop);
+      setTimeout(() => { if (stagePop?.textContent === label) { stagePop.remove(); stagePop = null; } }, 4000);
+    });
     fCanvas.addEventListener("pointermove", (e) => { if (drag && flight) { const rocketH = stackHeight(flight.parts); const scale = ((fCanvas.clientHeight * 0.32) / Math.max(10, rocketH)) * zoom; panY = Math.max(-rocketH * 1.2, Math.min(rocketH * 0.2, drag[1] - (e.clientY - drag[0]) / scale)); } });
     ["pointerup", "pointerleave"].forEach((ev) => fCanvas.addEventListener(ev, () => { drag = null; }));
     fCanvas.addEventListener("dblclick", () => { panY = 0; zoom = 1; });
@@ -920,11 +1022,21 @@ export default {
       const starA = Math.max(0, Math.min(1, 1 - (sky[0] + sky[1] + sky[2]) / 200));
       if (starA > 0) { ctx.fillStyle = `rgba(255,255,255,${starA})`; for (const [a, b, z] of starSeed) ctx.fillRect(a * W, b * H, 1 + z, 1 + z); }
       const rocketH = stackHeight(flight.parts);
-      const scale = ((H * 0.32) / Math.max(10, rocketH)) * zoom; // px per metre
-      const up = Math.atan2(L.y, L.x), cx = W / 2, cy = Math.min(H * 0.8, H / 2 + (rocketH * scale) / 2) - panY * scale; // the state point is the rocket's base
-      const toScreen = (wx, wy) => { const dx = wx - L.x, dy = wy - L.y; const a = Math.PI / 2 - up; const rx = dx * Math.cos(a) - dy * Math.sin(a), ry = dx * Math.sin(a) + dy * Math.cos(a); return [cx + rx * scale, cy - ry * scale]; };
+      const padHere = (ref === body && ref !== "moon") || (body === "moon" && ref === "moon" && !flight.moon);
+      const padA = Math.PI / 2 + (OMEGA[body] || 0) * s.t;
+      const launchCam = camMode === "launch" && padHere;
+      // view frame: "follow" keeps the rocket's base on screen; "launch" is a fixed camera beside the pad that zooms out to keep the rocket in frame
+      let scale = ((H * 0.32) / Math.max(10, rocketH)) * zoom, up = Math.atan2(L.y, L.x), ox = L.x, oy = L.y, ax = W / 2, ay = Math.min(H * 0.8, H / 2 + (rocketH * scale) / 2) - panY * scale;
+      if (launchCam) {
+        up = padA; ox = R * Math.cos(padA); oy = R * Math.sin(padA); ax = W / 2; ay = H * 0.84;
+        const reach = Math.hypot(L.x - ox, L.y - oy) + rocketH * 1.3;
+        scale = Math.min(scale, (H * 0.7) / reach, (W * 0.42) / Math.max(1, Math.abs(((L.x - ox) * Math.sin(padA) - (L.y - oy) * Math.cos(padA)))));
+      }
+      const toScreen = (wx, wy) => { const dx = wx - ox, dy = wy - oy; const a = Math.PI / 2 - up; const rx = dx * Math.cos(a) - dy * Math.sin(a), ry = dx * Math.sin(a) + dy * Math.cos(a); return [ax + rx * scale, ay - ry * scale]; };
+      const [cx, cy] = launchCam ? toScreen(L.x, L.y) : [ax, ay];
+      camNote.textContent = launchCam ? "LAUNCH VIEW · CAMERA AT THE PAD" : camMode === "launch" ? "LAUNCH VIEW · AWAY FROM THE PAD, FOLLOWING" : "";
       const span = (Math.hypot(W, H) / scale) / R * 1.5;
-      if (alt * scale < H * 3) { // ground: polygon of the surface arc under the view
+      if (launchCam || alt * scale < H * 3) { // ground: polygon of the surface arc under the view
         const pts = [];
         for (let i = 0; i <= 80; i++) { const th = up - span + (2 * span * i) / 80; pts.push(toScreen(R * Math.cos(th), R * Math.sin(th))); }
         const deep = (R - Math.min(R * 0.5, 3 * H / scale));
@@ -932,8 +1044,7 @@ export default {
         const [g1, g2] = GROUND[ref] || GROUND.moon;
         const grad = ctx.createLinearGradient(0, cy, 0, H); grad.addColorStop(0, g1); grad.addColorStop(1, g2);
         ctx.fillStyle = grad; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill();
-        if (ref === body && ref !== "moon" || body === "moon" && ref === "moon" && !flight.moon) { // launch pad fixed to the rotating surface
-          const padA = Math.PI / 2 + OMEGA[body] * s.t;
+        if (padHere) { // launch pad fixed to the rotating surface
           const [px, py] = toScreen(R * Math.cos(padA), R * Math.sin(padA));
           ctx.save(); ctx.translate(px, py); ctx.rotate(-(padA - up));
           // the pad and its lattice service tower are part of the ground: they stay behind when the rocket lifts off
@@ -951,7 +1062,8 @@ export default {
         }
       }
       // Rocket (upper stages only once lower ones are dropped)
-      const parts = flight.stages.slice(s.stage).flatMap((st, j) => (j === 0 && !(s.boosters_on || [])[s.stage] ? st.filter((p) => !isBooster(p)) : st));
+      const partStage = [];
+      const parts = flight.stages.slice(s.stage).flatMap((st, j) => { const kept = j === 0 && !(s.boosters_on || [])[s.stage] ? st.filter((p) => !isBooster(p)) : st; kept.forEach(() => partStage.push(s.stage + j)); return kept; });
       ctx.save(); ctx.translate(cx, cy); ctx.rotate(-(s.angle - up));
       const totalH = stackHeight(parts);
       if (tel && tel.thrust > 0 && !s.crashed) { // flame
@@ -973,12 +1085,13 @@ export default {
       if (s.crashed) { ctx.fillStyle = "rgba(255,120,40,.8)"; ctx.beginPath(); ctx.arc(0, 0, 8 * scale + 20, 0, Math.PI * 2); ctx.fill(); }
       else {
         const layout = drawStack(ctx, parts, 0, 0, scale, { hideFairing: !s.fairing });
+        rocketHit = { cx, cy, rot: -(s.angle - up), layout, parts, partStage, scale };
         const since = (performance.now() - flight.jettisonAt) / 1000; // fairing halves drifting away after jettison
         if (!s.fairing && flight.jettisonAt && since < 4) {
           const fi = parts.findIndex(isFairing);
           if (fi >= 0) {
             let from = fi; while (from > 0 && !isDecoupler(parts[from - 1])) from--; while (from < fi && isBooster(parts[from])) from++;
-            const top = layout[fi][0], bottom = layout[from][1], w = parts[fi].width * scale;
+            const top = layout[fi][0], bottom = layout[from][1], w = fitCovers(parts)[fi].width * scale;
             for (const side of [-1, 1]) {
               const midY = (top + bottom) / 2; // each half tumbles about its own middle as it drifts away
               ctx.save(); ctx.translate(side * since * 6 * scale, since * 3 * scale + midY); ctx.rotate(side * since * 0.25); ctx.translate(0, -midY); ctx.globalAlpha = Math.max(0, 1 - since / 4);
@@ -990,6 +1103,7 @@ export default {
         }
       }
       ctx.restore();
+      if (rocketH * scale < 8 && !s.crashed) { ctx.strokeStyle = "#FFB199"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.stroke(); }
       drawHud(tel, s);
     }
 
@@ -1057,6 +1171,7 @@ export default {
     const fmtT = (sec) => { sec = Math.max(0, Math.round(sec)); const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60), x = sec % 60; return `${d ? d + "d " : ""}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}`; };
     function drawHud(tel, s) {
       if (!tel) return;
+      fillStagePick();
       fairingBtn.style.display = s.fairing ? "" : "none";
       const refName = { earth: "Earth", moon: "Moon", mars: "Mars" }[tel.reference] || tel.reference;
       const rows = [

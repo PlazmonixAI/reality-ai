@@ -20,7 +20,8 @@ export function createFlight3D(host, { onSolarSystem, rocketHeight = 50 } = {}) 
   const tex = (name, srgb = true) => { const t = loader.load(TEX + name); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; texs.push(t); return t; };
   const wrap = el("div", { class: "sf3d" });
   const labels = el("div", { class: "sf3d-labels" });
-  const focusBtns = ["rocket", "earth", "moon"].map((f) => el("button", { class: "sf-btn wide", type: "button", onclick: () => setFocus(f) }, { rocket: "ROCKET", earth: "EARTH", moon: "MOON" }[f]));
+  const FOCI = ["rocket", "onboard", "earth", "moon"];
+  const focusBtns = FOCI.map((f) => el("button", { class: "sf-btn wide", type: "button", onclick: () => setFocus(f) }, { rocket: "ROCKET", onboard: "ON THE ROCKET", earth: "EARTH", moon: "MOON" }[f]));
   const dateBox = el("div", { class: "sf3d-date" });
   wrap.append(labels, el("div", { class: "sf3d-bar" }, ...focusBtns,
     el("button", { class: "sf-btn wide accent", type: "button", onclick: () => onSolarSystem?.(jd) }, "SOLAR SYSTEM")), dateBox,
@@ -98,14 +99,16 @@ export function createFlight3D(host, { onSolarSystem, rocketHeight = 50 } = {}) 
 
   let cur = null, prev = null, jd = null, focus = "rocket", lastFocusPos = null, placed = false, thrusting = false;
   const craftPos = new THREE.Vector3(), tmp = new THREE.Vector3(), mtx = new THREE.Matrix4();
-  function setFocus(f) { focus = f; focusBtns.forEach((b, i) => b.classList.toggle("on", ["rocket", "earth", "moon"][i] === f)); lastFocusPos = null; placed = false; }
+  function setFocus(f) { focus = f; focusBtns.forEach((b, i) => b.classList.toggle("on", FOCI[i] === f)); lastFocusPos = null; placed = false; controls.enabled = f !== "onboard"; }
   setFocus("rocket");
 
   function update(r) {
     const v = r.view3d;
     if (!v) return;
     prev = cur; cur = v; jd = v.julian_date; thrusting = r.result.telemetry.thrust > 0;
-    predict.geometry.setFromPoints(v.trajectory.map(m2s));
+    if (v.trajectory.length) { // a fresh line each time: the number of predicted points changes from step to step
+      predict.geometry.dispose(); predict.geometry = new THREE.BufferGeometry().setFromPoints(v.trajectory.map(m2s));
+    }
     const p = m2s(v.craft);
     if (!lastTrail || lastTrail.distanceTo(p) > 0.002) { // record the flown path
       if (trailN >= TRAIL_MAX) { trailGeo.attributes.position.array.copyWithin(0, 3); trailN--; }
@@ -146,10 +149,27 @@ export function createFlight3D(host, { onSolarSystem, rocketHeight = 50 } = {}) 
       soi.visible = craftPos.distanceTo(moonP) < MOON_SOI / 1000 * 3;
     }
     // Rocket: pointing from the engine, stood on its tail
-    rocket.position.copy(craftPos); marker.position.copy(craftPos);
+    rocket.position.copy(craftPos); marker.position.copy(craftPos); marker.visible = true;
     const dirV = toScene(v.pointing).normalize();
     rocket.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dirV);
     flame.visible = thrusting; flame.position.copy(craftPos).addScaledVector(dirV, -rocketHeight * KM * 0.6);
+    if (focus === "onboard") { // a camera fixed to the side of the rocket near the top, looking back down along it
+      const L = rocketHeight * KM, side = new THREE.Vector3().crossVectors(dirV, craftPos.clone().normalize());
+      if (side.lengthSq() < 1e-12) side.set(1, 0, 0);
+      side.normalize();
+      // the rocket mesh is centred on craftPos and one rocket-length tall: sit beside its upper third, aim past the tail
+      camera.position.copy(craftPos).addScaledVector(dirV, L * 0.35).addScaledVector(side, L * 0.32);
+      camera.up.copy(side);
+      camera.lookAt(tmp.copy(craftPos).addScaledVector(dirV, -L).addScaledVector(side, L * 2.2)); // down the side, toward the horizon
+      camera.up.set(0, 1, 0);
+      marker.visible = false; flame.visible = false;
+      keepOutside(camera.position, new THREE.Vector3(), EARTH_R / 1000, 3e-6);
+      skyHolder.position.copy(camera.position);
+      renderer.render(scene, camera);
+      for (const e of [lEarth, lMoon, lRocket, lGhost]) e.style.display = "none";
+      placed = false;
+      return;
+    }
     // Camera follows the focus body
     const target = focus === "rocket" ? craftPos : focus === "moon" && moonP ? moonP : new THREE.Vector3();
     if (!placed) {
@@ -183,7 +203,7 @@ export function createFlight3D(host, { onSolarSystem, rocketHeight = 50 } = {}) 
   }
 
   return {
-    update, render,
+    update, render, setFocus,
     show(on) { wrap.style.display = on ? "" : "none"; if (on) placed = false; },
     dispose() { controls.dispose(); scene.traverse((o) => { o.geometry?.dispose?.(); const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach((x) => { x.map?.dispose?.(); x.dispose(); }); }); texs.forEach((t) => t.dispose()); renderer.dispose(); wrap.remove(); },
   };
