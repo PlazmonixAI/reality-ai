@@ -6,6 +6,8 @@
   "name": "reality-asm",
   "main": "cloudflare/worker.js",
   "compatibility_date": "2025-09-01",
+  // Keep variables added in the dashboard (Settings > Variables and Secrets) when a push redeploys the Worker.
+  "keep_vars": true,
   "assets": {
     "directory": "./cloudflare/public",
     "binding": "ASSETS",
