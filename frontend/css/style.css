@@ -758,8 +758,8 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .sf-design { background: #0b1526; border-color: #263856; border-radius: 10px; }
 .sf-design-head, .sf-design-foot { background: #0f1b30; }
 
-/* telemetry strip across the top instead of a side table */
-.sf-hud { left: 14px; top: 14px; width: auto; max-width: calc(100% - 760px); min-width: 0; padding: 8px 10px; border-radius: 8px; background: rgba(7,13,24,.82);
+/* telemetry strip along the bottom */
+.sf-hud { left: 50%; top: auto; bottom: 14px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 360px); min-width: 0; padding: 8px 10px; border-radius: 8px; background: rgba(7,13,24,.82);
   border: 1px solid #1f2f4c; border-top: 2px solid #FF5B2E; display: grid; grid-template-columns: repeat(6, minmax(78px, 1fr)); gap: 4px 10px; backdrop-filter: blur(4px); }
 .sf-hud .sf-status { grid-column: 1 / -1; margin: 0 0 2px; font-size: 11px; letter-spacing: .22em; }
 .sf-hud-row { display: flex; flex-direction: column; min-width: 0; overflow: hidden; padding: 0; border-left: 1px solid #1f2f4c; padding-left: 8px; }
@@ -770,13 +770,13 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .sf-btn { height: 32px; border-radius: 6px; border: 1px solid #263856; background: rgba(7,13,24,.82); font-size: 12px; letter-spacing: .08em; }
 .sf-btn.accent, .sf-btn.on { background: #FF5B2E; border-color: #FF5B2E; color: #0B1526; }
 .sf-warp-label { color: #FF8A63; font-family: "Plex Mono", monospace; }
-/* horizontal throttle at the bottom centre */
-.sf-throttle-box { top: auto; bottom: 16px; right: auto; left: 50%; transform: translateX(-50%); width: auto; flex-direction: row; gap: 10px; padding: 8px 14px;
+/* throttle: a vertical lever on the left edge */
+.sf-throttle-box { top: 50%; bottom: auto; right: auto; left: 14px; transform: translateY(-50%); width: 84px; flex-direction: column; gap: 8px; padding: 10px 8px;
   border-radius: 8px; background: rgba(7,13,24,.82); border: 1px solid #1f2f4c; }
-.sf-throttle { writing-mode: horizontal-tb; direction: ltr; width: 240px; height: 22px; accent-color: #FF5B2E; }
+.sf-throttle { writing-mode: vertical-lr; direction: rtl; width: 28px; height: 220px; accent-color: #FF5B2E; }
 .sf-thr-label { font-family: "Plex Mono", monospace; font-weight: 400; min-width: 46px; text-align: right; color: #FF8A63; }
-/* attitude controls: one compact pad */
-.sf-bottomleft { gap: 6px; padding: 6px; border-radius: 8px; background: rgba(7,13,24,.82); border: 1px solid #1f2f4c; }
+/* attitude controls: one compact pad at the top left */
+.sf-bottomleft { top: 14px; bottom: auto; max-width: 300px; gap: 6px; padding: 6px; border-radius: 8px; background: rgba(7,13,24,.82); border: 1px solid #1f2f4c; }
 .sf-rot { width: 46px; height: 40px; border-radius: 6px; font-size: 22px; background: #101d33; border: 1px solid #263856; }
 .sf-pitch { flex-basis: 100%; font: 600 12px/1.2 "Plex Mono", ui-monospace, monospace; color: #FFB199; padding: 0 2px 2px; }
 .sf-attach-pick { margin-bottom: 4px; }
@@ -793,8 +793,13 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .sf-stagebtn:hover, .sf-chutebtn:hover, .sf-fairbtn:hover { background: #15264a; }
 .sf-toast div { background: rgba(7,13,24,.86); border: 1px solid #1f2f4c; border-radius: 6px; }
 /* not enough room beside the toolbar: the strip drops below it */
-@media (max-width: 1500px) { .sf-hud { max-width: calc(100% - 190px); top: 58px; } }
-@media (max-width: 1100px) { .sf-hud { max-width: calc(100% - 28px); grid-template-columns: repeat(4, minmax(70px, 1fr)); } }
+@media (max-width: 1500px) { .sf-bottomleft { top: 58px; } }
+@media (max-width: 1100px) { .sf-hud { max-width: calc(100% - 28px); grid-template-columns: repeat(4, minmax(70px, 1fr)); }
+  .sf-throttle-box { top: auto; bottom: 150px; transform: none; } .sf-throttle { height: 140px; } }
+.sf-stagepick { width: 128px; height: 34px; border-radius: 6px; background: rgba(7,13,24,.86); color: #eef3fa; border: 1px solid #263856; font-size: 12px; padding: 0 6px; }
+.sf-stage-pop { position: absolute; z-index: 3; transform: translate(-50%, -120%); padding: 6px 10px; border-radius: 6px; border: 1px solid #FF5B2E;
+  background: rgba(7,13,24,.92); color: #eef3fa; font-size: 12px; letter-spacing: .1em; cursor: pointer; white-space: nowrap; }
+.sf-cam-note { position: absolute; left: 50%; top: 112px; transform: translateX(-50%); z-index: 2; font: 600 11px "Plex Mono", monospace; letter-spacing: .14em; color: #8fa3c2; pointer-events: none; }
 
 /* Solar System: mission clock panel (top left) and a tool row along the bottom */
 .ss-top { left: 16px; top: 12px; }
