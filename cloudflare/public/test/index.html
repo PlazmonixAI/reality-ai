@@ -3,36 +3,104 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Test area · Reality ASM</title>
+  <title>Team Desk · Reality ASM</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="/static/brand/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/site.css">
   <link rel="stylesheet" href="/static/prelaunch.css">
+  <script type="module" src="/test/hub.js"></script>
 </head>
-<body>
+<body class="hub">
   <header class="nav">
     <div class="wrap">
       <a class="brand" href="/"><img src="/static/brand/mark.svg" alt="" width="55" height="30"><span>Reality <b>ASM</b></span></a>
       <span class="grow"></span>
-      <span class="tag">Private test area</span>
+      <span class="tag">Team desk</span>
     </div>
   </header>
-  <main class="test-box">
-    <p class="eyebrow">Team only</p>
-    <h1>Reality ASM test area</h1>
-    <p class="lede">You're signed in to the private test area. The full app runs on the Render backend; open it below and try the checklist.</p>
-    <p class="test-note" data-noapp>The beta app link appears here once the backend is live on Render (set <code>beta_app_url</code> in <code>cloudflare/site.config.json</code> and rebuild).</p>
-    <p><a class="btn" href="/test/waitlist.csv">Download the waitlist (CSV)</a></p>
-    <h2>What to test</h2>
-    <ol>
-      <li>Create an account (use the invite code if the team gave you one), sign out and sign back in.</li>
-      <li>Spaceflight Lab: pick PSLV-XL, launch, and watch the strap-on boosters burn out and drop away.</li>
-      <li>Start in low orbit, open the map, and try "To Ap" and the quick save (K) and load (L).</li>
-      <li>Mission Control: found a company, launch Cartosat-3, take a photo in daylight, and fire a small burn.</li>
-      <li>Send a probe to Mars with "Find launch windows", then look for it in the Solar System.</li>
-      <li>Challenges: finish "First orbit". Then open History and continue an old flight.</li>
-      <li>Anything odd? Use "Send feedback" in the account menu, or write to <a class="link" href="mailto:contact@plazmonixai.in">contact@plazmonixai.in</a>.</li>
-    </ol>
+
+  <main class="hub-main wrap">
+    <div class="hub-head">
+      <div>
+        <p class="eyebrow">Team only</p>
+        <h1>Reality ASM team desk</h1>
+        <p class="lede">Where the site stands, who has joined the waitlist, and what is left before launch.</p>
+      </div>
+      <button type="button" class="btn btn-ghost" id="hub-refresh">Check again</button>
+    </div>
+
+    <section class="hub-status" aria-label="Status">
+      <article class="hub-card" data-check="site"><span class="dot"></span><h3>Website</h3><p>Checking…</p></article>
+      <article class="hub-card" data-check="search"><span class="dot"></span><h3>Search engines</h3><p>Checking…</p></article>
+      <article class="hub-card" data-check="waitlist"><span class="dot"></span><h3>Waitlist storage</h3><p>Checking…</p></article>
+      <article class="hub-card" data-check="backend"><span class="dot"></span><h3>Backend (Render)</h3><p>Checking…</p></article>
+    </section>
+    <p class="hub-when muted small" id="hub-when"></p>
+
+    <div class="hub-grid">
+      <section class="hub-panel">
+        <div class="hub-panel-head"><h2>Waitlist</h2><a class="btn btn-ghost small" href="/test/waitlist.csv">Download CSV</a></div>
+        <div class="hub-nums">
+          <div><b id="wl-total">–</b><span>people in total</span></div>
+          <div><b id="wl-day">–</b><span>last 24 hours</span></div>
+          <div><b id="wl-week">–</b><span>last 7 days</span></div>
+        </div>
+        <div id="wl-latest" class="hub-table"><p class="muted small">Loading…</p></div>
+      </section>
+
+      <section class="hub-panel">
+        <div class="hub-panel-head"><h2>Before launch</h2><span class="muted small" id="todo-count"></span></div>
+        <p class="muted small">Tick items as they are done. Ticks are kept in this browser only.</p>
+        <ul class="hub-todo" id="todo">
+          <li data-id="dns"><label><input type="checkbox"> DNS: the 3 placeholder A records deleted, nameservers changed, domain shows Active</label></li>
+          <li data-id="domains"><label><input type="checkbox"> Worker custom domains: realityasm.com and www.realityasm.com</label></li>
+          <li data-id="www"><label><input type="checkbox"> Redirect rule: www to the bare domain (template "Redirect from WWW to root")</label></li>
+          <li data-id="secrets"><label><input type="checkbox"> TEST_USERNAME and TEST_PASSWORD saved as secrets</label></li>
+          <li data-id="gsc"><label><input type="checkbox"> Google Search Console: domain verified, sitemap submitted, indexing requested</label></li>
+          <li data-id="bing"><label><input type="checkbox"> Bing Webmaster Tools: imported from Search Console</label></li>
+          <li data-id="email"><label><input type="checkbox"> contact@plazmonixai.in receives mail</label></li>
+          <li data-id="render"><label><input type="checkbox"> Backend live on Render (SECRET_KEY, LLM keys, disk)</label></li>
+          <li data-id="betaurl"><label><input type="checkbox"> beta_app_url set in cloudflare/site.config.json and the site rebuilt</label></li>
+          <li data-id="google"><label><input type="checkbox"> Google sign-in for ASM Teach (OAuth client and redirect address)</label></li>
+          <li data-id="appdomain"><label><input type="checkbox"> app.realityasm.com pointed at the Render app</label></li>
+        </ul>
+      </section>
+
+      <section class="hub-panel">
+        <h2>Open the app</h2>
+        <p class="test-note" data-noapp>The simulations, the AI, ASM Teach and accounts run on the backend, which is not live yet.
+          Once it is on Render, put its address in <code>beta_app_url</code> (<code>cloudflare/site.config.json</code>), rebuild and push.
+          The buttons for the app and for ASM Teach then appear here, and the Backend card above turns green.</p>
+        <h3>What to test once the app is live</h3>
+        <ol class="hub-steps">
+          <li>Create an account, sign out and sign back in.</li>
+          <li>Spaceflight Lab: pick PSLV-XL, launch, and watch the strap-on boosters burn out and drop away.</li>
+          <li>Solar System: use the mission clock to run forward a year, then press Now.</li>
+          <li>Mission Control: found a company, launch Cartosat-3, take a photo in daylight and fire a small burn.</li>
+          <li>ASM Teach: sign up a school with Google, add a teacher, sign in as the teacher.</li>
+          <li>On the board, write <code>sin^2 x + cos^2 x = 1</code> in the Equation Lab, then say "T equals 2 pi root L by g" with Listen.</li>
+          <li>Show a PDF from Files and a YouTube video in the same lesson, then save the lesson.</li>
+          <li>Anything odd? Write to <a class="link" href="mailto:contact@plazmonixai.in">contact@plazmonixai.in</a>.</li>
+        </ol>
+      </section>
+
+      <section class="hub-panel">
+        <h2>Team links</h2>
+        <ul class="hub-links">
+          <li><a href="https://dash.cloudflare.com/" target="_blank" rel="noopener">Cloudflare dashboard</a><span>Worker reality-asm, DNS, KV, redirect rules</span></li>
+          <li><a href="https://github.com/PlazmonixAI/reality-ai" target="_blank" rel="noopener">GitHub: reality-ai</a><span>Code; a push to main redeploys this site</span></li>
+          <li><a href="https://dashboard.render.com/" target="_blank" rel="noopener">Render dashboard</a><span>The backend: engine, AI, accounts, ASM Teach</span></li>
+          <li><a href="https://search.google.com/search-console" target="_blank" rel="noopener">Google Search Console</a><span>Indexing, searches, sitemap</span></li>
+          <li><a href="https://www.bing.com/webmasters" target="_blank" rel="noopener">Bing Webmaster Tools</a><span>Bing, Yahoo, DuckDuckGo</span></li>
+          <li><a href="https://pagespeed.web.dev/analysis?url=https%3A%2F%2Frealityasm.com%2F" target="_blank" rel="noopener">PageSpeed Insights</a><span>Speed on phones and computers</span></li>
+          <li><a href="https://search.google.com/test/rich-results?url=https%3A%2F%2Frealityasm.com%2F" target="_blank" rel="noopener">Rich results test</a><span>Checks the structured data Google reads</span></li>
+          <li><a href="https://www.opengraph.xyz/url/https%3A%2F%2Frealityasm.com%2F" target="_blank" rel="noopener">Share preview</a><span>How the link looks on WhatsApp, LinkedIn, X</span></li>
+          <li><a href="/" target="_blank">Main page</a><span>What visitors see</span></li>
+          <li><a href="/sitemap.xml" target="_blank">sitemap.xml</a><span>The pages search engines are asked to index</span></li>
+          <li><a href="/robots.txt" target="_blank">robots.txt</a><span>What search engines may read</span></li>
+        </ul>
+      </section>
+    </div>
   </main>
 </body>
 </html>

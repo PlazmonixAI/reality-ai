@@ -1,11 +1,12 @@
 // Cloudflare Worker for the pre-launch site (Workers with static assets). The pages are the plain files in
 // cloudflare/public; this script only handles the two dynamic parts, reusing the same code as the Pages functions:
 //   POST /api/waitlist   store an email in the WAITLIST KV namespace
-//   /test, /test/*       username and password (TEST_USERNAME / TEST_PASSWORD), and the waitlist CSV
+//   /test, /test/*       username and password (TEST_USERNAME / TEST_PASSWORD), the waitlist CSV and the team status
 // Anything else is a static file; unknown addresses get 404.html, the "Coming soon" page.
 import { onRequestPost as joinWaitlist } from "./functions/api/waitlist.js";
 import { onRequest as testGate } from "./functions/test/_middleware.js";
 import { onRequestGet as waitlistCsv } from "./functions/test/waitlist.csv.js";
+import { onRequestGet as teamStatus } from "./functions/test/status.json.js";
 
 export default {
   async fetch(request, env) {
@@ -16,9 +17,10 @@ export default {
       return joinWaitlist({ request, env });
     }
     if (url.pathname === "/test" || url.pathname.startsWith("/test/")) {
+      const dynamic = { "/test/waitlist.csv": waitlistCsv, "/test/status.json": teamStatus }[url.pathname];
       const next = () => {
-        if (url.pathname !== "/test/waitlist.csv") return assets();
-        return request.method === "GET" ? waitlistCsv({ env }) : new Response("Method not allowed", { status: 405 });
+        if (!dynamic) return assets();
+        return request.method === "GET" ? dynamic({ request, env }) : new Response("Method not allowed", { status: 405 });
       };
       return testGate({ request, env, next });
     }

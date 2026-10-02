@@ -15,3 +15,55 @@
 .test-box ol { padding-left: 20px; color: #2B3446; }
 .test-box li { margin-bottom: 8px; }
 .test-note { background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+
+/* /test team desk */
+.hub-main { padding-top: 40px; padding-bottom: 64px; }
+.hub section.hub-status, .hub section.hub-panel { padding-top: 20px; padding-bottom: 20px; }
+.hub section.hub-status { padding: 0; }
+.hub .muted { color: var(--muted); }
+.hub .small { font-size: 14px; }
+.hub-head { display: flex; gap: 16px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 24px; }
+.hub-head h1 { font-size: clamp(28px, 4vw, 40px); margin: 8px 0 8px; }
+.hub-head .lede { margin: 0; }
+.hub-status { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.hub-card { position: relative; background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 16px 16px 14px 18px; }
+.hub-card h3 { font-size: 15px; margin: 0 0 6px; padding-left: 18px; }
+.hub-card p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.45; }
+.hub-card .dot { position: absolute; left: 18px; top: 21px; width: 10px; height: 10px; border-radius: 50%; background: #B8C0CC; }
+.hub-card[data-state="ok"] { border-left-color: var(--ok); }
+.hub-card[data-state="ok"] .dot { background: var(--ok); }
+.hub-card[data-state="warn"] { border-left-color: #D99A1E; }
+.hub-card[data-state="warn"] .dot { background: #D99A1E; }
+.hub-card[data-state="bad"] { border-left-color: var(--bad); }
+.hub-card[data-state="bad"] .dot { background: var(--bad); }
+.hub-when { margin: 10px 0 28px; min-height: 1.4em; }
+.hub-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+.hub-panel { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; min-width: 0; }
+.hub-panel h2 { font-size: 20px; margin: 0 0 12px; }
+.hub-panel h3 { font-size: 16px; margin: 22px 0 8px; }
+.hub-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+.hub-panel-head h2 { margin: 0; }
+.hub .btn.small { height: 34px; padding: 0 12px; font-size: 14px; }
+.hub-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+.hub-nums div { background: var(--paper-2); border-radius: 8px; padding: 12px; }
+.hub-nums b { display: block; font-size: 26px; color: var(--ink); }
+.hub-nums span { font-size: 13px; color: var(--muted); }
+.hub-table { overflow-x: auto; }
+.hub-table table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.hub-table th, .hub-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.hub-table th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+.hub-todo { list-style: none; padding: 0; margin: 8px 0 0; }
+.hub-todo li { border-bottom: 1px solid var(--line); }
+.hub-todo label { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; font-size: 15px; cursor: pointer; }
+.hub-todo input { margin-top: 4px; accent-color: var(--ember); width: 16px; height: 16px; flex: none; }
+.hub-todo label:has(input:checked) { color: var(--muted); text-decoration: line-through; }
+.hub-steps { padding-left: 20px; margin: 0; font-size: 15px; }
+.hub-steps li { margin-bottom: 7px; }
+.hub-links { list-style: none; padding: 0; margin: 0; }
+.hub-links li { padding: 9px 0; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 2px; }
+.hub-links a { color: var(--ember-dark); font-weight: 550; text-decoration: none; }
+.hub-links a:hover { text-decoration: underline; }
+.hub-links span { font-size: 13px; color: var(--muted); }
+.hub code { font-size: 13px; background: var(--paper-2); padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 860px) { .hub-grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .hub-main { padding-top: 24px; } .hub-nums b { font-size: 22px; } .hub-panel { padding: 16px; } }

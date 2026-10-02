@@ -16,7 +16,9 @@ def test_build_prelaunch_site():
     assert 'id="waitlist"' in index and "/static/waitlist.js" in index and "site.js" not in index
     soon = (OUT / "404.html").read_text()
     assert "Coming soon" in soon and "noindex" in soon
-    assert "noindex" in (OUT / "test" / "index.html").read_text()
+    desk = (OUT / "test" / "index.html").read_text()
+    assert "noindex" in desk and "/test/hub.js" in desk and "{{" not in desk
+    assert (OUT / "test" / "hub.js").exists() and "beta_app_url" in json.loads((OUT / "test" / "config.json").read_text())
     assert "Disallow: /test" in (OUT / "robots.txt").read_text()
     assert not (OUT / "login.html").exists() and not (OUT / "legal").exists()
     cfg = json.loads((ROOT / "cloudflare" / "site.config.json").read_text())
@@ -43,6 +45,13 @@ def test_seo_files():
     for f in ("og-image.jpg", "apple-touch-icon.png", "icon-192.png", "icon-512.png"):
         assert (OUT / "static" / "brand" / f).exists()
     assert "\u2014" not in index and "—" not in index
+
+
+def test_worker_serves_team_status_behind_the_password():
+    worker = (ROOT / "cloudflare" / "worker.js").read_text()
+    assert '"/test/status.json": teamStatus' in worker and "testGate({ request, env, next })" in worker
+    status = (ROOT / "cloudflare" / "functions" / "test" / "status.json.js").read_text()
+    assert "/health" in status and "onRequestGet" in status and "no-store" in status
 
 
 def test_test_area_needs_a_password():
