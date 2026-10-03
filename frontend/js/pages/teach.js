@@ -12,6 +12,7 @@ import { createBoard } from "../teach/board.js";
 import { equationLab, looksLikeEquation } from "../teach/eqlab.js";
 import { listenButton, setListenHandler } from "../teach/listen.js";
 
+const lower = (t) => (t && /^[A-Z][a-z]/.test(t) ? t[0].toLowerCase() + t.slice(1) : t); // "Time" → "time", "KMnO₄ used" unchanged
 const SUBJECT = { physics: "Physics", chemistry: "Chemistry", mathematics: "Maths" };
 /** The library is grouped into four courseworks (one per year of senior school), never by board or class name. */
 export const coursework = (cls) => `Coursework ${cls - 8}`;
@@ -257,11 +258,11 @@ function classroom(root, id, params) {
       graphBox.hidden = false;
       if (g.path) {
         graph.opts.xLabel = `${g.series[0].label}${g.series[0].unit ? ` (${g.series[0].unit})` : ""}`;
-        graph.opts.title = `${g.series[1].label} against ${g.series[0].label.toLowerCase()}`;
+        graph.opts.title = `${g.series[1].label} against ${lower(g.series[0].label)}`;
         graph.setSeries([{ name: g.series[1].label, color: colors[0], x: g.series[0].values, y: g.series[1].values }]);
       } else {
         graph.opts.xLabel = `${g.x.label}${g.x.unit ? ` (${g.x.unit})` : ""}`;
-        graph.opts.title = g.series.length === 1 ? `${g.series[0].label}${g.series[0].unit ? ` (${g.series[0].unit})` : ""} against ${g.x.label.toLowerCase()}` : `Against ${g.x.label.toLowerCase()}`;
+        graph.opts.title = g.series.length === 1 ? `${g.series[0].label}${g.series[0].unit ? ` (${g.series[0].unit})` : ""} against ${lower(g.x.label)}` : `Against ${lower(g.x.label)}`;
         graph.setSeries(g.series.slice(0, 3).map((s, k) => ({ name: `${s.label}${s.unit ? ` (${s.unit})` : ""}`, color: colors[k], x: g.x.values, y: s.values })));
       }
       graph.opts.yRange = robustRange(g.path ? [g.series[1].values] : g.series.slice(0, 3).map((s) => s.values));

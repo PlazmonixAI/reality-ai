@@ -447,3 +447,64 @@ X("c12-half-life-drug", 12, C, "Chemical Kinetics", "Drug in the body: repeated 
   series="mt:Amount left:mg:dose*(1/2)**(tt/t_half)", plot="tt=0..6*t_half: mt", eqs="left = dose*(1/2)**(t/t_half)",
   tags="first order elimination drug half life medicine", scene="decay: N0=dose, N=left, half=t_half", ask="left",
   steps="Elimination of most drugs is first order | After every half-life half is left | Amount = dose × (½)^(t/t½)")
+
+# ================================================================ Volumetric analysis (practical)
+# A standard solution is made by weighing a primary standard into a measuring flask; a pipetted volume of it is
+# titrated against the solution of unknown strength from a burette. At the end point the equivalents match:
+# n₁M₁V₁ = n₂M₂V₂, n being the electrons (redox) or H⁺/OH⁻ (acid-base) each formula unit gives or takes.
+VA = "Volumetric Analysis (Practical)"
+
+X("c12-kmno4-oxalic", 12, C, VA, "Volumetric analysis: KMnO₄ against oxalic acid", "practical",
+  "Molarity and strength of a KMnO₄ solution from a standard oxalic acid solution.",
+  params="w:Oxalic acid crystals weighed (H₂C₂O₄·2H₂O):g:1.575:0.1:10; Vf:Volume of the measuring flask:mL:250:50:1000; "
+         "V1:Oxalic acid pipetted:mL:10:5:50; V2:KMnO₄ used (concordant reading):mL:10:1:50",
+  out="M1:Molarity of the oxalic acid:mol/L:w*1000/(126.07*Vf); M2:Molarity of KMnO₄:mol/L:2*w*1000/(126.07*Vf)*V1/(5*V2); "
+      "S:Strength of KMnO₄:g/L:2*w*1000/(126.07*Vf)*V1/(5*V2)*158.03",
+  plot="V2: M2", eqs="M1 = w*1000/(126.07*Vf) | 2*M1*V1 = 5*M2*V2 | S = M2*158.03", scene="titration: V=V2, Vf=V1, ind=kmno4",
+  tags="volumetric analysis titration kmno4 potassium permanganate oxalic acid redox self indicator burette pipette molarity strength",
+  steps="2MnO₄⁻ + 5C₂O₄²⁻ + 16H⁺ → 2Mn²⁺ + 10CO₂ + 8H₂O | Standard solution: M₁ = w × 1000 / (126.07 × V_flask), 126.07 g/mol being H₂C₂O₄·2H₂O | "
+        "Each oxalate gives 2 electrons and each permanganate takes 5, so at the end point 2M₁V₁ = 5M₂V₂ | M₂ = 2M₁V₁ / (5V₂) | "
+        "Strength = M₂ × 158.03 g/mol (KMnO₄)",
+  assume="The oxalic acid is acidified with dilute H₂SO₄ and warmed to 60 to 70 °C before titrating | "
+         "KMnO₄ is its own indicator: the end point is the first permanent pale pink | Concordant readings agree within 0.1 mL",
+  ask="M2,S")
+
+X("c12-kmno4-mohr", 12, C, VA, "Volumetric analysis: KMnO₄ against Mohr's salt", "practical",
+  "Molarity and strength of a KMnO₄ solution from a standard ferrous ammonium sulphate solution.",
+  params="w:Mohr's salt weighed (FeSO₄(NH₄)₂SO₄·6H₂O):g:4.9:0.5:30; Vf:Volume of the measuring flask:mL:250:50:1000; "
+         "V1:Mohr's salt solution pipetted:mL:10:5:50; V2:KMnO₄ used (concordant reading):mL:10:1:50",
+  out="M1:Molarity of Mohr's salt:mol/L:w*1000/(392.14*Vf); M2:Molarity of KMnO₄:mol/L:w*1000/(392.14*Vf)*V1/(5*V2); "
+      "S:Strength of KMnO₄:g/L:w*1000/(392.14*Vf)*V1/(5*V2)*158.03",
+  plot="V2: M2", eqs="M1 = w*1000/(392.14*Vf) | M1*V1 = 5*M2*V2 | S = M2*158.03", scene="titration: V=V2, Vf=V1, ind=kmno4",
+  tags="volumetric analysis titration kmno4 potassium permanganate mohr salt ferrous ammonium sulphate redox burette molarity strength",
+  steps="MnO₄⁻ + 5Fe²⁺ + 8H⁺ → Mn²⁺ + 5Fe³⁺ + 4H₂O | Standard solution: M₁ = w × 1000 / (392.14 × V_flask), 392.14 g/mol being Mohr's salt | "
+        "Each Fe²⁺ gives 1 electron and each permanganate takes 5, so M₁V₁ = 5M₂V₂ | M₂ = M₁V₁ / (5V₂) | Strength = M₂ × 158.03 g/mol",
+  assume="Titrated cold, in dilute H₂SO₄ (no heating, which would oxidise Fe²⁺ in air) | KMnO₄ is its own indicator | "
+         "Concordant readings agree within 0.1 mL",
+  ask="M2,S")
+
+X("c11-naoh-oxalic", 11, C, VA, "Volumetric analysis: NaOH against oxalic acid", "practical",
+  "Molarity and strength of sodium hydroxide from a standard oxalic acid solution, with phenolphthalein.",
+  params="w:Oxalic acid crystals weighed (H₂C₂O₄·2H₂O):g:0.63:0.1:10; Vf:Volume of the measuring flask:mL:100:50:1000; "
+         "V1:Oxalic acid pipetted:mL:10:5:50; V2:NaOH used (concordant reading):mL:10:1:50",
+  out="M1:Molarity of the oxalic acid:mol/L:w*1000/(126.07*Vf); M2:Molarity of NaOH:mol/L:2*w*1000/(126.07*Vf)*V1/V2; "
+      "S:Strength of NaOH:g/L:2*w*1000/(126.07*Vf)*V1/V2*40.00",
+  plot="V2: M2", eqs="M1 = w*1000/(126.07*Vf) | 2*M1*V1 = M2*V2 | S = M2*40", scene="titration: V=V2, Vf=V1, ind=phph",
+  tags="volumetric analysis titration naoh sodium hydroxide oxalic acid phenolphthalein acid base burette molarity strength",
+  steps="H₂C₂O₄ + 2NaOH → Na₂C₂O₄ + 2H₂O | Standard solution: M₁ = w × 1000 / (126.07 × V_flask) | "
+        "Oxalic acid gives 2 H⁺ and NaOH takes 1, so 2M₁V₁ = M₂V₂ | M₂ = 2M₁V₁ / V₂ | Strength = M₂ × 40.00 g/mol (NaOH)",
+  assume="Phenolphthalein turns from colourless to pink at the end point | Concordant readings agree within 0.1 mL",
+  ask="M2,S", lab="titration")
+
+X("c11-hcl-na2co3", 11, C, VA, "Volumetric analysis: HCl against sodium carbonate", "practical",
+  "Molarity and strength of hydrochloric acid from a standard sodium carbonate solution, with methyl orange.",
+  params="w:Anhydrous Na₂CO₃ weighed:g:1.325:0.1:10; Vf:Volume of the measuring flask:mL:250:50:1000; "
+         "V1:Na₂CO₃ solution pipetted:mL:10:5:50; V2:HCl used (concordant reading):mL:10:1:50",
+  out="M1:Molarity of the Na₂CO₃:mol/L:w*1000/(105.99*Vf); M2:Molarity of HCl:mol/L:2*w*1000/(105.99*Vf)*V1/V2; "
+      "S:Strength of HCl:g/L:2*w*1000/(105.99*Vf)*V1/V2*36.46",
+  plot="V2: M2", eqs="M1 = w*1000/(105.99*Vf) | 2*M1*V1 = M2*V2 | S = M2*36.46", scene="titration: V=V2, Vf=V1, ind=mo",
+  tags="volumetric analysis titration hcl hydrochloric acid sodium carbonate methyl orange acid base burette molarity strength",
+  steps="Na₂CO₃ + 2HCl → 2NaCl + H₂O + CO₂ | Standard solution: M₁ = w × 1000 / (105.99 × V_flask) | "
+        "Carbonate takes 2 H⁺ and HCl gives 1, so 2M₁V₁ = M₂V₂ | M₂ = 2M₁V₁ / V₂ | Strength = M₂ × 36.46 g/mol (HCl)",
+  assume="Methyl orange turns from yellow to orange-red at the end point | Concordant readings agree within 0.1 mL",
+  ask="M2,S", lab="titration")

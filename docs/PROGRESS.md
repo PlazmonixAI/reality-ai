@@ -237,6 +237,11 @@
 - **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
 - **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
 
+## 2026-10-03: Volumetric analysis practicals in ASM Teach
+- Four new practicals under "Volumetric Analysis (Practical)": KMnO₄ against oxalic acid and KMnO₄ against Mohr's salt (Coursework 4), NaOH against oxalic acid and HCl against sodium carbonate (Coursework 2). Each takes the mass weighed, the flask volume, the pipetted volume and the concordant burette reading, and computes the standard solution's molarity, the unknown's molarity (n₁M₁V₁ = n₂M₂V₂ with the electrons or H⁺ per formula unit) and its strength in g/L, with the balanced equation and the derivation.
+- New "titration" classroom picture: a burette on a stand over a conical flask; the titrant runs in to the engine's end-point reading and the flask changes colour (KMnO₄ pale pink, phenolphthalein pink, methyl orange yellow to orange-red).
+- Graph titles keep chemical formulas as written (KMnO₄, not kmno₄). 285 experiments in the library.
+
 ## 2026-10-02 (evening): Spaceflight Lab fixes from testing
 - Solid bodies: the 3D flight view keeps the camera outside the Earth and the Moon, and the Solar System keeps it outside every planet and moon (not only the one in focus).
 - Steering: a tap on ‹ or › turns the rocket 1°, holding turns it at 20° a second; Q / E nudge 1° from the keyboard; the panel shows the angle from vertical.
