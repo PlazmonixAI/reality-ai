@@ -1,13 +1,16 @@
-// ASM Teach whiteboard: pen, highlighter, eraser, typed equations, several pages and undo. Coordinates are stored as
+// ASM Teach whiteboard: pen, highlighter, eraser, a plain, grid, lined or dotted board, typed equations, several pages and undo. Coordinates are stored as
 // fractions of the board so a lesson looks the same on a laptop and on the classroom projector.
 import { el } from "../core/ui.js";
 
 const COLORS = [["Ink", "#0B1526"], ["Ember", "#FF5B2E"], ["Blue", "#2a78d6"], ["Green", "#1baf7a"]];
 const SIZES = [["Fine", 2], ["Medium", 4], ["Bold", 8]];
+const PAPERS = [["plain", "Plain"], ["grid", "Grid"], ["lines", "Lines"], ["dots", "Dots"]];
+const PAPER_KEY = "asmteach.board.paper";
+const savedPaper = () => { try { return localStorage.getItem(PAPER_KEY) || "grid"; } catch { return "grid"; } };
 
 export function createBoard({ onEquation, transparent: overlay = false } = {}) {
   let transparent = overlay;
-  let pages = [{ strokes: [], texts: [] }], page = 0, tool = "pen", color = COLORS[0][1], size = 4;
+  let pages = [{ strokes: [], texts: [] }], page = 0, tool = "pen", color = COLORS[0][1], size = 4, paper = savedPaper();
   const undo = [];
   let drawing = null;
 
@@ -19,19 +22,22 @@ export function createBoard({ onEquation, transparent: overlay = false } = {}) {
   const tools = [toolBtn("pen", "Pen", "Pen (P)"), toolBtn("marker", "Highlight", "Highlighter (H)"), toolBtn("eraser", "Eraser", "Eraser (E)")];
   const swatches = COLORS.map(([name, c]) => el("button", { type: "button", class: "board-swatch", title: name, "aria-label": `${name} colour`, style: `background:${c}`, onclick: () => { color = c; if (tool === "eraser") setTool("pen"); sync(); } }));
   const sizeSel = el("select", { class: "board-size", "aria-label": "Pen size", onchange: (e) => { size = Number(e.target.value); } }, SIZES.map(([n, v]) => el("option", { value: v, selected: v === size }, n)));
+  const paperBtns = PAPERS.map(([id, name]) => el("button", { type: "button", class: "board-tool board-paper", "data-paper": id, title: `${name} board`, onclick: () => setPaper(id) }, name));
   const bar = el("div", { class: "board-bar" },
-    el("div", { class: "board-group" }, tools),
-    el("div", { class: "board-group" }, swatches, sizeSel),
+    el("div", { class: "board-group" }, el("span", { class: "board-label" }, "Draw"), tools),
+    el("div", { class: "board-group" }, el("span", { class: "board-label" }, "Colour"), el("div", { class: "board-swatches" }, swatches), sizeSel),
+    el("div", { class: "board-group" }, el("span", { class: "board-label" }, "Board"), paperBtns),
     el("div", { class: "board-group" },
       el("button", { type: "button", class: "board-tool", title: "Undo (Ctrl+Z)", onclick: () => doUndo() }, "Undo"),
       el("button", { type: "button", class: "board-tool", title: "Clear this page", onclick: () => { pushUndo(); pages[page] = { strokes: [], texts: [] }; redraw(); } }, "Clear")),
-    el("div", { class: "board-group" },
-      el("button", { type: "button", class: "board-tool", "aria-label": "Previous page", onclick: () => go(page - 1) }, "‹"), pageLabel,
-      el("button", { type: "button", class: "board-tool", "aria-label": "Next page", onclick: () => go(page + 1) }, "›"),
+    el("div", { class: "board-group" }, el("span", { class: "board-label" }, "Pages"),
+      el("div", { class: "board-pages" },
+        el("button", { type: "button", class: "board-tool", "aria-label": "Previous page", onclick: () => go(page - 1) }, "‹"), pageLabel,
+        el("button", { type: "button", class: "board-tool", "aria-label": "Next page", onclick: () => go(page + 1) }, "›")),
       el("button", { type: "button", class: "board-tool", title: "Add a page", onclick: () => { pages.splice(page + 1, 0, { strokes: [], texts: [] }); go(page + 1); } }, "+ Page")));
   const eqForm = el("form", { class: "board-eqform", onsubmit: (e) => { e.preventDefault(); const v = eqInput.value.trim(); if (!v) return; writeText(v); eqInput.value = ""; onEquation?.(v); } },
     eqInput, el("button", { type: "submit", class: "btn small primary" }, "Write"));
-  const root = el("div", { class: `board${transparent ? " overlay" : ""}` }, bar, el("div", { class: "board-surface" }, canvas), eqForm);
+  const root = el("div", { class: `board${transparent ? " overlay" : ""}` }, el("div", { class: "board-body" }, bar, el("div", { class: "board-surface" }, canvas)), eqForm);
 
   const ro = new ResizeObserver(() => {
     const r = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
@@ -41,10 +47,12 @@ export function createBoard({ onEquation, transparent: overlay = false } = {}) {
   ro.observe(canvas);
 
   function setTool(t) { tool = t; sync(); }
+  function setPaper(id) { paper = id; try { localStorage.setItem(PAPER_KEY, id); } catch { /* storage unavailable */ } sync(); redraw(); }
   function sync() {
     tools.forEach((b) => b.classList.toggle("on", b.dataset.tool === tool));
     swatches.forEach((b, i) => b.classList.toggle("on", COLORS[i][1] === color && tool !== "eraser"));
     pageLabel.textContent = `${page + 1} / ${pages.length}`;
+    paperBtns.forEach((b) => b.classList.toggle("on", b.dataset.paper === paper));
   }
   function go(p) { page = Math.max(0, Math.min(pages.length - 1, p)); sync(); redraw(); }
   function pushUndo() { undo.push(JSON.stringify(pages)); if (undo.length > 60) undo.shift(); }
@@ -65,9 +73,7 @@ export function createBoard({ onEquation, transparent: overlay = false } = {}) {
     ctx.clearRect(0, 0, W, H);
     if (!transparent) {
       ctx.fillStyle = "#fdfdfb"; ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = "#eef0f3"; ctx.lineWidth = 1;
-      for (let x = 24; x < W; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
-      for (let y = 24; y < H; y += 24) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      drawPaper(W, H);
     }
     const pg = pages[page];
     for (const s of pg.strokes) drawStroke(s, W, H);
@@ -75,6 +81,21 @@ export function createBoard({ onEquation, transparent: overlay = false } = {}) {
       const fs = textSize(t, W, H);
       ctx.fillStyle = t.color; ctx.font = `600 ${fs}px Plex, system-ui`; ctx.textBaseline = "top";
       wrap(t.text, W * (0.96 - t.x)).forEach((ln, k) => ctx.fillText(ln, t.x * W, t.y * H + k * fs * 1.25));
+    }
+  }
+
+  function drawPaper(W, H) { // the teacher's choice of board: plain, graph-paper grid, ruled lines or dots
+    ctx.lineWidth = 1;
+    if (paper === "grid") {
+      for (let k = 1, x = 24; x < W; x += 24, k++) { ctx.strokeStyle = k % 5 ? "#eef0f3" : "#dfe3e9"; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let k = 1, y = 24; y < H; y += 24, k++) { ctx.strokeStyle = k % 5 ? "#eef0f3" : "#dfe3e9"; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    } else if (paper === "lines") {
+      ctx.strokeStyle = "#dbe4f0";
+      for (let y = 40; y < H; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      ctx.strokeStyle = "rgba(255,91,46,.35)"; ctx.beginPath(); ctx.moveTo(56, 0); ctx.lineTo(56, H); ctx.stroke();
+    } else if (paper === "dots") {
+      ctx.fillStyle = "#cfd6df";
+      for (let x = 24; x < W; x += 24) for (let y = 24; y < H; y += 24) ctx.fillRect(x - 1, y - 1, 2, 2);
     }
   }
 
@@ -144,8 +165,12 @@ export function createBoard({ onEquation, transparent: overlay = false } = {}) {
   return {
     root,
     writeText,
-    get data() { return { pages: pages.map((p) => ({ strokes: p.strokes, texts: p.texts })) }; },
-    load(data) { if (data?.pages?.length) { pages = data.pages.map((p) => ({ strokes: p.strokes || [], texts: p.texts || [] })); page = 0; undo.length = 0; sync(); redraw(); } },
+    get data() { return { paper, pages: pages.map((p) => ({ strokes: p.strokes, texts: p.texts })) }; },
+    load(data) {
+      if (data?.paper && PAPERS.some(([id]) => id === data.paper)) paper = data.paper; // a saved lesson keeps its board
+      if (data?.pages?.length) { pages = data.pages.map((p) => ({ strokes: p.strokes || [], texts: p.texts || [] })); page = 0; undo.length = 0; }
+      sync(); redraw();
+    },
     isEmpty() { return pages.every((p) => !p.strokes.length && !p.texts.length); },
     redraw,
     /** Over the simulation the board is see-through; beside it, it is a plain whiteboard. */

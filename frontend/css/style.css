@@ -698,8 +698,17 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .board { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .board-surface { position: relative; flex: 1; min-height: 200px; }
 .board-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
-.board-bar { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 6px 8px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
-.board-group { display: flex; gap: 4px; align-items: center; }
+.board-body { flex: 1; display: flex; min-height: 0; }
+/* tools down the left side of the board, so the writing surface keeps its full height */
+.board-bar { display: flex; flex-direction: column; gap: 10px; width: 92px; flex: none; padding: 8px 6px; border-right: 1px solid var(--border); background: var(--surface-2); overflow-y: auto; }
+.board-group { display: flex; flex-direction: column; gap: 3px; align-items: stretch; }
+.board-group .board-tool { text-align: left; }
+.board-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); padding: 0 4px; }
+.board-pages { display: flex; align-items: center; justify-content: space-between; }
+.board-pages .board-page { min-width: 0; }
+.board-swatches { display: flex; flex-wrap: wrap; gap: 5px; padding: 2px 4px 4px; }
+@media (max-width: 640px) { .board-body { flex-direction: column; } .board-bar { width: auto; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--border); }
+  .board-group { flex-direction: row; align-items: center; } .board-label { display: none; } }
 .board-tool { border: 1px solid transparent; background: none; border-radius: 7px; padding: 4px 8px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--text-2); cursor: pointer; }
 .board-tool:hover { border-color: var(--border); color: var(--text); }
 .board-tool.on { background: var(--ink); color: #fff; }
