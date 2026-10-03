@@ -1,6 +1,6 @@
 // ASM Teach app shell: a separate product from ASM. Teachers get the board, experiments, files and their profile;
 // the school admin gets the admin panel. The role comes from /api/teach/me.
-//   teacher: #/board  #/teach  #/teach/<id>  #/files  #/profile        school: #/admin  #/account
+//   teacher: #/board  #/teach  #/teach/<id>  #/lab  #/files  #/profile        school: #/admin  #/account
 import { el } from "../core/ui.js";
 import { api } from "../core/session.js";
 
@@ -9,11 +9,11 @@ const nav = document.getElementById("ta-nav");
 let cleanup = null, me = null;
 
 const NAV = {
-  teacher: [["board", "Board"], ["teach", "Experiments"], ["files", "My files"], ["profile", "Profile"]],
+  teacher: [["board", "Board"], ["teach", "Experiments"], ["lab", "Lab"], ["files", "My files"], ["profile", "Profile"]],
   school: [["admin", "Teachers"], ["account", "School account"]],
 };
 const PAGES = {
-  board: () => import("./board.js"), teach: () => import("../pages/teach.js"), files: () => import("./files.js"),
+  board: () => import("./board.js"), teach: () => import("../pages/teach.js"), lab: () => import("../sims/labbench.js"), files: () => import("./files.js"),
   profile: () => import("./profile.js"), admin: () => import("./admin.js"), account: () => import("./account.js"),
 };
 

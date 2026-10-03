@@ -198,6 +198,15 @@ export const SIMS = [
       <rect x="180" y="110" width="22" height="0" fill="#1baf7a"/><rect x="180" y="30" width="22" height="80" fill="#1baf7a"/><text x="120" y="24" font-size="18" text-anchor="middle" fill="#39424e" font-family="sans-serif">⇌</text>`),
   },
   {
+    id: "labbench", domain: "chemistry", title: "Virtual Chemistry Lab",
+    blurb: "A sandbox bench: glassware, a Bunsen burner, a burette and 40 chemicals. Mix, pour, heat and titrate, and see what really happens.",
+    load: () => import("./labbench.js"),
+    art: sky(`<rect width="240" height="128" fill="#eef2f7"/><rect y="100" width="240" height="28" fill="#3b4658"/>
+      <path d="M70 44 h28 v52 h-28z" fill="none" stroke="#0B1526" stroke-width="3"/><rect x="72" y="70" width="24" height="26" fill="#2f7fd8" opacity=".7"/>
+      <path d="M132 40 h12 v20 l20 36 h-52 l20 -36z" fill="none" stroke="#0B1526" stroke-width="3"/><path d="M120 82 h40 l7 14 h-54z" fill="#e97bb8" opacity=".8"/>
+      <rect x="190" y="74" width="6" height="22" fill="#5b6270"/><path d="M186 74 q7 -26 14 0z" fill="#4f78ff" opacity=".8"/>`),
+  },
+  {
     id: "titration", domain: "chemistry", title: "Acid–Base Titration",
     blurb: "Drip base into acid (or acid into base), watch the indicator flip and find the equivalence point.",
     load: () => import("./titration.js"),
