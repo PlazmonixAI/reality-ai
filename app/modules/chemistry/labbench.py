@@ -17,7 +17,7 @@ import math
 from typing import Any
 
 from app.core.registry import tool
-from app.modules.chemistry.formula import molar_mass_of, parse_equation
+from app.modules.chemistry.formula import element_counts, molar_mass_of, parse_equation
 from app.modules.chemistry.stoichiometry import _balance
 
 R_GAS = 8.314462618
@@ -50,6 +50,19 @@ HF: dict[str, float] = {
     "Fe(OH)3(s)": -823.0, "Fe2O3(s)": -824.2, "Fe2(SO4)3(aq)": -2824.8, "FeS(s)": -100.0,
     "H2O2(aq)": -191.17, "KMnO4(aq)": -793.8, "KMnO4(s)": -837.2, "K2MnO4(s)": -1184.0, "MnO2(s)": -520.03,
     "Na2S2O3(aq)": -1132.5,
+    # concentrated acids, carbon, sugars, iodine
+    "H2SO4(l)": -813.99, "HNO3(l)": -174.10, "NO(g)": 91.29, "C(s)": 0.0, "C12H22O11(s)": -2226.1, "C12H22O11(aq)": None,
+    "C6H12O6(aq)": -1263.07, "I2(aq)": 22.6, "Na2S4O6(aq)": -1704.4, "NaI(aq)": -295.31,
+    # qualitative analysis
+    "KSCN(aq)": -175.94, "Fe(SCN)3(aq)": None, "(NH4)2SO4(aq)": -1174.29, "Cu(NH3)4(OH)2(aq)": -808.48, "Ag(NH3)2Cl(aq)": -278.45,
+    "Zn(OH)2(s)": -641.91, "Mg(OH)2(s)": -924.54, "Al(OH)3(s)": -1276.0, "PbCl2(s)": -359.41, "CaC2O4(s)": -1360.6,
+    "(NH4)2C2O4(aq)": -1090.12, "K2Cr2O7(aq)": -1995.06, "Cr2(SO4)3(aq)": None, "Ca(HCO3)2(aq)": -1926.81,
+    "Cu2O(s)": -168.6, "C6H11O7Na(aq)": None, "C6H11O7NH4(aq)": None, "Ag(NH3)2OH(aq)": -341.28, "NH4NO3(aq)": -339.87,
+    "Fe(NO)SO4(aq)": None, "LiCl(aq)": -445.6, "LiCl(s)": -408.27, "SrCl2(aq)": -880.1, "SrCl2(s)": -828.85,
+    # salts left behind when a solution is evaporated to dryness
+    "NaNO3(s)": -467.85, "Na2SO4(s)": -1387.08, "KCl(s)": -436.75, "MgSO4(s)": -1284.9, "ZnSO4(s)": -982.8, "CaCl2(s)": -795.42,
+    "CH3COONa(s)": -708.8, "MgCl2(s)": -641.32, "Na2CO3(s)": -1130.68, "KOH(s)": -424.6, "ZnCl2(s)": -415.05, "CuCl2(s)": -220.1,
+    "Cu(NO3)2(s)": -302.9, "AlCl3(s)": -704.2, "KI(s)": -327.9, "BaCl2(s)": -855.0, "AgNO3(s)": -124.4, "K2SO4(s)": -1437.8,
 }
 
 # What each species looks like (display data): colour, and how strongly a dissolved species tints water
@@ -67,7 +80,13 @@ LOOK: dict[str, tuple[str, float]] = {
     "Fe(s)": ("#55585e", 0), "Al(s)": ("#d6d9de", 0), "NaHCO3(s)": ("#ffffff", 0), "NaCl(s)": ("#ffffff", 0),
     "NaOH(s)": ("#ffffff", 0), "KNO3(s)": ("#ffffff", 0), "NH4Cl(s)": ("#ffffff", 0), "Ca(OH)2(s)": ("#ffffff", 0),
     "Pb(NO3)2(s)": ("#ffffff", 0),
+    "Fe(SCN)3(aq)": ("#9b0d0d", 300.0), "Cu(NH3)4(OH)2(aq)": ("#1a3fb5", 40.0), "K2Cr2O7(aq)": ("#f08a1c", 30.0), "Cr2(SO4)3(aq)": ("#3f8f4a", 20.0),
+    "I2(aq)": ("#9a5a14", 200.0), "Fe(NO)SO4(aq)": ("#5a3010", 120.0), "Ag(NH3)2OH(aq)": ("#ffffff", 0.0),
+    "Zn(OH)2(s)": ("#f4f4f2", 0), "Mg(OH)2(s)": ("#f7f7f5", 0), "Al(OH)3(s)": ("#eef2f2", 0), "PbCl2(s)": ("#f7f7f5", 0), "CaC2O4(s)": ("#f7f7f5", 0),
+    "Cu2O(s)": ("#b3321e", 0), "C(s)": ("#151515", 0), "C12H22O11(s)": ("#ffffff", 0), "LiCl(s)": ("#ffffff", 0), "SrCl2(s)": ("#ffffff", 0),
 }
+FLAME = {"Li": ("crimson red", "#d42a2a"), "Na": ("golden yellow", "#f5c518"), "K": ("lilac", "#b58cd8"), "Ca": ("brick red", "#e0602a"),
+         "Sr": ("crimson", "#d01c3c"), "Ba": ("apple green", "#8bcf5a"), "Cu": ("blue-green", "#2bb3a3")}
 
 GAS_TEST = {
     "H2(g)": "Hydrogen: a lighted splint held at the mouth goes out with a squeaky pop",
@@ -78,6 +97,7 @@ GAS_TEST = {
     "NO2(g)": "Nitrogen dioxide: brown fumes",
     "SO3(g)": "Sulphur trioxide: white fumes",
     "H2O(g)": "Steam: condenses as droplets on the cool upper part of the tube",
+    "NO(g)": "Nitrogen monoxide: colourless, turns brown at the mouth of the tube as it meets air",
 }
 
 # ---------------------------------------------------------------- the shelf
@@ -111,6 +131,11 @@ for cid, name, sp_, note in [
     _chem(cid, name, "solid", "Metals and non-metals" if sp_ in ("Na(s)", "K(s)", "Ca(s)", "Mg(s)", "Zn(s)", "Fe(s)", "Cu(s)", "Al(s)", "S(s)") else "Solids", sp_, note=note)
 
 _chem("water", "Distilled water", "liquid", "Water and liquids", "H2O(l)", density=1.0)
+_chem("conc_h2so4", "Concentrated sulphuric acid", "pure", "Acids", "H2SO4(l)", density=1.84, note="Always add acid to water, slowly. It gets very hot.")
+_chem("conc_hno3", "Concentrated nitric acid", "pure", "Acids", "HNO3(l)", density=1.51, note="Fume cupboard: it gives brown fumes with metals.")
+_chem("sugar", "Sugar (sucrose)", "solid", "Solids", "C12H22O11(s)")
+_chem("licl", "Lithium chloride", "solid", "Solids", "LiCl(s)", note="For flame tests.")
+_chem("srcl2", "Strontium chloride", "solid", "Solids", "SrCl2(s)", note="For flame tests.")
 _chem("h2o2", "Hydrogen peroxide (6 %)", "solution", "Water and liquids", "H2O2(aq)", conc=1.76)
 for cid, name, sp_, c, group, note in [
     ("hcl", "Dilute hydrochloric acid", "HCl(aq)", 2.0, "Acids", ""), ("h2so4", "Dilute sulphuric acid", "H2SO4(aq)", 1.0, "Acids", ""),
@@ -124,9 +149,18 @@ for cid, name, sp_, c, group, note in [
     ("na2co3", "Sodium carbonate solution", "Na2CO3(aq)", 1.0, "Salt solutions", ""), ("na2so4", "Sodium sulphate solution", "Na2SO4(aq)", 0.5, "Salt solutions", ""),
     ("thio", "Sodium thiosulphate solution", "Na2S2O3(aq)", 0.1, "Salt solutions", ""), ("kmno4", "Potassium permanganate solution", "KMnO4(aq)", 0.02, "Salt solutions", ""),
     ("zncl2", "Zinc chloride solution", "ZnCl2(aq)", 0.5, "Salt solutions", ""),
+    ("znso4", "Zinc sulphate solution", "ZnSO4(aq)", 0.5, "Salt solutions", ""), ("mgso4", "Magnesium sulphate solution", "MgSO4(aq)", 0.5, "Salt solutions", ""),
+    ("alcl3", "Aluminium chloride solution", "AlCl3(aq)", 0.5, "Salt solutions", ""), ("cacl2", "Calcium chloride solution", "CaCl2(aq)", 0.5, "Salt solutions", ""),
+    ("nano3", "Sodium nitrate solution", "NaNO3(aq)", 0.5, "Salt solutions", ""), ("nh4cl_aq", "Ammonium chloride solution", "NH4Cl(aq)", 1.0, "Salt solutions", ""),
+    ("kscn", "Potassium thiocyanate solution", "KSCN(aq)", 0.1, "Test reagents", "Test for Fe³⁺: blood red."),
+    ("amm_oxalate", "Ammonium oxalate solution", "(NH4)2C2O4(aq)", 0.25, "Test reagents", "Test for Ca²⁺: white precipitate."),
+    ("dichromate", "Potassium dichromate solution", "K2Cr2O7(aq)", 0.05, "Test reagents", "Acidify it; SO₂ turns it from orange to green."),
+    ("iodine", "Iodine solution", "I2(aq)", 0.05, "Test reagents", "Turns starch blue-black."),
+    ("tollens", "Tollens' reagent", "Ag(NH3)2OH(aq)", 0.1, "Test reagents", "Make fresh. Warm with an aldehyde or glucose: silver mirror."),
+    ("glucose", "Glucose solution", "C6H12O6(aq)", 0.5, "Test reagents", "A reducing sugar."),
 ]:
     _chem(cid, name, "solution", group, sp_, conc=c, note=note)
-for cid, name in [("phenolphthalein", "Phenolphthalein"), ("methyl_orange", "Methyl orange"), ("litmus", "Litmus solution"), ("universal", "Universal indicator")]:
+for cid, name in [("phenolphthalein", "Phenolphthalein"), ("methyl_orange", "Methyl orange"), ("litmus", "Litmus solution"), ("universal", "Universal indicator"), ("starch", "Starch solution")]:
     _chem(cid, name, "indicator", "Indicators")
 
 EQUIPMENT: dict[str, dict[str, Any]] = {
@@ -138,9 +172,14 @@ EQUIPMENT: dict[str, dict[str, Any]] = {
     "dish": {"name": "Evaporating dish", "capacity": 100, "glass": 80, "flame": 300.0, "loss": 1.0, "max_t": 600},
     "burette": {"name": "Burette (50 mL)", "capacity": 50, "glass": 60, "flame": 0.0, "loss": 0.5, "max_t": 60},
     "cylinder": {"name": "Measuring cylinder (100 mL)", "capacity": 100, "glass": 90, "flame": 0.0, "loss": 0.8, "max_t": 60},
+    "gas_jar": {"name": "Gas jar (250 mL)", "capacity": 250, "glass": 150, "flame": 0.0, "loss": 1.0, "max_t": 60, "holds_gas": True},
+    "watch_glass": {"name": "Watch glass", "capacity": 10, "glass": 20, "flame": 0.0, "loss": 0.4, "max_t": 60},
 }
-TOOLS = {"burner": "Bunsen burner on a tripod and gauze (or a holder for tubes)", "stand": "Burette stand", "dropper": "Dropper",
-         "thermometer": "Thermometer (reads the vessel's temperature)", "splint": "Splint (tests the gas)"}
+TOOLS = {"burner": "Bunsen burner on a tripod and gauze (or a holder for tubes)", "stand": "Burette stand", "dropper": "Dropper (one drop = 0.05 mL)",
+         "pipette": "Pipette (10 or 25 mL, exact)", "thermometer": "Thermometer (reads the vessel's temperature)", "delivery_tube": "Delivery tube (sends a vessel's gas into another vessel)",
+         "funnel": "Funnel and filter paper", "splint": "Splint, lighted or glowing (tests the gas)", "litmus": "Red and blue litmus paper",
+         "ph_paper": "pH paper", "flame_wire": "Nichrome wire for flame tests"}
+TESTS = ("litmus_red", "litmus_blue", "ph_paper", "lighted_splint", "glowing_splint", "flame")
 
 # ---------------------------------------------------------------- reactions
 # eq: written with states; min_t: lowest temperature (°C) at which it goes; rate: fraction of the limiting reactant
@@ -148,7 +187,7 @@ TOOLS = {"burner": "Bunsen burner on a tripod and gauze (or a holder for tubes)"
 REACTIONS: list[dict[str, Any]] = []
 
 
-def _rx(eq, see, min_t=-50.0, rate=100.0, needs=(), air=False, name=""):
+def _rx(eq, see, min_t=-50.0, rate=100.0, needs=(), air=False, name="", unless=(), max_t=None):
     left, right = (x.strip() for x in eq.split("->"))
     if " + " not in left and " + " not in right and left[: left.rindex("(")] == right[: right.rindex("(")]:
         reac, prod = {left: 1}, {right: 1}  # a change of state, such as dissolving: one formula unit each side
@@ -162,10 +201,11 @@ def _rx(eq, see, min_t=-50.0, rate=100.0, needs=(), air=False, name=""):
     for k in list(reac) + list(prod):
         if k not in HF:
             raise ValueError(f"no enthalpy of formation for {k}")
-    dh = sum(c * HF[k] for k, c in prod.items()) - sum(c * HF[k] for k, c in reac.items())
+    known = all(HF[k] is not None for k in list(reac) + list(prod))
+    dh = sum(c * HF[k] for k, c in prod.items()) - sum(c * HF[k] for k, c in reac.items()) if known else None
     side = lambda d: " + ".join((f"{c} " if c != 1 else "") + k for k, c in d.items())  # noqa: E731
     REACTIONS.append({"name": name or eq, "reactants": reac, "products": prod, "dh": dh, "see": see, "min_t": min_t, "rate": rate,
-                      "needs": tuple(needs), "air": air, "equation": f"{side(reac)} → {side(prod)}"})
+                      "needs": tuple(needs), "unless": tuple(unless), "max_t": max_t, "air": air, "equation": f"{side(reac)} → {side(prod)}"})
 
 
 # metals with water and acids
@@ -242,11 +282,58 @@ _rx("Fe(s) + S(s) -> FeS(s)", "The mixture glows red and leaves black iron sulph
 _rx("Mg(s) + O2(g) -> MgO(s)", "The ribbon burns with a dazzling white flame, leaving white ash", min_t=650, rate=0.3, air=True, name="Magnesium burns in air")
 _rx("S(s) + O2(g) -> SO2(g)", "The sulphur melts and burns with a blue flame, giving a choking smell", min_t=250, rate=0.1, air=True, name="Sulphur burns in air")
 _rx("Cu(s) + O2(g) -> CuO(s)", "The copper turns black on its surface", min_t=300, rate=0.003, air=True, name="Copper heated in air")
+# concentrated acids
+_rx("H2SO4(l) -> H2SO4(aq)", "The acid sinks and mixes; the solution gets very hot", rate=0.5, needs=("H2O(l)",), name="Diluting concentrated sulphuric acid")
+_rx("HNO3(l) -> HNO3(aq)", "The acid mixes with the water and warms it", rate=0.5, needs=("H2O(l)",), name="Diluting concentrated nitric acid")
+_rx("C12H22O11(s) -> C(s) + H2O(g)", "The sugar turns yellow, then brown, then swells into a steaming black column of carbon", rate=0.05,
+    needs=("H2SO4(l)",), name="Concentrated sulphuric acid dehydrates sugar")
+_rx("Cu(s) + HNO3(l) -> Cu(NO3)2(aq) + NO2(g) + H2O(l)", "Thick brown fumes of nitrogen dioxide; the liquid turns green, then blue", rate=0.1,
+    name="Copper and concentrated nitric acid")
+_rx("Cu(s) + HNO3(aq) -> Cu(NO3)2(aq) + NO(g) + H2O(l)", "Slow bubbles of a colourless gas that turns brown at the mouth; the solution turns blue",
+    rate=0.004, name="Copper and dilute nitric acid")
+_rx("C12H22O11(s) -> C12H22O11(aq)", "The sugar dissolves", rate=0.05, needs=("H2O(l)",), unless=("H2SO4(l)",), name="Sugar dissolves")
+# qualitative analysis: cations
+_rx("FeCl3(aq) + KSCN(aq) -> Fe(SCN)3(aq) + KCl(aq)", "A blood-red colour: Fe³⁺ is present", name="Thiocyanate test for Fe³⁺")
+_rx("CuSO4(aq) + NH3(aq) + H2O(l) -> Cu(OH)2(s) + (NH4)2SO4(aq)", "A pale blue precipitate with a little ammonia", name="Copper sulphate and a little ammonia")
+_rx("Cu(OH)2(s) + NH3(aq) -> Cu(NH3)4(OH)2(aq)", "In excess ammonia the precipitate dissolves to a deep blue solution: Cu²⁺ is present", rate=0.5,
+    name="Excess ammonia: tetraamminecopper(II)")
+_rx("ZnSO4(aq) + NaOH(aq) -> Zn(OH)2(s) + Na2SO4(aq)", "A white gelatinous precipitate", name="Zinc sulphate and sodium hydroxide")
+_rx("ZnCl2(aq) + NaOH(aq) -> Zn(OH)2(s) + NaCl(aq)", "A white gelatinous precipitate", name="Zinc chloride and sodium hydroxide")
+_rx("MgSO4(aq) + NaOH(aq) -> Mg(OH)2(s) + Na2SO4(aq)", "A white precipitate", name="Magnesium sulphate and sodium hydroxide")
+_rx("AlCl3(aq) + NaOH(aq) -> Al(OH)3(s) + NaCl(aq)", "A white gelatinous precipitate", name="Aluminium chloride and sodium hydroxide")
+_rx("Pb(NO3)2(aq) + HCl(aq) -> PbCl2(s) + HNO3(aq)", "A white precipitate of lead chloride", name="Lead nitrate and hydrochloric acid")
+_rx("CaCl2(aq) + (NH4)2C2O4(aq) -> CaC2O4(s) + NH4Cl(aq)", "A white precipitate of calcium oxalate: Ca²⁺ is present", name="Oxalate test for Ca²⁺")
+_rx("AgCl(s) + NH3(aq) -> Ag(NH3)2Cl(aq)", "The white precipitate dissolves in ammonia: it was silver chloride", rate=0.3, name="Silver chloride dissolves in ammonia")
+_rx("CaCl2(aq) + Na2CO3(aq) -> CaCO3(s) + NaCl(aq)", "A white precipitate of calcium carbonate", name="Calcium chloride and sodium carbonate")
+# anions
+_rx("FeSO4(aq) + NaNO3(aq) + H2SO4(l) -> Fe2(SO4)3(aq) + Na2SO4(aq) + NO(g) + H2O(l)", "Where the concentrated acid meets the solution, a ring forms",
+    rate=2.0, name="Nitrate reduced by Fe²⁺ in concentrated acid")
+_rx("FeSO4(aq) + NO(g) -> Fe(NO)SO4(aq)", "A brown ring: nitrate is present", name="Brown ring test")
+_rx("K2Cr2O7(aq) + SO2(g) + H2SO4(aq) -> K2SO4(aq) + Cr2(SO4)3(aq) + H2O(l)", "The orange dichromate turns green: the gas is sulphur dioxide", name="Sulphur dioxide reduces dichromate")
+_rx("CaCO3(s) + CO2(g) + H2O(l) -> Ca(HCO3)2(aq)", "With more carbon dioxide the milkiness clears again",
+    unless=("Ca(OH)2(aq)", "HCl(aq)", "H2SO4(aq)", "HNO3(aq)", "CH3COOH(aq)", "CaCl2(aq)", "CH3COONa(aq)"), name="Excess carbon dioxide clears limewater")
+_rx("NH3(g) -> NH3(aq)", "The ammonia dissolves in the water", needs=("H2O(l)",), max_t=40, name="Ammonia dissolves in water")
+# iodine
+_rx("H2O2(aq) + KI(aq) + H2SO4(aq) -> I2(aq) + K2SO4(aq) + H2O(l)", "The solution slowly turns yellow-brown as iodine forms (blue-black with starch)", rate=0.05,
+    name="Hydrogen peroxide oxidises iodide")
+_rx("Na2S2O3(aq) + I2(aq) -> Na2S4O6(aq) + NaI(aq)", "The brown iodine colour is discharged", name="Thiosulphate reduces iodine")
+# sugars
+_rx("C6H12O6(aq) + Ag(NH3)2OH(aq) -> C6H11O7NH4(aq) + Ag(s) + NH3(aq) + H2O(l)", "A silver mirror coats the inside of the tube: a reducing sugar", min_t=50, rate=0.05,
+    name="Tollens' test (silver mirror)")
+_rx("C6H12O6(aq) + Cu(OH)2(s) + NaOH(aq) -> C6H11O7Na(aq) + Cu2O(s) + H2O(l)", "On warming, the blue precipitate turns brick red: a reducing sugar", min_t=60, rate=0.05,
+    name="Trommer's test (red copper(I) oxide)")
+# flame-test salts dissolve
+_rx("LiCl(s) -> LiCl(aq)", "The salt dissolves", rate=0.2, needs=("H2O(l)",), name="Lithium chloride dissolves")
+_rx("SrCl2(s) -> SrCl2(aq)", "The salt dissolves", rate=0.2, needs=("H2O(l)",), name="Strontium chloride dissolves")
+# evaporating to dryness leaves the dissolved salts as crystals
+for _salt in ("NaCl", "KCl", "KNO3", "NaNO3", "Na2SO4", "K2SO4", "MgSO4", "ZnSO4", "CuSO4", "FeSO4", "CaCl2", "MgCl2", "ZnCl2", "CuCl2", "AlCl3",
+              "CH3COONa", "Na2CO3", "NaOH", "KOH", "KI", "BaCl2", "AgNO3", "Cu(NO3)2", "NH4Cl", "Pb(NO3)2", "KMnO4", "LiCl", "SrCl2"):
+    _rx(f"{_salt}(aq) -> {_salt}(s)", "The water has gone: crystals of the dissolved salt are left", unless=("H2O(l)",), name=f"{_salt} crystallises")
 
 
 # ---------------------------------------------------------------- vessel physics
 def _mass(contents: dict[str, float]) -> float:
-    return sum(n * molar_mass_of(k.split("(")[0]) for k, n in contents.items() if n > 0)
+    return sum(n * molar_mass_of(_formula(k)) for k, n in contents.items() if n > 0)
 
 
 def _formula(key: str) -> str:
@@ -343,6 +430,11 @@ def _appearance(c: dict[str, float], indicators: list[str], ph: float | None) ->
         f = min(1.0, weight)
         colour = [(1 - f) * colour[i] + f * tint[i] / weight for i in range(3)]
         alpha = 0.12 + 0.75 * f
+    if "starch" in indicators and c.get("I2(aq)", 0) > 1e-7:  # starch-iodine complex
+        a = 1 - math.exp(-4000 * c["I2(aq)"] / V)
+        colour = [(1 - a) * colour[i] + a * v for i, v in enumerate((20, 24, 70))]
+        alpha = max(alpha, 0.12 + 0.85 * a)
+    indicators = [i for i in indicators if i in INDICATOR_STOPS]
     if ph is not None and indicators:
         ind = _mix(INDICATOR_STOPS[indicators[-1]], ph)
         clear = indicators[-1] == "phenolphthalein" and ph < 8.2
@@ -355,8 +447,13 @@ def _appearance(c: dict[str, float], indicators: list[str], ph: float | None) ->
     return {"liquid_colour": _hex(colour), "liquid_alpha": round(alpha, 3), "cloudy": bool(cloudy), "solids": solids}
 
 
-def _step_vessel(v: dict[str, Any], dt: float, power: float, events: list[dict], t_now: float) -> dict[str, Any]:
+GAS_JAR_MOL = 0.25e-3 * 101325 / (R_GAS * (ROOM_T + 273.15))  # what a 250 mL jar holds at 25 °C, 1 atm
+
+
+def _step_vessel(v: dict[str, Any], dt: float, power: float, events: list[dict], t_now: float,
+                 inflow: dict[str, float] | None = None) -> dict[str, Any]:
     kind = v["kind"]
+    holds = EQUIPMENT[kind].get("holds_gas", False)
     c = {k: float(n) for k, n in v.get("contents", {}).items() if n > 1e-12}
     T = float(v.get("T", ROOM_T))
     gases: dict[str, float] = {}
@@ -365,8 +462,13 @@ def _step_vessel(v: dict[str, Any], dt: float, power: float, events: list[dict],
     sub = max(1, min(40, int(math.ceil(dt / 0.25))))
     h = dt / sub
     for _ in range(sub):
+        for k, n in (inflow or {}).items():  # gas bubbling in through a delivery tube, spread over the step
+            k = "H2O(l)" if k == "H2O(g)" else k  # steam condenses in the cool vessel
+            c[k] = c.get(k, 0.0) + n / sub
         for r in REACTIONS:
-            if T < r["min_t"] or any(c.get(nd, 0) <= 0 for nd in r["needs"]):
+            if T < r["min_t"] or any(c.get(nd, 0) <= 0 for nd in r["needs"]) or any(c.get(u, 0) > 1e-12 for u in r["unless"]):
+                continue
+            if r["max_t"] is not None and T > r["max_t"]:
                 continue
             reac = {k: n for k, n in r["reactants"].items() if not (r["air"] and k == "O2(g)")}
             if any(c.get(k, 0) <= 1e-12 for k in reac):
@@ -381,11 +483,21 @@ def _step_vessel(v: dict[str, Any], dt: float, power: float, events: list[dict],
                     c.pop(k)
             for k, n in r["products"].items():
                 c[k] = c.get(k, 0.0) + n * xi
-            q += -r["dh"] * 1000 * xi
+            q += -(r["dh"] or 0.0) * 1000 * xi  # reactions with no tabulated ΔH are taken as thermoneutral
             happened.append((r, xi))
         # gases leave; CO₂ meeting limewater in the same vessel reacts first (handled above on the next pass)
+        held = 0.0
         for k in [k for k in c if k.endswith("(g)")]:
             if k == "CO2(g)" and c.get("Ca(OH)2(aq)", 0) > 0:
+                continue
+            if holds and k != "H2O(g)":  # a gas jar keeps what fits and the rest spills out of the mouth
+                keep = min(c[k], max(0.0, GAS_JAR_MOL - held))
+                held += keep
+                if c[k] - keep > 1e-15:
+                    gases[k] = gases.get(k, 0.0) + c[k] - keep
+                c[k] = keep
+                if keep <= 1e-15:
+                    c.pop(k)
                 continue
             gases[k] = gases.get(k, 0.0) + c.pop(k)
         # energy: reactions, burner, room
@@ -410,7 +522,7 @@ def _step_vessel(v: dict[str, Any], dt: float, power: float, events: list[dict],
     seen = {}
     for r, xi in happened:
         s = seen.setdefault(r["name"], {"reaction": r["name"], "equation": r["equation"], "observation": r["see"],
-                                         "delta_h_kj_per_mol": round(r["dh"], 2), "extent_mol": 0.0})
+                                         "delta_h_kj_per_mol": None if r["dh"] is None else round(r["dh"], 2), "extent_mol": 0.0})
         s["extent_mol"] += xi
     for s in seen.values():
         events.append({"t": t_now, "vessel": v["id"], **s, "extent_mol": float(f"{s['extent_mol']:.4g}")})
@@ -426,7 +538,60 @@ def _step_vessel(v: dict[str, Any], dt: float, power: float, events: list[dict],
            "indicators": list(v.get("indicators", [])), "T": round(T, 2), "volume_ml": round(vol, 2), "mass_g": round(_mass(c), 3),
            "ph": None if ph is None else round(ph, 2), "gases": gas_out, "boiling": any(g["species"] == "H2O(g)" and g["mol"] > 1e-6 for g in gas_out) and T >= 99.9,
            "overflow": vol > EQUIPMENT[kind]["capacity"], "reacting": [s["reaction"] for s in seen.values()], **look}
+    if v.get("gas_to"):
+        out["gas_to"] = v["gas_to"]
+    out["_gas_raw"] = {k: n for k, n in gases.items() if n > 1e-12}
     return out
+
+
+def _run_test(v: dict[str, Any], test: str) -> dict[str, Any]:
+    """What a test on a stepped vessel shows: litmus, pH paper, a lighted or glowing splint at the mouth, or a flame test."""
+    c, ph = v["contents"], v["ph"]
+    gas = {g["species"] for g in v["gases"]} | {k for k, n in c.items() if k.endswith("(g)") and n > 1e-9}
+    gas.discard("H2O(g)")
+    if test in ("litmus_red", "litmus_blue"):
+        colour = "red" if test == "litmus_red" else "blue"
+        if ph is None:  # no liquid: moist litmus held in the gas
+            acid = gas & {"CO2(g)", "SO2(g)", "NO2(g)", "SO3(g)"}
+            if colour == "red" and "NH3(g)" in gas:
+                return {"result": "Moist red litmus turns blue: the gas is alkaline (ammonia)", "colour": "#3c46c8"}
+            if colour == "blue" and acid:
+                return {"result": "Moist blue litmus turns red: the gas is acidic", "colour": "#d72832"}
+            return {"result": f"The {colour} litmus does not change", "colour": "#d72832" if colour == "red" else "#3c46c8"}
+        if colour == "red" and ph > 8:
+            return {"result": f"Red litmus turns blue: the solution is basic (pH {ph:.1f})", "colour": "#3c46c8"}
+        if colour == "blue" and ph < 5:
+            return {"result": f"Blue litmus turns red: the solution is acidic (pH {ph:.1f})", "colour": "#d72832"}
+        return {"result": f"The {colour} litmus does not change", "colour": "#d72832" if colour == "red" else "#3c46c8"}
+    if test == "ph_paper":
+        if ph is None:
+            return {"result": "Nothing liquid to dip the paper in", "colour": "#e8d9a0"}
+        return {"result": f"The paper matches pH {round(ph)} on the chart", "colour": _hex(_mix(INDICATOR_STOPS["universal"], ph)), "ph": round(ph)}
+    if test == "lighted_splint":
+        if "H2(g)" in gas:
+            return {"result": "A squeaky pop: the gas is hydrogen"}
+        if "O2(g)" in gas:
+            return {"result": "The splint burns more brightly: the gas is oxygen"}
+        if gas & {"CO2(g)", "NH3(g)", "SO2(g)", "NO2(g)"}:
+            return {"result": "The flame goes out: the gas does not support burning"}
+        return {"result": "The splint keeps burning as it does in air"}
+    if test == "glowing_splint":
+        if "O2(g)" in gas:
+            return {"result": "The glowing splint bursts back into flame: the gas is oxygen"}
+        return {"result": "The splint keeps glowing faintly and does not relight"}
+    if test == "flame":
+        metals: set[str] = set()
+        for k, n in c.items():
+            if n > 1e-9 and not k.endswith("(g)"):
+                metals |= set(element_counts(_formula(k))) & set(FLAME)
+        if not metals:
+            return {"result": "No colour: the flame stays pale blue"}
+        if "Na" in metals and len(metals) > 1:  # sodium's yellow swamps the rest unless seen through cobalt glass
+            others = ", ".join(f"{m} ({FLAME[m][0]})" for m in sorted(metals - {"Na"}))
+            return {"result": f"A strong golden yellow flame from sodium; through blue cobalt glass: {others}", "colour": FLAME["Na"][1]}
+        m = sorted(metals)[0]
+        return {"result": f"The flame turns {FLAME[m][0]}: {m} is present", "colour": FLAME[m][1]}
+    raise ValueError(f"test must be one of {', '.join(TESTS)}")
 
 
 def _lower(name: str) -> str:
@@ -446,6 +611,10 @@ def _add(v: dict[str, Any], chem: dict[str, Any], amount: float) -> str:
         n = amount / molar_mass_of(_formula(chem["species"]))
         c[chem["species"]] = c.get(chem["species"], 0.0) + n
         return f"Added {amount:g} g of {_lower(chem['name'])}"
+    if chem["kind"] == "pure":
+        n = amount * chem["density"] / molar_mass_of(_formula(chem["species"]))
+        c[chem["species"]] = c.get(chem["species"], 0.0) + n
+        return f"Added {amount:g} mL of {_lower(chem['name'])}"
     if chem["kind"] == "liquid":
         c["H2O(l)"] = c.get("H2O(l)", 0.0) + amount * chem["density"] / 18.015
         return f"Added {amount:g} mL of {_lower(chem['name'])}"
@@ -459,8 +628,8 @@ def _add(v: dict[str, Any], chem: dict[str, Any], amount: float) -> str:
       description="The virtual chemistry lab's shelf: chemicals (solids, liquids, solutions with concentrations, indicators), "
                   "glassware with capacities, tools, and the reactions the lab knows with balanced equations and ΔH.")
 def lab_catalog() -> dict:
-    return {"result": {"chemicals": list(CHEMICALS.values()), "equipment": [{"id": k, **v} for k, v in EQUIPMENT.items()], "tools": TOOLS,
-                       "reactions": [{"name": r["name"], "equation": r["equation"], "delta_h_kj_per_mol": round(r["dh"], 2), "min_t": r["min_t"],
+    return {"result": {"chemicals": list(CHEMICALS.values()), "equipment": [{"id": k, **v} for k, v in EQUIPMENT.items()], "tools": TOOLS, "tests": list(TESTS),
+                       "reactions": [{"name": r["name"], "equation": r["equation"], "delta_h_kj_per_mol": None if r["dh"] is None else round(r["dh"], 2), "min_t": r["min_t"],
                                       "needs": list(r["needs"]), "observation": r["see"]} for r in REACTIONS]},
             "units": {"capacity": "mL", "delta_h_kj_per_mol": "kJ per mole of reaction as written", "min_t": "degC", "conc": "mol/L"},
             "assumptions": ["Standard enthalpies of formation at 298 K (CRC / NBS tables)", "Equations balanced by the engine"]}
@@ -469,9 +638,11 @@ def lab_catalog() -> dict:
 @tool(domain="chemistry", name="lab_step",
       description="Virtual chemistry lab: advance a bench of vessels by dt seconds after applying actions. vessels: "
                   "[{id, kind, contents{species: mol}, T (°C), indicators[], heat (0..1 burner setting)}]; kind is one of "
-                  "beaker, conical, test_tube, boiling_tube, crucible, dish, burette, cylinder. actions: {type: 'add', vessel, "
+                  "beaker, conical, test_tube, boiling_tube, crucible, dish, burette, cylinder, gas_jar, watch_glass; gas_to "
+                  "(optional) sends the vessel's gas through a delivery tube into another vessel. actions: {type: 'add', vessel, "
                   "chemical, amount (g for solids, mL for liquids and solutions)}, {type: 'pour', from, to, volume_ml}, "
-                  "{type: 'empty', vessel}. Returns each vessel's contents, temperature, pH, colour, solids, gases given off "
+                  "{type: 'filter', from, to} (solids stay on the paper), {type: 'empty', vessel}, {type: 'test', vessel, test} with test "
+                  "one of litmus_red, litmus_blue, ph_paper, lighted_splint, glowing_splint, flame. Returns each vessel's contents, temperature, pH, colour, solids, gases given off "
                   "with their tests, and the reactions that ran with balanced equations and ΔH.")
 def lab_step(vessels: list[dict], actions: list[dict] | None = None, dt: float = 1.0, t: float = 0.0) -> dict:
     if not isinstance(vessels, list) or len(vessels) > 20:
@@ -486,9 +657,11 @@ def lab_step(vessels: list[dict], actions: list[dict] | None = None, dt: float =
         if not isinstance(contents, dict) or any(k not in HF for k in contents):
             raise ValueError("vessel contents must use species the lab knows (see lab_catalog)")
         bench[str(v["id"])] = {"id": str(v["id"]), "kind": v["kind"], "contents": {k: float(n) for k, n in contents.items() if float(n) > 0},
-                               "T": float(v.get("T", ROOM_T)), "indicators": [i for i in v.get("indicators", []) if i in INDICATOR_STOPS],
+                               "T": float(v.get("T", ROOM_T)), "indicators": [i for i in v.get("indicators", []) if i in INDICATOR_STOPS or i == "starch"],
+                               "gas_to": str(v["gas_to"]) if v.get("gas_to") else None,
                                "heat": max(0.0, min(1.0, float(v.get("heat", 0) or 0)))}
     log: list[str] = []
+    tests: list[tuple[str, str]] = []
     for a in actions or []:
         kind = a.get("type")
         if kind == "add":
@@ -518,17 +691,63 @@ def lab_step(vessels: list[dict], actions: list[dict] | None = None, dt: float =
                 if i not in dst["indicators"]:
                     dst["indicators"].append(i)
             log.append(f"Poured {min(want, vol):.3g} mL from {_lower(EQUIPMENT[src['kind']]['name'])} into {_lower(EQUIPMENT[dst['kind']]['name'])}")
+        elif kind == "filter":
+            src, dst = bench.get(str(a.get("from"))), bench.get(str(a.get("to")))
+            if not src or not dst or src is dst:
+                raise ValueError("filter needs two different vessels")
+            moved = 0.0
+            for k in [k for k in src["contents"] if not k.endswith("(s)")]:
+                n = src["contents"].pop(k)
+                dst["contents"][k] = dst["contents"].get(k, 0.0) + n
+                moved += n
+            for i in src["indicators"]:
+                if i not in dst["indicators"]:
+                    dst["indicators"].append(i)
+            src["indicators"] = []
+            left = [_formula(k) for k, n in src["contents"].items() if k.endswith("(s)") and n > 1e-9]
+            log.append(f"Filtered into {_lower(EQUIPMENT[dst['kind']]['name'])}: the filtrate went through"
+                       + (f"; {', '.join(left)} stayed on the filter paper" if left else "; nothing was left on the paper"))
         elif kind == "empty":
             v = bench.get(str(a.get("vessel")))
             if v:
                 v["contents"], v["indicators"], v["T"] = {}, [], ROOM_T
+        elif kind == "test":
+            if str(a.get("vessel")) not in bench or a.get("test") not in TESTS:
+                raise ValueError(f"test needs an existing vessel and a test from {', '.join(TESTS)}")
+            tests.append((str(a["vessel"]), a["test"]))
         else:
-            raise ValueError("action type must be add, pour or empty")
+            raise ValueError("action type must be add, pour, filter, empty or test")
+    # vessels that pipe gas into another go first, so the gas arrives in the same step
+    order: list[str] = []
+    def visit(vid: str, seen: tuple = ()) -> None:  # noqa: E306
+        if vid in order or vid in seen:
+            return
+        for src in bench.values():
+            if src["gas_to"] == vid:
+                visit(src["id"], seen + (vid,))
+        order.append(vid)
+    for vid in bench:
+        visit(vid)
     events: list[dict] = []
-    out = [_step_vessel(v, dt, v["heat"] * EQUIPMENT[v["kind"]]["flame"], events, t + dt) for v in bench.values()]
-    return {"result": {"vessels": out, "events": events, "log": log, "t": t + dt},
+    inflow: dict[str, dict[str, float]] = {}
+    done: dict[str, dict] = {}
+    for vid in order:
+        v = bench[vid]
+        o = _step_vessel(v, dt, v["heat"] * EQUIPMENT[v["kind"]]["flame"], events, t + dt, inflow.get(vid))
+        raw = o.pop("_gas_raw")
+        if v["gas_to"] in bench and v["gas_to"] != vid and v["gas_to"] not in done:
+            tgt = inflow.setdefault(v["gas_to"], {})
+            for k, n in raw.items():
+                tgt[k] = tgt.get(k, 0.0) + n
+            for g in o["gases"]:
+                g["piped_to"] = v["gas_to"]
+        done[vid] = o
+    out = [done[vid] for vid in bench]
+    results = [{"vessel": vid, "test": name, **_run_test(done[vid], name)} for vid, name in tests]
+    return {"result": {"vessels": out, "events": events, "log": log, "tests": results, "t": t + dt},
             "units": {"T": "degC", "contents": "mol", "volume_ml": "mL", "mass_g": "g", "delta_h_kj_per_mol": "kJ/mol", "gases.volume_ml": "mL at 25 degC, 1 atm"},
             "assumptions": ["Dilute solutions: about 1 g of water per mL, heat capacity of water 4.18 J/(g K)",
                             "Reactions with no threshold go as soon as their reactants meet; rates are typical classroom rates",
-                            "Gases escape at once and are reported at 25 °C and 1 atm",
+                            "Gases escape at once (a gas jar keeps up to its volume; a delivery tube carries them on) and are reported at 25 °C and 1 atm",
+                            "Reactions with no tabulated enthalpy of formation for a complex or organic product are treated as thermoneutral (ΔH reported as null)",
                             "The burner delivers a few hundred watts into the vessel; glass and contents lose heat to the room"]}

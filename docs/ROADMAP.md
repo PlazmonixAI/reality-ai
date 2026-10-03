@@ -202,3 +202,4 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Two-dimensional wave packets (double slit)
 
 - [x] Virtual Chemistry Lab (sandbox): shelf of 40+ chemicals and glassware, burner, burette; engine tool `chemistry.lab_step` with 64 balanced reactions, Hess's-law heat, boiling, gases with their tests, pH and indicators; in ASM and as the Lab page in ASM Teach
+- [x] Lab sandbox, full shelf: concentrated acids, test reagents, qualitative-analysis reactions, delivery tube, gas jar, filtering, litmus, pH paper, splints, flame tests, evaporating to crystals
