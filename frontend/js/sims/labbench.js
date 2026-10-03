@@ -6,12 +6,14 @@ import { el } from "../core/ui.js";
 import { fmt } from "../core/format.js";
 
 const INK = "#0B1526", EMBER = "#FF5B2E";
-const SLOTS = 6;
+const SLOTS = 7;
 const HEATS = [["Off", 0], ["Low", 0.35], ["Medium", 0.7], ["High", 1]];
 const SPEEDS = [1, 5, 20];
-const DEFAULT_AMOUNT = { solid: 1, liquid: 20, solution: 10 };
+const DEFAULT_AMOUNT = { solid: 1, liquid: 20, solution: 10, pure: 2 };
+const QUICK = { solid: [["A pinch", 0.05], ["0.5 g", 0.5], ["1 g", 1], ["5 g", 5]], liquid: [["1 drop", 0.05], ["10 drops", 0.5], ["Pipette 10 mL", 10], ["Pipette 25 mL", 25]] };
+const TEST_LABEL = { litmus_red: "Red litmus", litmus_blue: "Blue litmus", ph_paper: "pH paper", lighted_splint: "Lighted splint", glowing_splint: "Glowing splint", flame: "Flame test" };
 const SMALL = { sodium: 0.1, potassium: 0.05, calcium: 0.2, magnesium: 0.1 };
-const SHAPE = { beaker: [74, 96], conical: [80, 104], test_tube: [22, 110], boiling_tube: [30, 120], crucible: [56, 36], dish: [96, 30], burette: [16, 230], cylinder: [34, 150] };
+const SHAPE = { beaker: [74, 96], conical: [80, 104], test_tube: [22, 110], boiling_tube: [30, 120], crucible: [56, 36], dish: [96, 30], burette: [16, 230], cylinder: [34, 150], gas_jar: [62, 118], watch_glass: [84, 12] };
 
 export default {
   title: "Virtual Chemistry Lab",
@@ -39,14 +41,16 @@ export default {
         body.append(...cat.equipment.map((e) => el("button", { class: "lab-item", type: "button", draggable: "true",
           ondragstart: (ev) => ev.dataTransfer.setData("text/plain", `eq:${e.id}`), onclick: () => place(e.id) },
           el("b", {}, e.name), el("small", {}, e.flame ? "Can go on the burner" : "Not for heating"))),
-        el("p", { class: "muted small" }, "Every vessel can sit on a Bunsen burner (tripod and gauze, or a holder for tubes). A thermometer reads each vessel's temperature."));
+        el("div", { class: "lab-group" }, "Tools on the bench"),
+          ...Object.values(cat.tools).map((t) => el("p", { class: "lab-tool" }, t)),
+          el("p", { class: "muted small" }, "Select a vessel to use the tools: burner, delivery tube, filter funnel, litmus, pH paper, splints and the flame-test wire."));
       } else {
         const groups = [...new Set(cat.chemicals.map((c) => c.group))];
         for (const g of groups) {
           body.append(el("div", { class: "lab-group" }, g));
           body.append(...cat.chemicals.filter((c) => c.group === g).map((c) => el("button", { class: `lab-item${hand?.id === c.id ? " on" : ""}`, type: "button", draggable: "true", title: c.note || c.name,
             ondragstart: (ev) => ev.dataTransfer.setData("text/plain", `ch:${c.id}`), onclick: () => pick(c) },
-            el("b", {}, c.name), el("small", {}, c.kind === "solution" ? `${c.conc} mol/L` : c.kind === "indicator" ? "a few drops" : c.kind))));
+            el("b", {}, c.name), el("small", {}, c.kind === "solution" ? `${c.conc} mol/L` : c.kind === "indicator" ? "a few drops" : c.kind === "pure" ? "concentrated" : c.kind))));
         }
       }
       shelf.replaceChildren(tabs, body);
@@ -75,7 +79,7 @@ export default {
     async function step(actions, dt) {
       if (busy) { pending.push(...actions); resync = true; return; }
       busy = true;
-      const send = vessels.map((v) => ({ id: v.id, kind: v.kind, contents: v.contents, T: v.T, indicators: v.indicators, heat: v.heat }));
+      const send = vessels.map((v) => ({ id: v.id, kind: v.kind, contents: v.contents, T: v.T, indicators: v.indicators, heat: v.heat, ...(v.gasTo ? { gas_to: v.gasTo } : {}) }));
       // burettes run into the vessel under them
       const pours = [];
       if (dt > 0) for (const b of vessels) if (b.kind === "burette" && b.over && b.tap > 0 && (b.view?.volume_ml || 0) > 0.001) pours.push({ type: "pour", from: b.id, to: b.over, volume_ml: Math.min(b.view.volume_ml, b.tap * Math.min(dt, 0.5)) });
@@ -95,8 +99,9 @@ export default {
         }
         for (const v of res.vessels) for (const g of v.gases) {
           const key = `${v.id}|gas|${g.gas}`;
-          if (g.gas !== "H2O" && !seen.has(key)) { seen.add(key); logs.unshift({ text: g.test, kind: "gas", vessel: v.id }); }
+          if (g.gas !== "H2O" && !seen.has(key)) { seen.add(key); logs.unshift({ text: g.piped_to ? `${g.test} (going through the delivery tube into ${nameOf(g.piped_to)})` : g.test, kind: "gas", vessel: v.id }); }
         }
+        for (const r of res.tests || []) logs.unshift({ text: `${TEST_LABEL[r.test]}: ${r.result}`, kind: "test", vessel: r.vessel, swatch: r.colour });
         logs = logs.slice(0, 60);
         renderLog(); renderInspector(true);
       } catch (e) { note(e.message); } finally { busy = false; }
@@ -113,7 +118,9 @@ export default {
       const unit = chem.kind === "solid" ? "g" : "mL", start = SMALL[chem.id] ?? DEFAULT_AMOUNT[chem.kind];
       const input = el("input", { type: "number", min: "0", step: "any", value: start, class: "lab-num", "aria-label": `Amount in ${unit}` });
       const go = () => { const a = Number(input.value); if (a > 0) step([{ type: "add", vessel: v.id, chemical: chem.id, amount: a }], 0.5); closeDialog(); };
-      openDialog(`Add ${chem.name.toLowerCase()}`, el("div", { class: "lab-dialog-row" }, input, el("span", {}, unit)),
+      const chips = el("div", { class: "lab-seg" }, el("span", {}, chem.kind === "solid" ? "Spatula" : "Dropper or pipette"),
+        ...QUICK[chem.kind === "solid" ? "solid" : "liquid"].map(([l, a]) => el("button", { type: "button", onclick: () => { input.value = a; } }, l)));
+      openDialog(`Add ${chem.name.toLowerCase()}`, chips, el("div", { class: "lab-dialog-row" }, input, el("span", {}, unit)),
         chem.note ? el("p", { class: "muted small" }, chem.note) : "", el("button", { class: "btn primary small", type: "button", onclick: go }, "Add"));
       input.focus(); input.select(); input.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
     }
@@ -122,7 +129,10 @@ export default {
       if (vol <= 0) { note("That vessel is empty."); return; }
       const input = el("input", { type: "number", min: "0", step: "any", value: Math.min(vol, from.kind === "burette" ? 10 : vol).toFixed(1), class: "lab-num" });
       const go = () => { const a = Number(input.value); if (a > 0) step([{ type: "pour", from: from.id, to: to.id, volume_ml: a }], 0.5); closeDialog(); };
-      openDialog(`Pour from ${nameOf(from.id)} into ${nameOf(to.id)}`, el("div", { class: "lab-dialog-row" }, input, el("span", {}, `mL of ${fmt(vol, 3)} mL`)),
+      const chips = el("div", { class: "lab-seg" }, el("span", {}, "Dropper or pipette"),
+        ...QUICK.liquid.filter(([, a]) => a <= vol + 1e-9).map(([l, a]) => el("button", { type: "button", onclick: () => { input.value = a; } }, l)),
+        el("button", { type: "button", onclick: () => { input.value = vol.toFixed(2); } }, "All"));
+      openDialog(`Pour from ${nameOf(from.id)} into ${nameOf(to.id)}`, chips, el("div", { class: "lab-dialog-row" }, input, el("span", {}, `mL of ${fmt(vol, 3)} mL`)),
         el("button", { class: "btn primary small", type: "button", onclick: go }, "Pour"));
       input.focus(); input.select(); input.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
     }
@@ -136,7 +146,7 @@ export default {
       const v = vessels.find((x) => x.id === selected);
       if (!v) { insp.replaceChildren(el("h3", {}, "Bench"), el("p", { class: "muted small" }, "Tap glassware on the Equipment shelf to put it on the bench, then pick a chemical and tap the glassware to add it. Drag one vessel onto another to pour. Select a vessel to heat it, pour it or read its contents.")); lastInspector = ""; return; }
       const o = v.view || {};
-      const key = JSON.stringify([v.id, v.heat, v.over, v.tap, vessels.length]);
+      const key = JSON.stringify([v.id, v.heat, v.over, v.tap, v.gasTo, vessels.length]);
       const facts = el("div", { class: "lab-facts" },
         el("div", {}, el("span", {}, "Temperature"), el("b", {}, `${fmt(o.T ?? v.T, 4)} °C`)),
         el("div", {}, el("span", {}, "Volume"), el("b", {}, `${fmt(o.volume_ml || 0, 3)} mL`)),
@@ -151,10 +161,16 @@ export default {
       }
       lastInspector = key;
       const others = vessels.filter((x) => x.id !== v.id);
-      const heatRow = v.kind === "burette" || v.kind === "cylinder" ? el("p", { class: "muted small" }, "Not for heating.") :
+      const heatRow = !cat.equipment.find((e) => e.id === v.kind).flame ? el("p", { class: "muted small" }, "Not for heating.") :
         el("div", { class: "lab-seg" }, el("span", {}, "Burner"), ...HEATS.map(([label, h]) => el("button", { type: "button", class: v.heat === h ? "on" : "", onclick: () => { v.heat = h; renderInspector(); draw(); } }, label)));
       const pourSel = el("select", { class: "lab-sel", "aria-label": "Pour into" }, el("option", { value: "" }, "Pour into…"), ...others.map((x) => el("option", { value: x.id }, nameOf(x.id))));
       pourSel.addEventListener("change", () => { const to = vessels.find((x) => x.id === pourSel.value); if (to) pourPrompt(v, to); pourSel.value = ""; });
+      const filterSel = el("select", { class: "lab-sel", "aria-label": "Filter into" }, el("option", { value: "" }, "Filter into…"), ...others.map((x) => el("option", { value: x.id }, nameOf(x.id))));
+      filterSel.addEventListener("change", () => { if (filterSel.value) step([{ type: "filter", from: v.id, to: filterSel.value }], 0.5); filterSel.value = ""; });
+      const tubeSel = el("select", { class: "lab-sel", "aria-label": "Delivery tube" }, el("option", { value: "" }, "No delivery tube"),
+        ...others.filter((x) => x.kind !== "burette").map((x) => el("option", { value: x.id, selected: v.gasTo === x.id }, `Gas into ${nameOf(x.id)}`)));
+      tubeSel.addEventListener("change", () => { v.gasTo = tubeSel.value || null; renderInspector(); draw(); });
+      const tests = el("div", { class: "lab-seg" }, el("span", {}, "Test"), ...cat.tests.map((k) => el("button", { type: "button", onclick: () => step([{ type: "test", vessel: v.id, test: k }], 0) }, TEST_LABEL[k])));
       const extra = [];
       if (v.kind === "burette") {
         const overSel = el("select", { class: "lab-sel", "aria-label": "Burette over" }, el("option", { value: "" }, "Not over a vessel"), ...others.map((x) => el("option", { value: x.id, selected: v.over === x.id }, nameOf(x.id))));
@@ -163,15 +179,17 @@ export default {
           el("div", { class: "lab-seg" }, el("span", {}, "Tap"), ...[["Shut", 0], ["Drops", 0.1], ["Slow", 0.5], ["Open", 2]].map(([l, r]) => el("button", { type: "button", class: v.tap === r ? "on" : "", disabled: !v.over, onclick: () => { v.tap = r; renderInspector(); } }, l))),
           el("button", { class: "btn small", type: "button", onclick: () => { v.delivered = 0; renderInspector(); } }, "Note the initial reading (zero)")));
       }
-      insp.replaceChildren(el("h3", {}, nameOf(v.id)), facts, ...extra, heatRow, el("div", { class: "lab-actions" }, pourSel,
+      insp.replaceChildren(el("h3", {}, nameOf(v.id)), facts, ...extra, heatRow, tests,
+        v.kind === "burette" ? "" : el("div", { class: "lab-actions" }, el("span", { class: "muted small" }, "Delivery tube"), tubeSel),
+        el("div", { class: "lab-actions" }, pourSel, filterSel,
         el("button", { class: "btn small", type: "button", onclick: () => step([{ type: "empty", vessel: v.id }], 0) }, "Empty"),
-        el("button", { class: "btn small danger", type: "button", onclick: () => { vessels = vessels.filter((x) => x !== v); vessels.forEach((x) => { if (x.over === v.id) x.over = null; }); selected = null; renderInspector(); draw(); } }, "Remove")),
+        el("button", { class: "btn small danger", type: "button", onclick: () => { vessels = vessels.filter((x) => x !== v); vessels.forEach((x) => { if (x.over === v.id) x.over = null; if (x.gasTo === v.id) x.gasTo = null; }); selected = null; renderInspector(); draw(); } }, "Remove")),
         el("h4", {}, "Contents"), contents);
     }
     function renderLog() {
       logBox.replaceChildren(el("h4", {}, "Lab notebook"), ...(logs.length ? logs.map((l) => el("div", { class: `lab-entry ${l.kind}` },
-        l.vessel ? el("small", {}, nameOf(l.vessel)) : "", el("span", {}, l.text),
-        l.eq ? el("code", {}, l.eq) : "", l.dh != null ? el("small", { class: "muted" }, `ΔH = ${fmt(l.dh, 4)} kJ per mole of reaction${l.dh < 0 ? " (gives out heat)" : " (takes in heat)"}`) : "")) : [el("p", { class: "muted small" }, "Observations, equations and gas tests appear here.")]));
+        l.vessel ? el("small", {}, nameOf(l.vessel)) : "", el("span", {}, l.swatch ? el("i", { class: "lab-swatch", style: `background:${l.swatch}` }) : "", l.text),
+        l.eq ? el("code", {}, l.eq) : "", l.kind !== "reaction" ? "" : l.dh != null ? el("small", { class: "muted" }, `ΔH = ${fmt(l.dh, 4)} kJ per mole of reaction${l.dh < 0 ? " (gives out heat)" : " (takes in heat)"}`) : el("small", { class: "muted" }, "ΔH not tabulated for this product"))) : [el("p", { class: "muted small" }, "Observations, equations and gas tests appear here.")]));
     }
 
     // ---------------------------------------------------------------- drawing
@@ -182,7 +200,7 @@ export default {
       if (kind === "conical") { ctx.moveTo(x - w * 0.14, base - h); ctx.lineTo(x - w * 0.14, base - h * 0.68); ctx.lineTo(x - w / 2, base); ctx.lineTo(x + w / 2, base); ctx.lineTo(x + w * 0.14, base - h * 0.68); ctx.lineTo(x + w * 0.14, base - h); }
       else if (kind === "test_tube" || kind === "boiling_tube") { ctx.moveTo(x - w / 2, base - h); ctx.lineTo(x - w / 2, base - w / 2); ctx.arc(x, base - w / 2, w / 2, Math.PI, 0, true); ctx.lineTo(x + w / 2, base - h); }
       else if (kind === "crucible") { ctx.moveTo(x - w / 2, base - h); ctx.lineTo(x - w * 0.32, base); ctx.lineTo(x + w * 0.32, base); ctx.lineTo(x + w / 2, base - h); }
-      else if (kind === "dish") { ctx.moveTo(x - w / 2, base - h); ctx.quadraticCurveTo(x, base + h * 0.6, x + w / 2, base - h); }
+      else if (kind === "dish" || kind === "watch_glass") { ctx.moveTo(x - w / 2, base - h); ctx.quadraticCurveTo(x, base + h * 0.6, x + w / 2, base - h); }
       else { ctx.moveTo(x - w / 2, base - h); ctx.lineTo(x - w / 2, base); ctx.lineTo(x + w / 2, base); ctx.lineTo(x + w / 2, base - h); }
     }
     function draw() {
@@ -244,6 +262,14 @@ export default {
       if (rx.includes("Sulphur burns in air")) { ctx.fillStyle = "rgba(80,120,255,.6)"; ctx.beginPath(); ctx.ellipse(x, base - 10, 14 * sc, 9 * sc, 0, 0, 6.3); ctx.fill(); }
       const fume = (o.gases || []).find((g) => g.gas === "NO2") ? "rgba(150,70,20,.45)" : (o.gases || []).find((g) => g.gas === "SO3") ? "rgba(255,255,255,.6)" : null;
       if (o.boiling || fume) for (let i = 0; i < 6; i++) { const ph = (now * 0.4 + i / 6) % 1; ctx.fillStyle = fume || `rgba(255,255,255,${0.5 * (1 - ph)})`; ctx.beginPath(); ctx.arc(x + Math.sin(i + now) * 8, base - h - ph * 50, 5 + ph * 10, 0, 6.3); ctx.fill(); }
+      // a gas jar shows the gas it holds (brown for NO₂, faint for colourless gases)
+      const held = Object.entries(o.contents || {}).filter(([k]) => k.endsWith("(g)")).reduce((a, [, n]) => a + n, 0);
+      if (held > 1e-6) { ctx.save(); shapePath(ctx, v.kind, x, base, w, h); ctx.closePath(); ctx.clip(); ctx.fillStyle = (o.contents["NO2(g)"] || 0) > 1e-6 ? "rgba(150,70,20,.45)" : `rgba(200,225,250,${Math.min(0.5, 0.15 + held * 30)})`; ctx.fillRect(x - w, base - h, 2 * w, h); ctx.restore(); }
+      if (v.kind === "gas_jar") { ctx.fillStyle = "rgba(11,21,38,.25)"; ctx.fillRect(x - w / 2 - 4, base - h - 3, w + 8, 3); } // glass lid
+      // delivery tube to the vessel that receives this one's gas
+      if (v.gasTo) { const tv = vessels.find((q) => q.id === v.gasTo); if (tv?.hit) { const tx = slotX(tv.slot), top = Math.min(base - h - 18, tv.hit.y0 - 8);
+        ctx.strokeStyle = "rgba(11,21,38,.55)"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, base - h * 0.85); ctx.lineTo(x, top); ctx.lineTo(tx, top); ctx.lineTo(tx, tv.hit.y1 - 52); ctx.stroke();
+        if ((o.gases || []).some((g) => g.piped_to)) { const ph = (now * 0.8) % 1; ctx.fillStyle = "rgba(255,255,255,.95)"; ctx.beginPath(); ctx.arc(x + (tx - x) * ph, top, 2.5, 0, 6.3); ctx.fill(); } } }
       // glass
       shapePath(ctx, v.kind, x, base, w, h);
       ctx.strokeStyle = selected === v.id ? EMBER : INK; ctx.lineWidth = selected === v.id ? 3 : 2; ctx.stroke();

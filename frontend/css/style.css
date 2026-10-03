@@ -1008,4 +1008,7 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .lab-entry { display: flex; flex-direction: column; gap: 2px; font-size: 12.5px; padding: 6px 8px; border-radius: 8px; background: var(--surface-2); border-left: 3px solid var(--border); }
 .lab-entry.reaction { border-left-color: #FF5B2E; } .lab-entry.gas { border-left-color: #2a78d6; } .lab-entry.action { background: none; padding: 2px 8px; color: var(--text-2); }
 .lab-entry code { font-size: 11.5px; white-space: normal; }
+.lab-entry.test { border-left-color: #2f9e6e; }
+.lab-swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(11,21,38,.25); }
+.lab-tool { margin: 0; font-size: 12px; color: var(--text-2); padding: 4px 8px; border-left: 2px solid var(--border); }
 @media (max-width: 1100px) { .lab { height: auto; } .lab-body { grid-template-columns: 1fr; } .lab-stage { height: 380px; } .lab-shelf { max-height: 260px; } }
