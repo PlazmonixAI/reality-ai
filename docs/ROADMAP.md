@@ -200,3 +200,5 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Time-dependent Schrödinger solver for wave packets; quantum harmonic oscillator; Rabi oscillations on the Bloch sphere
 - [ ] Rotating (Kerr) black hole and an accretion disc image
 - [ ] Two-dimensional wave packets (double slit)
+
+- [x] Virtual Chemistry Lab (sandbox): shelf of 40+ chemicals and glassware, burner, burette; engine tool `chemistry.lab_step` with 64 balanced reactions, Hess's-law heat, boiling, gases with their tests, pH and indicators; in ASM and as the Lab page in ASM Teach
