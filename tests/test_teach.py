@@ -72,6 +72,25 @@ def test_every_experiment_computes_at_its_defaults():
     ("c12-unit-cell", {"Zc": 4, "M": 63.55, "a": 361}, "rho", 8.97, 2e-3),          # copper, fcc
     ("c12-fp", {"Kf": 1.86, "w2": 10, "M2": 58.44, "w1": 200, "i": 2}, "dTf", 3.183, 1e-3),
     ("c9-avg-atomic-mass", {"m1": 35, "p1": 75, "m2": 37}, "Mavg", 35.5, 1e-9),
+    # Class 12 practicals (NCERT laboratory manual)
+    ("p12-glass-slab", {"R1": 2.0, "R2": 2.4, "R3": 3.2}, "n", 1.5, 1e-9),                       # real 1.2 / apparent 0.8
+    ("p12-liquid-n", {"f1": 15, "f2": 22.5, "Rc": 15}, "n", 4 / 3, 1e-5),                        # water
+    ("p12-convex-lens-uv", {"do": 30, "di": 15}, "f", 10.0, 1e-9),
+    ("p12-concave-mirror-uv", {"do": 30, "di": 30}, "f", -15.0, 1e-9),                          # object at C
+    ("p12-concave-lens", {"f1": 10, "do": 30, "di": 60}, "f2", -20.0, 1e-9),                     # F = 20, 1/20 = 1/10 + 1/f₂
+    ("p12-galvanometer", {"E": 2, "R": 5000, "S": 50, "th": 30}, "G", 50.505, 1e-4),             # RS/(R − S)
+    ("p12-sonometer-ac", {"M": 1, "mu": 1, "l": 99}, "f", 50.01, 1e-3),                           # √(9.807/0.001)/1.98
+    ("p12-resistivity", {"V": 1.5, "I": 0.5, "L": 100, "d": 0.7}, "rho", 1.1545e-6, 1e-3),       # nichrome
+    ("p12-pot-internal", {"l1": 450, "l2": 375, "R": 5}, "r", 1.0, 1e-9),
+    ("p12-zener", {"Vin": 12, "Rs": 200, "Vz": 6.2, "RL": 1000}, "Iz", 22.8, 1e-9),
+    ("c12-neutralisation-heat", {"Va": 100, "Ca": 1, "Vb": 100, "Cb": 1, "dT": 6.8, "W": 0}, "dH", -56.848, 1e-4),
+    ("c12-daniell-conc", {"cZn": 1, "cCu": 0.01, "T": 298.15}, "E", 1.0408, 1e-3),              # 1.10 − 0.0592
+    ("c12-thiosulphate", {"c": 0.05, "T": 25, "tref": 60, "Ea": 50}, "t", 120.0, 1e-6),          # half the concentration, twice the time
+    ("c12-mohr-salt-prep", {"m1": 2.7801, "m2": 5, "got": 0}, "theo", 3.9214, 1e-4),             # 0.01 mol limiting
+    ("c12-chromatography", {"ds": 3.2, "df": 8}, "Rf", 0.4, 1e-9),
+    ("m12-mvt", {"a": 0, "b": 2}, "c", 2 / 3 ** 0.5, 1e-5),
+    ("m12-area-between", {"k": 1}, "A", 1 / 6, 1e-5),
+    ("m12-by-parts", {"b": 1}, "I", 1.0, 1e-9),
     # volumetric analysis: CBSE practical examples
     ("c12-kmno4-oxalic", {"w": 6.3035, "Vf": 1000, "V1": 20, "V2": 40}, "M2", 0.01, 1e-4),   # 0.05 M oxalic acid, 2·0.05·20 = 5·M·40
     ("c12-kmno4-oxalic", {"w": 1.575, "Vf": 250, "V1": 10, "V2": 10}, "S", 3.159, 1e-3),     # ≈ 0.02 M KMnO₄

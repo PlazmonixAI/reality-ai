@@ -41,7 +41,7 @@ actually produced.
 **Storage:** a single SQLite file (`DATABASE_PATH`). Back it up by copying the file.
 
 ## ASM Teach
-The classroom part of the app, at `/app/#/teach`: 285 senior school physics, chemistry and maths experiments (derivations, laws,
+The classroom part of the app, at `/app/#/teach`: 308 senior school physics, chemistry and maths experiments (derivations, laws,
 practicals and graphs), grouped as Coursework 1 to 4 (one per year) rather than by board or class. Each one has a live picture, a graph, the equations and
 derivation, an observation table, practice questions with engine-computed answers, an AI co-teacher and a whiteboard that reads
 typed equations. Lessons save to the history. Engine tools: `teach.catalog`, `teach.experiment`, `teach.practice`, `teach.recognize`.

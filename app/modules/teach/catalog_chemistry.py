@@ -508,3 +508,57 @@ X("c11-hcl-na2co3", 11, C, VA, "Volumetric analysis: HCl against sodium carbonat
         "Carbonate takes 2 H⁺ and HCl gives 1, so 2M₁V₁ = M₂V₂ | M₂ = 2M₁V₁ / V₂ | Strength = M₂ × 36.46 g/mol (HCl)",
   assume="Methyl orange turns from yellow to orange-red at the end point | Concordant readings agree within 0.1 mL",
   ask="M2,S", lab="titration")
+
+# ================================================================ Class 12 practicals (NCERT laboratory manual)
+X("c12-neutralisation-heat", 12, C, "Thermochemistry (Practical)", "Enthalpy of neutralisation: HCl and NaOH", "practical",
+  "Temperature rise when a strong acid meets a strong base, per mole of water formed.",
+  params="Va:Volume of HCl:mL:100:10:500; Ca:Concentration of HCl:mol/L:1:0.1:2; Vb:Volume of NaOH:mL:100:10:500; Cb:Concentration of NaOH:mol/L:1:0.1:2; "
+         "dT:Temperature rise:K:6.8:0.1:20; W:Water equivalent of the calorimeter:g:0:0:100",
+  out="q:Heat released:J:(Va + Vb + W)*4.18*dT; n:Moles of water formed:mol:Min(Va*Ca, Vb*Cb)/1000; dH:Enthalpy of neutralisation:kJ/mol:-(Va + Vb + W)*4.18*dT/(Min(Va*Ca, Vb*Cb))",
+  eqs="q = m*c*dT | dH = -q/n", tags="enthalpy of neutralisation calorimeter hcl naoh heat thermochemistry practical",
+  steps="H⁺(aq) + OH⁻(aq) → H₂O(l) | Heat taken up by the solution (and calorimeter): q = (m + W) × 4.18 × ΔT, taking the solution's density as 1 g/mL | Moles of water = moles of the acid or base used up, whichever is less | ΔH = −q/n; strong acid with strong base gives about −57 kJ/mol",
+  assume="Solutions have density 1 g/mL and specific heat 4.18 J/(g K) | No heat lost to the air", ask="dH")
+
+X("c12-dissolution-heat", 12, C, "Thermochemistry (Practical)", "Enthalpy of dissolution of a salt", "practical",
+  "Temperature change when a salt dissolves in water: anhydrous CuSO₄ warms it, KNO₃ cools it.",
+  params="ms:Mass of salt:g:5:0.5:50; Ms:Molar mass of the salt:g/mol:159.6:20:400; mw:Mass of water:g:100:20:500; dT:Temperature change (negative for a fall):K:4.75:-15:20",
+  out="q:Heat released to the solution:J:(mw + ms)*4.18*dT; n:Moles dissolved:mol:ms/Ms; dH:Enthalpy of dissolution:kJ/mol:-(mw + ms)*4.18*dT*Ms/(1000*ms)",
+  eqs="q = m*c*dT | dH = -q/n", tags="enthalpy of solution dissolution copper sulphate potassium nitrate endothermic exothermic calorimeter practical",
+  steps="Dissolve a weighed salt in water in a calorimeter and note the steady temperature change | q = (m_water + m_salt) × 4.18 × ΔT | n = mass / molar mass | ΔH_sol = −q/n: negative (exothermic) for CuSO₄, positive for KNO₃ (M = 101.1, the temperature falls)",
+  assume="Specific heat of the solution 4.18 J/(g K) | No heat lost to the air", ask="dH")
+
+X("c12-thiosulphate", 12, C, "Chemical Kinetics", "Rate of reaction: sodium thiosulphate and HCl", "practical",
+  "The time for sulphur to hide a cross under the flask, at different concentrations and temperatures.",
+  params="c:Thiosulphate concentration:mol/L:0.1:0.02:0.2; T:Temperature:degC:25:10:60; tref:Time measured at 0.1 mol/L and 25 °C:s:60:10:300; Ea:Activation energy:kJ/mol:50:20:100",
+  out="t:Time for the cross to disappear:s:tref*(0.1/c)*exp(Ea*1000/R_g*(1/(T + 273.15) - 1/298.15)); rate:Rate (1/t):1/s:1/(tref*(0.1/c)*exp(Ea*1000/R_g*(1/(T + 273.15) - 1/298.15)))",
+  plot="c: t", eqs="rate = k*c | k = A*exp(-Ea/(R*T))", tags="kinetics rate sodium thiosulphate hydrochloric acid sulphur cross concentration temperature practical",
+  steps="Na₂S₂O₃ + 2HCl → 2NaCl + SO₂ + S + H₂O; the sulphur clouds the solution | The cross disappears when a fixed amount of sulphur has formed, so rate ∝ 1/t | First order in thiosulphate: halving the concentration doubles the time | Arrhenius: raising the temperature by 10 °C near room temperature roughly doubles the rate",
+  assume="The rate is first order in thiosulphate with the acid in excess | The time at 0.1 mol/L and 25 °C is the class's own measured value", ask="t")
+
+X("c12-daniell-conc", 12, C, "Electrochemistry", "Daniell cell: potential and concentration", "practical",
+  "Measured EMF of Zn | Zn²⁺ ‖ Cu²⁺ | Cu as the two solutions change.",
+  params="cZn:Zn²⁺ concentration:mol/L:0.1:0.001:1; cCu:Cu²⁺ concentration:mol/L:0.1:0.001:1; T:Temperature:K:298:273:350",
+  out="E:Cell potential:V:1.10 - R_g*T/(2*F_c)*log(cZn/cCu); dG:Gibbs energy change:kJ/mol:-2*F_c*(1.10 - R_g*T/(2*F_c)*log(cZn/cCu))/1000",
+  plot="cCu: E", eqs="E = 1.10 - R*T/(2*F)*log(cZn/cCu)", tags="daniell cell emf concentration nernst zinc copper practical",
+  steps="Zn + Cu²⁺ → Zn²⁺ + Cu, n = 2 and E° = 1.10 V | Nernst: E = E° − (RT/2F) ln([Zn²⁺]/[Cu²⁺]) | At 298 K this is E° − 0.0296 log([Zn²⁺]/[Cu²⁺]) | A plot of E against log([Zn²⁺]/[Cu²⁺]) is a straight line of slope −0.0296 V", ask="E")
+
+X("c12-chromatography", 12, C, "Chromatography (Practical)", "Paper chromatography: Rf values", "practical",
+  "How far each pigment travels compared with the solvent.",
+  params="ds:Distance moved by the spot:cm:3.2:0.1:20; df:Distance moved by the solvent front:cm:8:0.5:20",
+  out="Rf:Rf value:-:ds/df", eqs="Rf = ds/df", tags="chromatography paper rf value pigment solvent front separation practical",
+  steps="Spot the mixture on a pencil line and stand the paper in the solvent | Each component moves at its own speed, depending on how strongly it sticks to the paper | Rf = distance moved by the spot / distance moved by the solvent front | Rf lies between 0 and 1 and identifies the substance for a given solvent", ask="Rf")
+
+X("c12-mohr-salt-prep", 12, C, "Preparation of Inorganic Compounds (Practical)", "Preparing Mohr's salt: yield", "practical",
+  "FeSO₄·7H₂O and (NH₄)₂SO₄ crystallise together as the double salt.",
+  params="m1:FeSO₄·7H₂O taken:g:7:1:50; m2:(NH₄)₂SO₄ taken:g:3.5:0.5:30; got:Mass of crystals obtained:g:7.5:0:60",
+  out="theo:Theoretical yield:g:Min(m1/278.01, m2/132.14)*392.14; pct:Percentage yield:%:100*got/(Min(m1/278.01, m2/132.14)*392.14)",
+  eqs="theo = Min(m1/278.01, m2/132.14)*392.14 | pct = 100*got/theo", tags="mohr salt ferrous ammonium sulphate double salt preparation yield crystallisation practical",
+  steps="FeSO₄·7H₂O + (NH₄)₂SO₄ → FeSO₄·(NH₄)₂SO₄·6H₂O + H₂O | Moles: FeSO₄·7H₂O 278.01 g/mol, (NH₄)₂SO₄ 132.14 g/mol; they react 1 : 1, the smaller amount limits | Theoretical yield = limiting moles × 392.14 g/mol | Percentage yield = obtained / theoretical × 100",
+  assume="A few drops of dilute H₂SO₄ stop Fe²⁺ from hydrolysing; crystals are dried before weighing", ask="theo,pct")
+
+X("c12-acetanilide", 12, C, "Preparation of Organic Compounds (Practical)", "Preparing acetanilide: yield", "practical",
+  "Aniline is acetylated by acetic anhydride.",
+  params="Van:Volume of aniline:mL:5:1:20; got:Mass of acetanilide obtained:g:5.5:0:30",
+  out="nan:Moles of aniline:mol:Van*1.022/93.13; theo:Theoretical yield:g:Van*1.022/93.13*135.17; pct:Percentage yield:%:100*got/(Van*1.022/93.13*135.17)",
+  eqs="theo = Van*1.022/93.13*135.17", tags="acetanilide aniline acetic anhydride acetylation organic preparation yield practical",
+  steps="C₆H₅NH₂ + (CH₃CO)₂O → C₆H₅NHCOCH₃ + CH₃COOH | Mass of aniline = volume × density (1.022 g/mL); moles = mass / 93.13 g/mol | With the anhydride in excess, one mole of aniline gives one mole of acetanilide (135.17 g/mol) | Percentage yield = obtained / theoretical × 100; the product is recrystallised from hot water", ask="theo,pct")

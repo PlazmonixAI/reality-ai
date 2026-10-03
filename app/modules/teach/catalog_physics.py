@@ -1007,3 +1007,93 @@ X("p12-rectifier", 12, P, "Semiconductor Electronics", "Half and full wave recti
   series="vout:Full-wave output:V:Max(0, Abs(Vm*sin(2*pi*50*t)) - Vd)", plot="t=0..0.04: vout",
   eqs="Vdc_full = 2*Vm/pi | Vdc_half = Vm/pi", tags="rectifier half wave full wave diode dc", ask="Vdc_full",
   steps="A half-wave rectifier passes only the positive half cycles; the average of a half sine over a full cycle is Vm/π | A full-wave rectifier flips the negative halves, doubling the average to 2Vm/π")
+
+# ================================================================ Class 12 practicals (NCERT laboratory manual)
+X("p12-resistivity", 12, P, "Current Electricity", "Resistivity of a wire from V and I", "practical",
+  "Ohm's law on a length of wire, then its resistance per cm and the resistivity of the material.",
+  params="V:Voltmeter reading:V:1.5:0.1:10; I:Ammeter reading:A:0.5:0.01:5; L:Length of wire:cm:100:10:200; d:Diameter (screw gauge):mm:0.7:0.1:2",
+  out="R:Resistance:ohm:V/I; Rcm:Resistance per cm:ohm/cm:V/(I*L); rho:Resistivity:ohm m:V/I*pi*(d*1e-3)**2/(4*L*1e-2)",
+  plot="d: rho", eqs="R = V/I | rho = R*pi*d**2/(4*L)", scene="circuit: V=V, I=I, R=R, layout=single",
+  tags="resistivity wire ohm law screw gauge resistance per unit length nichrome practical", ask="R,rho",
+  steps="Plot V against I: a straight line through the origin whose slope is R | R = ρL/A and A = πd²/4 for a round wire | So ρ = RπD²/(4L) | Nichrome is about 1.1 × 10⁻⁶ Ω m, copper 1.7 × 10⁻⁸ Ω m")
+
+X("p12-mb-combination", 12, P, "Current Electricity", "Metre bridge: laws of combination of resistances", "practical",
+  "Two resistances in series and in parallel, measured with the metre bridge.",
+  params="R1:First resistance:ohm:4:0.5:50; R2:Second resistance:ohm:6:0.5:50; Rk:Known resistance in the box:ohm:10:1:100",
+  out="Rs:Series combination:ohm:R1 + R2; Rp:Parallel combination:ohm:R1*R2/(R1 + R2); ls:Balance point, series:cm:100*Rk/(Rk + R1 + R2); "
+      "lp:Balance point, parallel:cm:100*Rk/(Rk + R1*R2/(R1 + R2))",
+  eqs="Rs = R1 + R2 | 1/Rp = 1/R1 + 1/R2 | S = Rk*(100 - l)/l", tags="metre bridge series parallel combination resistances practical",
+  steps="With the known resistance R in the left gap and the unknown S in the right, balance gives S = R(100 − l)/l | So l = 100R/(R + S) | Measure each resistance alone, then the pair in series and in parallel | Series: R₁ + R₂; parallel: R₁R₂/(R₁ + R₂)",
+  ask="Rs,Rp")
+
+X("p12-pot-internal", 12, P, "Current Electricity", "Potentiometer: internal resistance of a cell", "practical",
+  "Balancing lengths with and without a shunt resistance give the cell's internal resistance.",
+  params="l1:Balancing length, key open:cm:450:50:1000; l2:Balancing length with resistance R:cm:375:20:1000; R:Shunt resistance:ohm:5:0.5:50",
+  out="r:Internal resistance:ohm:R*(l1 - l2)/l2; ratio:EMF / terminal voltage:-:l1/l2", plot="R: r",
+  eqs="r = R*(l1 - l2)/l2", tags="potentiometer internal resistance cell balancing length shunt practical",
+  steps="With the key open the cell gives no current: the balancing length l₁ measures the EMF E | With R across the cell the terminal voltage V balances at l₂ | E/V = l₁/l₂ and E/V = (R + r)/R | So r = R(l₁ − l₂)/l₂", ask="r")
+
+X("p12-galvanometer", 12, P, "Moving Charges and Magnetism", "Galvanometer: resistance and figure of merit", "practical",
+  "Half deflection gives the galvanometer's resistance; the deflection per ampere gives its figure of merit.",
+  params="E:EMF of the battery:V:2:0.5:6; R:High resistance in series:ohm:5000:500:20000; S:Shunt for half deflection:ohm:50:5:500; th:Deflection with R alone:div:30:5:30",
+  out="G:Galvanometer resistance:ohm:R*S/(R - S); k:Figure of merit:A/div:E/((R + R*S/(R - S))*th)",
+  eqs="G = R*S/(R - S) | k = E/((R + G)*th)", tags="galvanometer half deflection figure of merit shunt resistance practical",
+  steps="With R alone the current E/(R + G) gives θ divisions | Adding a shunt S across the galvanometer until the deflection halves gives G = RS/(R − S) | When R ≫ S this is close to S | Figure of merit k = I/θ = E/((R + G)θ) amperes per division", ask="G,k")
+
+X("p12-sonometer-ac", 12, P, "Alternating Current", "Frequency of AC mains with a sonometer", "practical",
+  "A wire carrying mains current between magnet poles resonates when its length matches the mains frequency.",
+  params="M:Mass hung on the wire:kg:1:0.2:5; mu:Mass per unit length of the wire:g/m:1:0.2:10; l:Resonating length:cm:99:20:150",
+  out="T:Tension:N:M*g0; v:Wave speed on the wire:m/s:sqrt(M*g0/(mu*1e-3)); f:Mains frequency:Hz:sqrt(M*g0/(mu*1e-3))/(2*l*1e-2)",
+  plot="l: f", eqs="f = sqrt(T/mu)/(2*l)", tags="sonometer ac mains frequency resonance wire tension practical",
+  steps="The alternating current in the wire, in the magnet's field, pushes it back and forth at the mains frequency | Resonance in the fundamental mode: l = λ/2 | Wave speed on a stretched wire v = √(T/μ) | So f = (1/2l)√(T/μ), close to 50 Hz in India", ask="f")
+
+X("p12-concave-mirror-uv", 12, P, "Ray Optics and Optical Instruments", "Concave mirror: focal length by the u-v method", "practical",
+  "Object and image distances give the focal length; the 1/u against 1/v graph is a straight line.",
+  params="do:Object distance from the pole:cm:30:16:100; di:Image distance from the pole:cm:30:16:100",
+  out="u:u:cm:-do; v:v:cm:-di; f:Focal length:cm:-do*di/(do + di); R:Radius of curvature:cm:-2*do*di/(do + di)",
+  plot="do: f", eqs="1/v + 1/u = 1/f", scene="mirror: u=do, f=f, v=v, kind=concave",
+  tags="concave mirror focal length u v method radius of curvature practical", ask="f",
+  steps="Move the object until its image coincides with the object needle (no parallax) | With the New Cartesian convention u and v are both negative for a real image | 1/f = 1/v + 1/u, so f = uv/(u + v) | Repeat for several u and plot 1/v against 1/u: the intercepts are both 1/f")
+
+X("p12-convex-lens-uv", 12, P, "Ray Optics and Optical Instruments", "Convex lens: focal length by the u-v method", "practical",
+  "Object and image distances on the optical bench give the focal length.",
+  params="do:Object distance:cm:30:11:100; di:Image distance:cm:15:11:100",
+  out="u:u:cm:-do; v:v:cm:di; f:Focal length:cm:do*di/(do + di); P_l:Power:dioptre:100*(do + di)/(do*di)",
+  plot="do: f", eqs="1/v - 1/u = 1/f", scene="lens: u=do, f=f, v=v, kind=convex",
+  tags="convex lens focal length u v method optical bench power practical", ask="f",
+  steps="Image on the far side, so v is positive; object on the near side, so u is negative | Lens formula 1/v − 1/u = 1/f | With magnitudes, f = uv/(u + v) | Power in dioptres = 100/f(cm)")
+
+X("p12-convex-mirror", 12, P, "Ray Optics and Optical Instruments", "Convex mirror: focal length using a convex lens", "practical",
+  "A convex lens forms a real image; a convex mirror placed in its path sends the rays straight back.",
+  params="x:Lens to image distance (no mirror):cm:40:10:100; y:Lens to mirror distance:cm:20:1:99",
+  out="Rm:Radius of curvature:cm:x - y; f:Focal length of the convex mirror:cm:(x - y)/2",
+  eqs="R = x - y | f = R/2", tags="convex mirror focal length convex lens auxiliary practical",
+  steps="Without the mirror the lens forms a real image I at distance x | Put the convex mirror between the lens and I; when the image comes back onto the object, the rays meet the mirror normally | Normal rays point at the centre of curvature, which is where I was | So R = x − y and f = R/2", ask="f")
+
+X("p12-concave-lens", 12, P, "Ray Optics and Optical Instruments", "Concave lens: focal length using a convex lens", "practical",
+  "The pair in contact behaves as one convex lens; subtracting the convex lens gives the concave one.",
+  params="f1:Focal length of the convex lens:cm:10:5:40; do:Object distance for the pair:cm:30:10:100; di:Image distance for the pair:cm:60:10:300",
+  out="F:Focal length of the pair:cm:do*di/(do + di); f2:Focal length of the concave lens:cm:f1*do*di/(do + di)/(f1 - do*di/(do + di))",
+  eqs="1/F = 1/f1 + 1/f2", tags="concave lens focal length combination convex lens contact practical",
+  steps="A concave lens alone gives no real image, so it is put in contact with a stronger convex lens | Measure u and v for the pair: 1/F = 1/v − 1/u | For lenses in contact 1/F = 1/f₁ + 1/f₂ | So f₂ = f₁F/(f₁ − F), negative for a concave lens", ask="F,f2")
+
+X("p12-glass-slab", 12, P, "Ray Optics and Optical Instruments", "Refractive index of a glass slab: travelling microscope", "practical",
+  "Real and apparent depth from three microscope readings.",
+  params="R1:Reading on the mark, no slab:cm:2.0:0:10; R2:Reading on the mark seen through the slab:cm:2.4:0:10; R3:Reading on the top of the slab:cm:3.2:0:12",
+  out="real:Real thickness:cm:R3 - R1; app:Apparent thickness:cm:R3 - R2; n:Refractive index:-:(R3 - R1)/(R3 - R2)",
+  eqs="n = (R3 - R1)/(R3 - R2)", tags="travelling microscope glass slab refractive index real apparent depth practical",
+  steps="Focus on a mark with no slab (R₁), then through the slab (R₂), then on fine powder on the slab's top (R₃) | Real thickness = R₃ − R₁, apparent thickness = R₃ − R₂ | n = real depth / apparent depth | Glass comes out near 1.5", ask="n")
+
+X("p12-liquid-n", 12, P, "Ray Optics and Optical Instruments", "Refractive index of a liquid: convex lens and plane mirror", "practical",
+  "A layer of liquid under the lens forms a plano-concave liquid lens.",
+  params="f1:Focal length of the convex lens alone:cm:15:5:50; f2:Focal length with the liquid under it:cm:22.5:5:100; Rc:Radius of curvature of the lens face (spherometer):cm:15:5:60",
+  out="fl:Focal length of the liquid lens:cm:f1*f2/(f2 - f1); n:Refractive index of the liquid:-:1 + Rc*(f2 - f1)/(f1*f2)",
+  eqs="1/fl = 1/f1 - 1/f2 | n = 1 + Rc/fl", tags="refractive index liquid convex lens plane mirror spherometer water practical",
+  steps="On a plane mirror, a pin's image coincides with the pin when it sits at the lens's focus: this gives f₁ | With liquid between lens and mirror, the same method gives the pair's focal length f₂ | The liquid forms a plano-concave lens: 1/f_l = 1/f₁ − 1/f₂ (magnitude) | For a plano-concave lens 1/f_l = (n − 1)/R, so n = 1 + R/f_l | Water gives about 1.33", ask="n")
+
+X("p12-zener", 12, P, "Semiconductor Electronics", "Zener diode as a voltage regulator", "practical",
+  "In reverse breakdown the Zener holds its voltage while the current through it changes.",
+  params="Vin:Input voltage:V:12:6:30; Rs:Series resistance:ohm:200:50:2000; Vz:Zener breakdown voltage:V:6.2:2:15; RL:Load resistance:ohm:1000:100:10000",
+  out="Is:Current through the series resistor:mA:1000*(Vin - Vz)/Rs; IL:Load current:mA:1000*Vz/RL; Iz:Current through the Zener:mA:1000*((Vin - Vz)/Rs - Vz/RL)",
+  plot="Vin: Iz", eqs="Is = (Vin - Vz)/Rs | Iz = Is - IL", tags="zener diode reverse breakdown voltage regulator practical",
+  steps="In reverse bias the Zener conducts sharply once the voltage reaches V_z | The output across it stays at V_z | The series resistor takes the difference: I_s = (V_in − V_z)/R_s | The load takes V_z/R_L and the Zener the rest; it regulates while I_z stays positive", ask="Iz")
