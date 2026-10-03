@@ -553,3 +553,32 @@ X("m12-binomial-dist", 12, M, "Probability", "Binomial distribution", "concept",
   out="Pr:P(X = r):-:factorial(n)/(factorial(r)*factorial(n - r))*p**r*(1 - p)**(n - r); mean:Mean np:-:n*p; var:Variance npq:-:n*p*(1 - p)",
   plot="r: Pr", eqs="Pr = binomial(n, r)*p**r*(1 - p)**(n - r) | mean = n*p", tags="binomial distribution bernoulli trials probability mean variance", lab="probability", ask="Pr",
   steps="One particular order of r successes and n − r failures has probability pʳqⁿ⁻ʳ | There are nCr such orders | P(X = r) = nCr pʳ qⁿ⁻ʳ | Mean np, variance npq")
+
+# ================================================================ Class 12 laboratory activities
+X("m12-mvt", 12, M, "Continuity and Differentiability", "Mean value theorem: f(x) = x³ − x", "graph",
+  "Somewhere between a and b the tangent is parallel to the chord.",
+  params="a:Left end a:-:0:-3:2; b:Right end b:-:2:-2:3",
+  out="slope:Slope of the chord:-:(b**3 - b - a**3 + a)/(b - a); c:The point c:-:sqrt((a**2 + a*b + b**2)/3)",
+  eqs="3*c**2 - 1 = (b**3 - b - a**3 + a)/(b - a)", tags="mean value theorem lagrange rolle tangent chord derivative activity",
+  steps="f(x) = x³ − x is continuous on [a, b] and differentiable inside | Chord slope = (f(b) − f(a))/(b − a) = a² + ab + b² − 1 | f′(c) = 3c² − 1 | Setting them equal: c = √((a² + ab + b²)/3), which lies between a and b", ask="c")
+
+X("m12-area-between", 12, M, "Application of Integrals", "Area between y = kx and y = x²", "derivation",
+  "The region enclosed by a line and a parabola.",
+  params="k:Slope of the line:-:1:0.2:4",
+  out="xm:Where they meet:-:k; A:Enclosed area:-:k**3/6", plot="k: A", eqs="A = k**3/6",
+  tags="area between curves line parabola definite integral activity",
+  steps="The curves meet where kx = x², at x = 0 and x = k | Between them the line is above the parabola | A = ∫₀ᵏ (kx − x²) dx = k³/2 − k³/3 | So A = k³/6; for k = 1 this is 1/6", ask="A")
+
+X("m12-by-parts", 12, M, "Integrals", "Integration by parts: ∫ x eˣ dx", "derivation",
+  "Choose u = x and dv = eˣ dx.",
+  params="b:Upper limit:-:1:0:4",
+  out="I:Value of the integral from 0 to b:-:(b - 1)*exp(b) + 1", plot="b: I", eqs="I = (b - 1)*exp(b) + 1",
+  tags="integration by parts definite integral exponential ilate activity",
+  steps="∫u dv = uv − ∫v du | Take u = x (it gets simpler when differentiated) and dv = eˣ dx, so v = eˣ | ∫x eˣ dx = x eˣ − ∫eˣ dx = (x − 1)eˣ + C | From 0 to b: (b − 1)eᵇ + 1; at b = 1 this is exactly 1", ask="I")
+
+X("m12-skew", 12, M, "Three Dimensional Geometry", "Shortest distance between two skew lines", "concept",
+  "Lines x-axis-parallel and y-axis-parallel at different heights.",
+  params="h:Height between the lines:-:3:0.5:10; th:Angle between their directions:deg:90:10:90",
+  out="d:Shortest distance:-:h; cosang:Cosine of the angle:-:cos(th*pi/180)",
+  eqs="d = h", tags="skew lines shortest distance three dimensional geometry vectors activity",
+  steps="Skew lines are neither parallel nor meeting | The shortest segment between them is perpendicular to both, along b₁ × b₂ | d = |(a₂ − a₁) · (b₁ × b₂)| / |b₁ × b₂| | For one line in the plane z = 0 and the other in z = h, the common perpendicular is vertical and d = h whatever the angle", ask="d")

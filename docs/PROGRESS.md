@@ -237,6 +237,12 @@
 - **Known issues:** the board reads typed equations, not handwriting; symbols must match the textbook's letters; some graphs near a pole (lens at u = f) show a vertical line at the asymptote.
 - **Next:** handwriting on the board, assignments, Hindi interface, board-specific chapter names.
 
+## 2026-10-03 (later): Class 12 practicals and the board paper choice
+- ASM Teach board: plain, grid, lined or dotted board (remembered and saved with lessons); pen, highlighter, eraser, colours, size, undo, clear and pages in a side bar.
+- 23 Class 12 practicals and activities from the NCERT laboratory manuals. Physics: resistivity of a wire, laws of combination with the metre bridge, internal resistance with the potentiometer, galvanometer resistance and figure of merit, AC mains frequency with a sonometer, concave mirror and convex lens by the u-v method, convex mirror and concave lens using a convex lens, glass slab with a travelling microscope, refractive index of a liquid, Zener regulator. Chemistry: enthalpy of neutralisation and of dissolution, thiosulphate kinetics, Daniell cell against concentration, paper chromatography, preparing Mohr's salt and acetanilide (yields). Maths: mean value theorem, area between a line and a parabola, integration by parts, skew lines. Each has textbook checks in tests/test_teach.py.
+- Library: 308 experiments (physics 152, chemistry 75, maths 81).
+- Qualitative practicals (salt analysis, functional group tests, colloids) are left for the chemistry sandbox lab, where reactions can be seen rather than computed from a formula.
+
 ## 2026-10-03: Volumetric analysis practicals in ASM Teach
 - Four new practicals under "Volumetric Analysis (Practical)": KMnO₄ against oxalic acid and KMnO₄ against Mohr's salt (Coursework 4), NaOH against oxalic acid and HCl against sodium carbonate (Coursework 2). Each takes the mass weighed, the flask volume, the pipetted volume and the concordant burette reading, and computes the standard solution's molarity, the unknown's molarity (n₁M₁V₁ = n₂M₂V₂ with the electrons or H⁺ per formula unit) and its strength in g/L, with the balanced equation and the derivation.
 - New "titration" classroom picture: a burette on a stand over a conical flask; the titrant runs in to the engine's end-point reading and the flask changes colour (KMnO₄ pale pink, phenolphthalein pink, methyl orange yellow to orange-red).

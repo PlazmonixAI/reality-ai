@@ -173,7 +173,7 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [ ] Shared mission gallery
 
 ## Phase 11: ASM Teach (the classroom product)
-- [x] Curriculum catalogue: 285 experiments across Class 9 to 12 physics, chemistry and maths, chapters following NCERT, with ICSE and state board topics tagged (`app/modules/teach/`)
+- [x] Curriculum catalogue: 308 experiments across Class 9 to 12 physics, chemistry and maths, chapters following NCERT, with ICSE and state board topics tagged (`app/modules/teach/`)
 - [x] Engine tools `teach.catalog`, `teach.experiment` (outputs, swept graphs, equations, derivation), `teach.practice` (questions with engine-computed answers, choices and working), `teach.recognize` (reads an equation from the board and matches experiments, rearranges it)
 - [x] Classroom view: live picture, graph, inputs, results, equations, derivation, observation table (readings, CSV), practice, AI co-teacher, projector mode
 - [x] Whiteboard beside the experiment or drawn over it: pen, highlighter, eraser, colours, pages, undo, typed equations read by the engine
