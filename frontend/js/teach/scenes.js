@@ -263,6 +263,45 @@ const SCENES = {
     ball(ctx, sx + (sw * Math.max(0, Math.min(14, pH))) / 14, sy - 14, 5, INK);
   },
 
+  titration(ctx, w, h, res, t, c) {
+    // A burette over a conical flask. The titrant runs in until the engine's end-point reading V, then the flask turns.
+    const r = res.scene.roles, V = Math.max(0.1, num(r.V, 10)), Vf = num(r.Vf, 10), ind = r.ind || "phph";
+    const look = { kmno4: { titrant: [106, 27, 106], start: [244, 246, 250], end: [244, 170, 205], name: "KMnO₄ is its own indicator: colourless to pale pink" },
+      phph: { titrant: [232, 240, 248], start: [244, 246, 250], end: [246, 150, 196], name: "Phenolphthalein: colourless to pink" },
+      mo: { titrant: [232, 240, 248], start: [242, 200, 75], end: [232, 102, 58], name: "Methyl orange: yellow to orange-red" } }[ind] || {};
+    const cyc = 9, ph = t % cyc, f = Math.min(1, ph / 6), added = f * V, done = ph >= 6; // 6 s to the end point, then hold
+    const full = 50, bx = w * 0.42, top = h * 0.08, bh = h * 0.5, bw = Math.max(16, w * 0.03), y0 = top + 10, yScale = (bh - 20) / full;
+    // stand
+    ctx.fillStyle = c.text3; ctx.fillRect(w * 0.2, h * 0.93, w * 0.32, 6); ctx.fillRect(w * 0.22, top - 10, 5, h * 0.93 - top + 10);
+    ctx.fillRect(w * 0.22, top + bh * 0.3, bx - w * 0.22, 4);
+    // burette: liquid from the current reading down to the tap, graduations 0 at the top
+    const rgb = (a) => `rgb(${a.join(",")})`;
+    ctx.fillStyle = rgb(look.titrant); ctx.globalAlpha = 0.85; ctx.fillRect(bx - bw / 2 + 2, y0 + added * yScale, bw - 4, (full - added) * yScale); ctx.globalAlpha = 1;
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.strokeRect(bx - bw / 2, top, bw, bh);
+    ctx.lineWidth = 1; ctx.font = "10px system-ui";
+    for (let m = 0; m <= full; m += 5) { const y = y0 + m * yScale; ctx.beginPath(); ctx.moveTo(bx - bw / 2, y); ctx.lineTo(bx - bw / 2 + (m % 10 ? 5 : 9), y); ctx.stroke(); if (m % 10 === 0) T(ctx, String(m), bx - bw / 2 - 6, y, { align: "right", color: c.text3, font: "10px system-ui" }); }
+    ctx.beginPath(); ctx.moveTo(bx - 3, top + bh); ctx.lineTo(bx - 1.5, top + bh + 26); ctx.lineTo(bx + 1.5, top + bh + 26); ctx.lineTo(bx + 3, top + bh); ctx.stroke();
+    ctx.fillStyle = INK; ctx.fillRect(bx - 8, top + bh + 6, 16, 5); // tap
+    // conical flask
+    const fx = bx, fy = h * 0.92, fw = Math.min(w * 0.22, 150), fh = h * 0.28, neck = fw * 0.22;
+    if (!done) for (let k = 0; k < 3; k++) { const dy = ((t * 3 + k / 3) % 1) * (fy - fh - (top + bh + 28)); ball(ctx, bx, top + bh + 30 + dy, 3, rgb(look.titrant)); }
+    const col2 = done ? look.end : look.start, liq = fh * (0.35 + 0.15 * f * V / Math.max(V, Vf));
+    ctx.save(); ctx.beginPath(); ctx.moveTo(fx - neck / 2, fy - fh); ctx.lineTo(fx - neck / 2, fy - fh * 0.62); ctx.lineTo(fx - fw / 2, fy); ctx.lineTo(fx + fw / 2, fy); ctx.lineTo(fx + neck / 2, fy - fh * 0.62); ctx.lineTo(fx + neck / 2, fy - fh); ctx.closePath();
+    ctx.clip(); ctx.fillStyle = rgb(col2); ctx.globalAlpha = 0.9; ctx.fillRect(fx - fw / 2, fy - liq, fw, liq); ctx.restore();
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(fx - neck / 2, fy - fh); ctx.lineTo(fx - neck / 2, fy - fh * 0.62); ctx.lineTo(fx - fw / 2, fy); ctx.lineTo(fx + fw / 2, fy); ctx.lineTo(fx + neck / 2, fy - fh * 0.62); ctx.lineTo(fx + neck / 2, fy - fh); ctx.stroke();
+    // readings
+    // readings, sized to the room beside the burette
+    const o = outputsOf(res), tx = Math.max(bx + bw + 40, w * 0.6), room = w - tx - 12, fs = Math.max(10, Math.min(16, room / 15)), gap = fs * 1.6;
+    const [indName, indChange] = (look.name || "").split(": ");
+    const rows = [[`Burette reading ${fmt(added, 3)} mL`, `600 ${fs}px Plex, system-ui`, c.text],
+      [done ? `End point at ${fmt(V, 3)} mL` : "Adding drop by drop", `${fs - 1}px Plex, system-ui`, done ? EMBER : c.text2],
+      [`${fmt(Vf, 3)} mL pipetted`, `${fs - 1}px Plex, system-ui`, c.text2],
+      [indName || "", `${fs - 3}px Plex, system-ui`, c.text3], [indChange || "", `${fs - 3}px Plex, system-ui`, c.text3], ["", "", ""],
+      o.M2 ? [`${o.M2.label.replace(/^Molarity of /, "")}: ${fmt(o.M2.value, 4)} ${o.M2.unit}`, `600 ${fs}px Plex, system-ui`, c.text] : null,
+      o.S ? [`${fmt(o.S.value, 4)} ${o.S.unit}`, `${fs - 1}px Plex, system-ui`, c.text2] : null].filter(Boolean);
+    rows.forEach(([text, font, color], i) => { if (text) T(ctx, text, tx, h * 0.14 + i * gap, { align: "left", font, color }); });
+  },
+
   atom(ctx, w, h, res, t, c) {
     const r = res.scene.roles, n = Math.round(num(r.n, 1)), Z = Math.round(num(r.Z, 1));
     const cx = w / 2, cy = h / 2, maxN = Math.max(n, 3), R = Math.min(w, h) * 0.42;

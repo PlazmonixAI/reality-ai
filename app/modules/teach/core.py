@@ -35,7 +35,7 @@ BOARDS = ("NCERT", "CBSE", "ICSE", "State")
 SUBJECTS = ("physics", "chemistry", "mathematics")
 KINDS = {"derivation": "Derivation", "law": "Law", "practical": "Practical", "graph": "Graph", "concept": "Concept"}
 SCENES = {"gauges", "path", "pendulum", "spring", "wave", "circuit", "lens", "mirror", "gas", "beaker", "atom", "vector",
-          "incline", "graph", "shape", "decay", "field", "prism", "lever", "reaction"}
+          "incline", "graph", "shape", "decay", "field", "prism", "lever", "reaction", "titration"}
 
 # Physical constants a formula may use by name (SI, CODATA 2018 exact or recommended values)
 CONSTANTS: dict[str, float] = {
