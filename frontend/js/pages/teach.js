@@ -156,17 +156,19 @@ function classroom(root, id, params) {
   const modeSeg = segmented({ label: "", options: [{ value: "off", label: "No board" }, { value: "beside", label: "Board beside" }, { value: "over", label: "Draw over" }], value: boardMode, onChange: (v) => setBoardMode(v) });
   const saveBtn = el("button", { type: "button", class: "btn small primary", onclick: () => saveLesson() }, "Save lesson");
   const projBtn = el("button", { type: "button", class: "btn small", onclick: () => projector() }, "Projector");
+  const graphBox = el("div", { class: "teach-graph" });
+  const graph = new LineGraph(graphBox, { height: 150 });
+  let showGraph = store.get("teach.showGraph", true);
+  const graphBtn = el("button", { type: "button", class: "btn small", onclick: () => { showGraph = !showGraph; store.set("teach.showGraph", showGraph); graphBtn.textContent = showGraph ? "Hide graph" : "Show graph"; if (res) apply(res, res.assumptions); } }, showGraph ? "Hide graph" : "Show graph");
   const head = el("header", { class: "teach-head" },
     el("a", { class: "teach-back", href: "#/teach" }, "‹ Library"),
     el("div", { class: "teach-title" }, title, meta),
-    el("div", { class: "teach-actions" }, modeSeg.root, labLink, listenButton(), projBtn, saveBtn));
+    el("div", { class: "teach-actions" }, modeSeg.root, graphBtn, labLink, listenButton(), projBtn, saveBtn));
 
   const sceneBox = el("div", { class: "teach-scene" });
   const stage = createStage(sceneBox);
   const status = el("div", { class: "scene-status" });
   sceneBox.append(status);
-  const graphBox = el("div", { class: "teach-graph" });
-  const graph = new LineGraph(graphBox, { height: 170 });
   const boardSlot = el("div", { class: "teach-board" });
   const readerCard = el("div", { class: "board-reader", hidden: true });
   const board = createBoard({ onEquation: (text) => readBoard(text) });
@@ -192,8 +194,9 @@ function classroom(root, id, params) {
   const TABS = [["eq", "Equations"], ["steps", "Derivation"], ["readings", "Readings"], ["practice", "Practice"]];
   let tab = params.tab || "eq";
   const tabBar = el("div", { class: "tabs teach-tabs", role: "tablist" });
+  const notesBox = el("div", { class: "teach-notes", hidden: true });
   const side = el("aside", { class: "teach-side" },
-    el("section", { class: "panel" }, el("h4", {}, "Inputs"), inputs),
+    el("section", { class: "panel" }, el("h4", {}, "Inputs"), inputs, notesBox),
     el("section", { class: "panel" }, el("h4", {}, "Results from the engine"), results),
     el("section", { class: "panel teach-tabpanel" }, tabBar, tabBody));
   const main = el("div", { class: "teach-main" }, sceneBox, graphBox);
@@ -231,10 +234,21 @@ function classroom(root, id, params) {
     if (r.lab) { labLink.hidden = false; labLink.href = `#/sim/${r.lab}`; }
     for (const p of r.params) {
       values[p.name] = p.default;
+      // the slider covers the usual classroom range; the box takes any number at all (the engine flags unusual ones)
+      const box = el("input", { type: "text", inputmode: "decimal", class: "teach-num", value: String(p.default), "aria-label": `${p.label}: type any value`, title: "Type any value, even outside the slider's range" });
       const s = slider({ label: `${p.label}${p.symbol && p.symbol !== p.label ? ` (${p.symbol})` : ""}`, min: p.min, max: p.max, step: p.step || "any", value: p.default, unit: p.unit, digits: 4,
-        onInput: (v) => { values[p.name] = p.step ? Math.round(v / p.step) * p.step : v; run(); } });
-      sliders[p.name] = s;
-      inputs.append(s.root);
+        onInput: (v) => { values[p.name] = p.step ? Math.round(v / p.step) * p.step : v; box.value = String(Number(values[p.name].toPrecision(6))); box.classList.remove("bad"); run(); } });
+      const typed = () => {
+        const v = Number(box.value.replace(/[×x]\s*10\^?/i, "e").replace(/[^\d.eE+-]/g, ""));
+        if (!box.value.trim() || !Number.isFinite(v)) { box.classList.add("bad"); return; }
+        box.classList.remove("bad"); values[p.name] = v; s.set(Math.max(p.min, Math.min(p.max, v)));
+        s.root.querySelector("output").textContent = `${fmt(v, 6)}${p.unit ? " " + p.unit : ""}`; run();
+      };
+      box.addEventListener("change", typed);
+      box.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); typed(); } });
+      const wrap = s.root; wrap.classList.add("teach-control"); wrap.append(el("div", { class: "teach-numrow" }, el("span", { class: "muted small" }, "or type any value"), box, p.unit ? el("span", { class: "muted small" }, p.unit) : ""));
+      sliders[p.name] = { root: wrap, set: (v) => { s.set(Math.max(p.min, Math.min(p.max, v))); box.value = String(v); s.root.querySelector("output").textContent = `${fmt(v, 6)}${p.unit ? " " + p.unit : ""}`; } };
+      inputs.append(wrap);
     }
     inputs.append(el("div", { class: "btn-row" }, el("button", { type: "button", class: "btn small", onclick: () => { for (const p of r.params) { values[p.name] = p.default; sliders[p.name].set(p.default); } run(); } }, "Reset")));
     try { // values the teacher said aloud before this page opened
@@ -249,12 +263,15 @@ function classroom(root, id, params) {
 
   function apply(r, assumptions = []) {
     res = r;
+    notesBox.replaceChildren(...(r.notes || []).map((n) => el("p", {}, n)));
+    notesBox.hidden = !(r.notes || []).length;
     results.replaceChildren(...r.outputs.flatMap((o, k) => [
       el("dt", { title: o.formula }, o.label),
       el("dd", { class: k === 0 ? "lead" : "" }, o.value === null ? "no real value" : `${fmt(o.value, 5)}${o.unit ? " " + o.unit : ""}`)]));
     res.assumptions = assumptions;
     const g = r.graph, colors = SERIES();
-    if (g) {
+    graphBtn.hidden = !g;
+    if (g && showGraph) {
       graphBox.hidden = false;
       if (g.path) {
         graph.opts.xLabel = `${g.series[0].label}${g.series[0].unit ? ` (${g.series[0].unit})` : ""}`;

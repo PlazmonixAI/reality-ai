@@ -3,11 +3,31 @@
 
 const sky = (inner) => `<svg viewBox="0 0 240 128" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
 
+/** Gallery sections. Physics is split by topic so quantum, space and the rest each have their own shelf. */
 export const DOMAINS = [
-  { id: "physics", label: "Physics" },
+  { id: "mechanics", label: "Physics: motion and forces" },
+  { id: "waves", label: "Physics: waves, sound and light" },
+  { id: "electricity", label: "Physics: electricity and magnetism" },
+  { id: "heat", label: "Physics: heat and fluids" },
+  { id: "quantum", label: "Quantum mechanics" },
+  { id: "modern", label: "Relativity and nuclear physics" },
+  { id: "space", label: "Space and astronomy" },
   { id: "chemistry", label: "Chemistry" },
   { id: "mathematics", label: "Mathematics" },
 ];
+const SECTION = {
+  projectile: "mechanics", ramp: "mechanics", collisions: "mechanics", pendulum: "mechanics", doublependulum: "mechanics", springs: "mechanics",
+  coupled: "mechanics", skate: "mechanics", rolling: "mechanics", resonance: "mechanics",
+  waves: "waves", interference: "waves", doppler: "waves", lenses: "waves", refraction: "waves",
+  circuit: "electricity", rlc: "electricity", charges: "electricity", faraday: "electricity", lorentz: "electricity",
+  heat: "heat", engine: "heat", bernoulli: "heat", buoyancy: "heat", blackbody: "heat",
+  quantum: "quantum", tunnelling: "quantum", wavepacket: "quantum", oscillator: "quantum", rabi: "quantum", hydrogen: "quantum", photoelectric: "quantum",
+  relativity: "modern", decay: "modern",
+  spaceflight: "space", orbits: "space", kepler: "space", hohmann: "space", solarsystem: "space", universe: "space", blackhole: "space",
+  "earth-moon": "space", orbitdecay: "space", precession: "space", rocket: "space",
+};
+/** The gallery section a simulation belongs to (chemistry and maths keep their subject). */
+export const sectionOf = (sim) => SECTION[sim.id] || (sim.domain === "physics" ? "mechanics" : sim.domain);
 
 export const SIMS = [
   {
@@ -637,7 +657,7 @@ export const SIMS = [
       <ellipse cx="120" cy="64" rx="26" ry="9" fill="#cfd8ff" fill-opacity=".35" transform="rotate(-20 120 64)"/><circle cx="120" cy="64" r="5" fill="#fff3d6"/>${Array.from({ length: 26 }, (_, i) => `<circle cx="${(i * 97) % 240}" cy="${(i * 53) % 128}" r="${i % 3 ? 0.8 : 1.4}" fill="#fff" fill-opacity=".7"/>`).join("")}`),
   },
   {
-    id: "spaceflight", domain: "physics", title: "Spaceflight Lab",
+    id: "spaceflight", domain: "physics", title: "Space Program",
     blurb: "Build a rocket from engines, tanks and capsules, then fly it to orbit, or land it on the Moon and Mars.",
     load: () => import("./spaceflight.js"),
     art: sky(`<rect width="240" height="128" fill="#1f4f86"/>${Array.from({ length: 10 }, (_, i) => `<line x1="${i * 24}" y1="0" x2="${i * 24}" y2="128" stroke="#fff" stroke-opacity=".08"/>`).join("")}

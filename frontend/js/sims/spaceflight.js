@@ -1,7 +1,8 @@
-// Spaceflight Lab: design engines and satellites, build a rocket from parts, then fly it — to orbit, to the Moon
+// Space Program, Build and fly: design engines and satellites, build a rocket from parts, then fly it — to orbit, to the Moon
 // and back. The engine does all the physics: physics.rocket_engine_design, satellite_design, rocket_design,
 // rocket_launch_state and rocket_flight (gravity of Earth and the moving Moon, thrust, drag, staging, fairings,
 // landing, orbit prediction). The browser draws, takes the pilot's inputs and interpolates between steps.
+import { spaceTabs } from "../space/tabs.js";
 import { simulate } from "../core/api.js";
 import { el } from "../core/ui.js";
 import { fmt } from "../core/format.js";
@@ -256,7 +257,7 @@ export default {
     let catalogue = null, stack = TEMPLATES.orbiter.parts.map((p) => ({ ...p })), body = "earth", selected = -1, design = null;
     let mode = "build", customs = loadCustom();
     const rootEl = el("div", { class: "sf-root" });
-    root.append(rootEl);
+    root.append(spaceTabs("fly"), rootEl);
     const usedCustom = (parts = stack) => { const ids = new Set(parts.map((p) => p.part)); const out = {}; for (const [id, c] of Object.entries(customs)) if (ids.has(id)) out[id] = c.spec; return out; };
     const allParts = () => [...catalogue.parts, ...Object.entries(customs).map(([id, c]) => ({ id, ...c.spec, class: c.class, profile: c.profile, custom: true }))];
 
@@ -295,7 +296,7 @@ export default {
         el("button", { class: "sf-small accent", type: "button", onclick: () => openEngineDesigner() }, "Engine designer"),
         el("button", { class: "sf-small accent", type: "button", onclick: () => openSatDesigner() }, "Satellite designer"),
         el("button", { class: "sf-small", type: "button", onclick: () => saveDesign() }, "Save design"),
-        el("a", { class: "sf-small", href: "#/company?probe=1", title: "Plan a mission to Mars, Venus, Jupiter or Saturn in Mission Control" }, "Planet missions"),
+        el("a", { class: "sf-small", href: "#/company?probe=1", title: "Plan a mission to Mars, Venus, Jupiter or Saturn in Mission Control (Space Program)" }, "Planet missions"),
         el("span", { class: "sf-spacer" }), launchBtn),
       palette, el("div", { class: "sf-build-stage" }, bCanvas), el("div", { class: "sf-right" }, partBox, statsBox));
     rootEl.append(buildView);
@@ -870,7 +871,7 @@ export default {
           const r = await api("/api/company/deploy", { method: "POST", body });
           closeModal(); say(`${r.name} deployed. It now flies in Mission Control.`); notify(`${r.name} added to your fleet.`);
         } catch (e) {
-          msg.textContent = e.status === 409 ? "Found your space company in Mission Control first." : e.message;
+          msg.textContent = e.status === 409 ? "Found your space company in Mission Control first (Space Program, Mission Control tab)." : e.message;
         } finally { go.disabled = false; }
       });
       modal.replaceChildren(el("div", { class: "sf-design sf-deploy" },

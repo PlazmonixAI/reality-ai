@@ -1,6 +1,7 @@
 // Mission Control: your space company. Satellites and probes are stored on the server and move in real time;
 // every position, decay rate, burn and photo footprint comes from the engine (satellite_track, satellite_manoeuvre,
 // satellite_imaging, interplanetary_mission). This page draws them and sends your commands.
+import { spaceTabs } from "../space/tabs.js";
 import { el, cssVar } from "../core/ui.js";
 import { fmt } from "../core/format.js";
 import { LineGraph } from "../core/graph.js";
@@ -94,12 +95,12 @@ function openPhoto(photo) {
 
 // ---------------------------------------------------------------- page
 export default {
-  title: "Mission Control",
+  title: "Mission Control · Space Program",
   mount(root, params) {
     let company = null, fleet = [], subsolar = null, selected = null, detail = null, detailAt = 0, target = null, catalog = null;
     let alive = true, pollT = 0, detailT = 0, raf = 0;
     const wrap = el("div", { class: "mc" });
-    root.append(wrap);
+    root.append(spaceTabs("mission"), wrap);
 
     const cleanup = () => { alive = false; clearTimeout(pollT); clearTimeout(detailT); cancelAnimationFrame(raf); ro?.disconnect(); };
     let ro = null;
@@ -196,7 +197,7 @@ export default {
     function drawList() {
       if (!fleet.length) {
         list.replaceChildren(el("div", { class: "mc-empty" }, el("b", {}, "No spacecraft yet"),
-          el("p", { class: "muted small" }, "Launch a satellite on a real rocket, or fly your own in the Spaceflight Lab and deploy it from orbit."),
+          el("p", { class: "muted small" }, "Launch a satellite on a real rocket, or fly your own in Build and fly and deploy it from orbit."),
           el("button", { class: "btn primary", type: "button", onclick: () => openLaunch() }, "Launch your first satellite")));
         return;
       }

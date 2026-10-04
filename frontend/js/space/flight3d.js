@@ -1,4 +1,4 @@
-// Spaceflight Lab's 3D view: the flight drawn in the Solar System's Earth–Moon system on the real date. Everything
+// Space Program's 3D flight view: the flight drawn in the Solar System's Earth–Moon system on the real date. Everything
 // placed here comes from the engine: physics.rocket_flight's `view3d` (craft, pointing, Moon, trajectory, Earth's
 // rotation angle and the Sun's direction, equatorial J2000) plus star_catalog and milky_way for the sky.
 import * as THREE from "three";

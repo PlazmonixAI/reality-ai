@@ -3,7 +3,7 @@
 //   #/sim/<id>?…       one simulation            #/company         Mission Control (space company)
 //   #/challenges       challenge missions        #/history         saved work
 //   #/account          account settings          #/ask             ask the AI
-import { SIMS, DOMAINS } from "./sims/index.js";
+import { SIMS, DOMAINS, sectionOf } from "./sims/index.js";
 import { el } from "./core/ui.js";
 import { health, clearRecentCalls, recentCalls } from "./core/api.js";
 import { mountAsk } from "./ask.js";
@@ -30,11 +30,17 @@ export function parseHash() {
   return { path: path || "/", params: Object.fromEntries(new URLSearchParams(qs)) };
 }
 
+// Phones: the main menu folds behind a button and closes after each choice
+const navToggle = document.getElementById("nav-toggle"), nav = document.getElementById("app-nav");
+navToggle?.addEventListener("click", () => { const open = !document.body.classList.contains("nav-open"); document.body.classList.toggle("nav-open", open); navToggle.setAttribute("aria-expanded", String(open)); });
+nav?.addEventListener("click", (e) => { if (e.target.closest("a")) { document.body.classList.remove("nav-open"); navToggle?.setAttribute("aria-expanded", "false"); } });
+
 function setActive(route) {
   document.querySelectorAll("#app-nav a").forEach((a) => a.classList.toggle("on", a.dataset.route === route));
 }
 
 async function route() {
+  document.body.classList.remove("nav-open");
   try { cleanup?.(); } catch (e) { console.error(e); }
   cleanup = null;
   app.replaceChildren();
@@ -48,7 +54,7 @@ async function route() {
   else {
     const name = path.replace(/^\//, "").split("/")[0] || "home";
     const load = PAGES[name] || PAGES.home;
-    setActive(PAGES[name] ? name : "home");
+    setActive(name === "company" ? "spaceflight" : PAGES[name] ? name : "home");  // Mission Control lives inside the Space Program
     const page = el("div", { class: "page" });
     app.append(page);
     try {
@@ -67,11 +73,18 @@ function renderGallery() {
   document.title = "Simulations · Reality ASM";
   const search = el("input", { class: "search", type: "search", placeholder: "Search simulations", value: query, "aria-label": "Search simulations" });
   const sections = el("div");
+  let shelf = sessionStorage.getItem("sims.shelf") || "";
+  const shelves = el("div", { class: "shelf-tabs", role: "tablist", "aria-label": "Sections" });
+  const drawShelves = () => shelves.replaceChildren(...[{ id: "", label: "All" }, ...DOMAINS].map((d) => el("button", { type: "button", role: "tab", class: `chip${shelf === d.id ? " on" : ""}`, "aria-selected": String(shelf === d.id),
+    onclick: () => { shelf = d.id; try { sessionStorage.setItem("sims.shelf", shelf); } catch { /* private mode */ } drawShelves(); draw(); } },
+    d.label.replace(/^Physics: /, ""), el("span", { class: "count" }, String(d.id ? SIMS.filter((s) => sectionOf(s) === d.id).length : SIMS.length)))));
+  drawShelves();
   const draw = () => {
     const q = query.trim().toLowerCase();
     sections.replaceChildren();
     for (const d of DOMAINS) {
-      const sims = SIMS.filter((s) => s.domain === d.id && (!q || `${s.title} ${s.blurb}`.toLowerCase().includes(q)));
+      if (shelf && shelf !== d.id) continue;
+      const sims = SIMS.filter((s) => sectionOf(s) === d.id && (!q || `${s.title} ${s.blurb}`.toLowerCase().includes(q)));
       if (!sims.length) continue;
       sections.append(
         el("h2", { class: "domain-title" }, d.label, el("span", { class: "count" }, `${sims.length}`)),
@@ -88,7 +101,7 @@ function renderGallery() {
     el("div", { class: "hero" },
       el("h1", {}, "Simulations"),
       el("p", {}, "Every number on screen is computed by the Reality ASM engine: real numerical and symbolic physics, chemistry and maths, animated in your browser.")),
-    search, sections));
+    shelves, search, sections));
 }
 
 async function openSim(sim, params) {

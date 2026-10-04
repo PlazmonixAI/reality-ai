@@ -122,8 +122,12 @@ def test_graph_sweeps_and_paths():
 
 
 def test_input_checks():
-    with pytest.raises(ValueError, match="between"):
-        teach_experiment("p11-pendulum", {"L": 50})
+    r = teach_experiment("p11-pendulum", {"L": 50})["result"]  # any value: outside the slider range it is still computed
+    T = next(o for o in r["outputs"] if o["name"] == "T")["value"]
+    assert T == pytest.approx(2 * math.pi * math.sqrt(50 / 9.80665), rel=2e-3) and "outside the usual range" in r["notes"][0]
+    assert r["graph"]["x"]["values"][-1] >= 50  # the sweep widens to show the typed value
+    with pytest.raises(ValueError, match="finite"):
+        teach_experiment("p11-pendulum", {"L": float("inf")})
     with pytest.raises(ValueError, match="no input"):
         teach_experiment("p11-pendulum", {"mass": 2})
     with pytest.raises(ValueError):
@@ -179,6 +183,42 @@ def test_teach_tools_over_http():
     r = client.post("/simulate", json={"domain": "teach", "name": "experiment", "args": {"experiment_id": "p11-pendulum", "values": {"L": 2}}})
     assert r.status_code == 200 and r.json()["result"]["outputs"][0]["value"] == pytest.approx(2.8384, rel=1e-4)
     r = client.post("/simulate", json={"domain": "teach", "name": "experiment", "args": {"experiment_id": "p11-pendulum", "values": {"L": -1}}})
-    assert r.status_code == 422
+    assert r.status_code == 200 and r.json()["result"]["outputs"][0]["value"] is None  # a negative length has no real period
+    assert any("No real value" in n for n in r.json()["result"]["notes"])
     r = client.post("/simulate", json={"domain": "teach", "name": "recognize", "args": {"equation": "V = IR"}})
     assert r.status_code == 200 and r.json()["result"]["matches"][0]["id"] == "p10-ohm"
+
+
+def test_every_number_only_experiment_has_a_real_world_picture():
+    """Experiments that used to show only numbers now have a moving real-life picture, computed by the engine."""
+    import re
+    from pathlib import Path
+
+    from app.modules.teach.worlds import WORLDS
+    js = "".join((Path(__file__).parent.parent / "frontend/js/teach" / f).read_text() for f in ("worlds_phys.js", "worlds_chem.js", "worlds_math.js"))
+    drawn = set(re.findall(r"^  (\w+)\(ctx, w, h, t, a\)", js, re.M))
+    for e in CATALOG.values():
+        if e.scene == "gauges":
+            assert e.id in WORLDS, f"{e.id} has no world"
+    for exp_id, spec in WORLDS.items():
+        assert spec["type"] in drawn, f"{exp_id}: no drawing for world {spec['type']}"
+        r = teach_experiment(exp_id)["result"]
+        assert r["world"]["type"] == spec["type"]
+        assert "–" not in str(r["world"].get("lines", "")), f"{exp_id}: a line failed to format"
+
+
+def test_world_numbers_follow_the_inputs():
+    w = teach_experiment("p9-stopping", {"kmh": 100})["result"]["world"]
+    w2 = teach_experiment("p9-stopping", {"kmh": 250})["result"]["world"]  # outside the slider range, still computed
+    assert w2["d2"] == pytest.approx(w["d2"] * 6.25, rel=1e-9)  # braking distance grows with the square of speed
+    w = teach_experiment("m10-ap", {"a": 3, "d": 4, "n": 5})["result"]["world"]
+    assert w["vals"] == [3, 7, 11, 15, 19]
+    w = teach_experiment("m12-binomial-dist", {"n": 4, "p": 0.5, "r": 2})["result"]["world"]
+    assert w["vals"] == pytest.approx([1 / 16, 4 / 16, 6 / 16, 4 / 16, 1 / 16])
+    w = teach_experiment("p12-photoelectric", {"lam": 700, "phi": 2.3})["result"]["world"]
+    assert w["K"] == 0  # below the threshold no electrons leave
+
+
+def test_carnot_world_uses_a_fraction():
+    w = teach_experiment("p11-carnot", {"Th": 600, "Tc": 300, "Qh": 1000})["result"]["world"]
+    assert w["eta"] == pytest.approx(0.5) and w["W"] == pytest.approx(500)

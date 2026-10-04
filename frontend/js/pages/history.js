@@ -91,7 +91,7 @@ export default {
         if (!append) list.replaceChildren();
         list.append(...res.items.map(row));
         if (!items.length) list.replaceChildren(el("div", { class: "empty-state" }, el("b", {}, "Nothing here yet"),
-          el("p", {}, kind === "flight" ? "Launch a rocket in the Spaceflight Lab; the flight is saved as you go." : "Save something and it will show up here.")));
+          el("p", {}, kind === "flight" ? "Launch a rocket in the Space Program; the flight is saved as you go." : "Save something and it will show up here.")));
         moreBtn.hidden = !more;
       } catch (e) { list.replaceChildren(el("p", { class: "muted" }, e.message)); }
     }
