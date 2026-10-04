@@ -270,11 +270,23 @@ def resolve_values(e: Experiment, values: dict[str, float] | None) -> dict[str, 
             raise ValueError(f"{e.title} has no input {k!r}; inputs are {', '.join(q.name for q in e.params)}")
         if not isinstance(v, (int, float)) or isinstance(v, bool) or not math.isfinite(v):
             raise ValueError(f"{p.label} must be a finite number")
-        span = p.hi - p.lo
-        if not (p.lo - 1e-9 * abs(span) <= v <= p.hi + 1e-9 * abs(span)):
-            raise ValueError(f"{p.label} must be between {p.lo:g} and {p.hi:g} {pretty_unit(p.unit)}")
-        vals[k] = float(v)
+        if abs(v) > 1e300:
+            raise ValueError(f"{p.label} is too large to compute with")
+        vals[k] = float(v)  # any finite number: the slider range is only the usual classroom range
     return vals
+
+
+def range_notes(e: Experiment, vals: dict[str, float]) -> list[str]:
+    """Plain warnings for values outside an input's usual range (they are still computed)."""
+    notes = []
+    for p in e.params:
+        v = vals[p.name]
+        span = abs(p.hi - p.lo) or 1.0
+        if v < p.lo - 1e-9 * span or v > p.hi + 1e-9 * span:
+            unit = pretty_unit(p.unit)
+            notes.append(f"{p.label} = {v:g}{(' ' + unit) if unit else ''} is outside the usual range ({p.lo:g} to {p.hi:g}); "
+                         "the formula still applies only if the model's assumptions hold there.")
+    return notes
 
 
 def compute(e: Experiment, vals: dict[str, Any]) -> dict[str, Any]:
@@ -326,6 +338,12 @@ def sweep(e: Experiment, vals: dict[str, float], n: int = 161) -> dict[str, Any]
 
     lo = bound(spec["lo"], param.lo if param else None)
     hi = bound(spec["hi"], param.hi if param else None)
+    if param and spec["lo"] is None and spec["hi"] is None:  # a typed value outside the slider range: widen the sweep to show it
+        v, span = vals[var], hi - lo
+        if v < lo:
+            lo = v - 0.1 * span
+        elif v > hi:
+            hi = v + 0.1 * span
     if not (math.isfinite(lo) and math.isfinite(hi)) or hi <= lo:
         raise ValueError(f"these values give an empty range for {var}")
     xs = np.linspace(lo, hi, n)

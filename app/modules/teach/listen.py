@@ -147,7 +147,7 @@ def _values(text: str, e) -> dict[str, float]:
                 v /= 100
             if unit == "g" and p.unit == "kg":
                 v /= 1000
-            out[p.name] = max(p.lo, min(p.hi, v))
+            out[p.name] = v  # what the teacher said, even outside the slider range
             break
     return out
 

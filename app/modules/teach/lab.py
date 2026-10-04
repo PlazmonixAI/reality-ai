@@ -10,9 +10,10 @@ import sympy as sp
 
 from app.core.registry import tool
 from app.modules.teach import catalog  # noqa: F401  (fills CATALOG)
+from app.modules.teach.worlds import world_for
 from app.modules.teach.core import (BOARDS, CATALOG, CONSTANTS, KINDS, SUBJECTS, compute, dependencies, equation_index,
                                     nice_number, numerically_equivalent, parse, parse_eq, pretty, pretty_unit,
-                                    resolve_values, split_teacher_text, sweep, sym_name)
+                                    range_notes, resolve_values, split_teacher_text, sweep, sym_name)
 
 
 def _get(experiment_id: str):
@@ -56,8 +57,8 @@ def teach_catalog(cls: int | None = None, subject: str | None = None, board: str
 
 
 @tool(domain="teach", name="experiment",
-      description="Run one ASM Teach experiment: computes every output for the given input values, the swept graph, "
-                  "and returns the governing equations and derivation steps.")
+      description="Run one ASM Teach experiment: computes every output for the given input values (any finite numbers; "
+                  "values outside the usual range are computed and flagged in notes), the swept graph, and returns the governing equations and derivation steps.")
 def teach_experiment(experiment_id: str, values: dict[str, float] | None = None) -> dict:
     e = _get(experiment_id)
     vals = resolve_values(e, values)
@@ -80,8 +81,10 @@ def teach_experiment(experiment_id: str, values: dict[str, float] | None = None)
     graph = sweep(e, vals)
     return {
         "result": {**e.summary(), "params": [p.public() for p in e.params], "values": vals, "outputs": outputs, "graph": graph,
+                   "notes": range_notes(e, vals) + ([f"No real value for {', '.join(o['label'].lower() for o in outputs if o['value'] is None)} "
+                                                     "with these inputs."] if any(o["value"] is None for o in outputs) else []),
                    "equations": [{"text": q, "pretty": pretty(q)} for q in e.eqs], "steps": e.steps,
-                   "scene": {"type": e.scene, "roles": roles}, "lab": e.lab or None,
+                   "scene": {"type": e.scene, "roles": roles}, "world": world_for(e.id, ns), "lab": e.lab or None,
                    "constants": {k: v for k, v in CONSTANTS.items() if any(k in o.expr for o in e.outputs + e.series)}},
         "units": {o.name: pretty_unit(o.unit) for o in e.outputs} | {p.name: pretty_unit(p.unit) for p in e.params},
         "assumptions": e.assumptions or ["Ideal textbook model: the conditions stated in the chapter."],

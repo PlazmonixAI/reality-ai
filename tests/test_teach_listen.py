@@ -38,8 +38,8 @@ def test_units_are_converted_and_values_update_the_open_experiment():
     assert r["action"] == "update" and r["values"] == {"L": 1.5}
 
 
-def test_values_are_clamped_to_the_parameter_range():
-    assert L("pendulum length 50 metres")["values"]["L"] == 5.0  # the experiment allows 0.1 to 5 m
+def test_values_outside_the_slider_range_are_kept():
+    assert L("pendulum length 50 metres")["values"]["L"] == 50.0  # the slider runs 0.1 to 5 m, but any value is allowed
 
 
 def test_unknown_equation_goes_to_the_equation_lab():

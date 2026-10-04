@@ -8,8 +8,8 @@ const PLACES = [
   ["#/sims", "All simulations", "82 research simulations across physics, chemistry and mathematics.", "grid"],
   ["#/ask", "Ask the AI", "Ask a question in plain words; it runs the engine and explains the answer.", "chat"],
   ["#/sim/solarsystem", "Solar System", "Every planet and moon on any date, out to the stars and galaxies.", "planet"],
-  ["#/sim/spaceflight", "Spaceflight Lab", "Build a rocket from parts or pick a real one, and fly it to orbit or the Moon.", "rocket"],
-  ["#/company", "Mission Control", "Your space company: launch satellites, keep them flying, take pictures, send probes.", "sat"],
+  ["#/sim/spaceflight", "Space Program", "Build a rocket from parts or pick a real one, fly it to orbit or the Moon, then run your fleet in Mission Control.", "rocket"],
+  ["#/company", "Mission Control", "Inside the Space Program: launch satellites, keep them flying, take pictures, send probes.", "sat"],
   ["#/challenges", "Challenges", "Set missions checked by the engine, from the Kármán line to Jupiter.", "flag"],
 ];
 const ICON = {
@@ -45,7 +45,7 @@ export default {
       if (!alive) return;
       recent.replaceChildren(...(items.length ? items.map((r) => el("a", { class: "recent-item", href: openLink(r) },
         el("span", { class: `kind k-${r.kind}` }, KIND_LABEL[r.kind] || r.kind), el("b", {}, r.title), el("small", {}, when(r.updated_at))))
-        : [el("p", { class: "muted" }, "Nothing saved yet. Flights in the Spaceflight Lab save themselves; in any other simulation press Save on the right edge.")]));
+        : [el("p", { class: "muted" }, "Nothing saved yet. Flights in the Space Program save themselves; in any other simulation press Save on the right edge.")]));
     }).catch((e) => recent.replaceChildren(el("p", { class: "muted" }, e.message)));
     Promise.all([api("/api/company").catch(() => null), api("/api/challenges").catch(() => null)]).then(([c, ch]) => {
       if (!alive) return;

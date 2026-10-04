@@ -666,6 +666,12 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .teach-graph[hidden] { display: none; }
 .teach-board { min-height: 0; display: flex; }
 .teach-side { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-height: 0; padding-right: 22px; }
+.teach-numrow { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.teach-num { width: 110px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; font: 13px "Plex Mono", monospace; background: var(--surface); color: var(--text); }
+.teach-num.bad { border-color: var(--danger); }
+.teach-notes { margin-top: 8px; font-size: 12.5px; color: var(--ember-dark); }
+.teach-notes p { margin: 0 0 4px; }
+.teach-notes[hidden] { display: none; }
 .teach-results { display: grid; grid-template-columns: 1fr auto; gap: 6px 10px; margin: 0; font-size: 13px; }
 .teach-results dt { color: var(--text-2); cursor: help; }
 .teach-results dd { margin: 0; text-align: right; font-family: "Plex Mono", monospace; font-variant-numeric: tabular-nums; }
@@ -1012,3 +1018,56 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .lab-swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(11,21,38,.25); }
 .lab-tool { margin: 0; font-size: 12px; color: var(--text-2); padding: 4px 8px; border-left: 2px solid var(--border); }
 @media (max-width: 1100px) { .lab { height: auto; } .lab-body { grid-template-columns: 1fr; } .lab-stage { height: 380px; } .lab-shelf { max-height: 260px; } }
+
+/* Space Program tabs (Build and fly, Mission Control) */
+.space-tabs { display: flex; align-items: center; gap: 4px; padding: 0 14px; height: 42px; background: #0B1526; border-bottom: 1px solid #1d2a42; flex: none; }
+.space-brand { color: #b9c3d3; font-size: 13px; margin-right: 14px; letter-spacing: .02em; white-space: nowrap; }
+.space-brand b { color: #fff; }
+.space-tab { color: #b9c3d3; text-decoration: none; font-weight: 600; font-size: 13.5px; padding: 8px 12px; border-radius: 8px 8px 0 0; border-bottom: 2px solid transparent; white-space: nowrap; }
+.space-tab:hover { color: #fff; }
+.space-tab.on { color: #fff; border-bottom-color: #FF5B2E; }
+
+/* simulation shelves */
+.shelf-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+.shelf-tabs .chip { display: inline-flex; gap: 6px; align-items: center; }
+.shelf-tabs .chip.on { background: #0B1526; color: #fff; border-color: #0B1526; }
+.shelf-tabs .chip .count { font-size: 11px; opacity: .7; }
+
+/* ---------- phones and small tablets: the same app, laid out for touch ---------- */
+.nav-toggle { display: none; }
+@media (max-width: 760px) {
+  :root { --topbar-h: 52px; }
+  .topbar { gap: 10px; padding: 0 12px; }
+  .nav-toggle { display: inline-flex; flex-direction: column; justify-content: center; gap: 4px; width: 38px; height: 38px; border: 0; border-radius: 8px; background: rgba(255,255,255,.08); padding: 0 9px; cursor: pointer; }
+  .nav-toggle span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .app-nav { display: none; position: fixed; top: var(--topbar-h); left: 0; right: 0; flex-direction: column; background: var(--ink); padding: 8px 12px 14px; gap: 2px; box-shadow: 0 12px 30px rgba(0,0,0,.35); z-index: 60; }
+  body.nav-open .app-nav { display: flex; }
+  .app-nav a { font-size: 16px; padding: 12px 12px; }
+  .crumb, .api-status { display: none; }
+  .brand span { font-size: 15px; }
+  .gallery, .teach-home, .mc { padding-left: 12px; padding-right: 12px; }
+  .cards { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .card-art { height: 92px; }
+  .card-body { padding: 9px 10px 11px; }
+  .card-body p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .search { max-width: none; }
+  .shelf-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .shelf-tabs .chip { white-space: nowrap; }
+  .space-tabs { padding: 0 8px; }
+  .space-brand { display: none; }
+  .teach-head { padding: 8px 10px 0; }
+  .teach-actions { width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+  .teach-body { padding: 8px 10px 12px; }
+  .teach-scene { min-height: 320px; }
+  .teach-numrow { flex-wrap: wrap; }
+  .teach-actions button, .teach-actions a, .teach-actions .seg { white-space: nowrap; flex: none; }
+  .teach-actions .seg { flex-direction: row; flex-wrap: nowrap; }
+  .teach-main { order: 1; } .teach-side { order: 2; } .teach-board { order: 3; }
+  .lab-body { gap: 8px; }
+  .lab-stage { height: 320px; }
+  input, select, textarea { font-size: 16px; }  /* stops phones zooming into fields */
+}
+@media (max-width: 860px) {
+  /* full-screen simulators keep the whole screen on phones (their layout fills the page) */
+  .sim-page:has(.sf-root), .sim-page:has(.ss-root) { height: calc(100dvh - var(--topbar-h)); }
+}

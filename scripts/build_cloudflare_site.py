@@ -116,7 +116,7 @@ def seo_head(html: str, site: str, email: str) -> str:
          "description": "A simulation engine for physics, chemistry and mathematics. Every number is computed by tested engine tools "
                         "with SI units and stated assumptions; an AI analyst explains the results.",
          "featureList": ["82 interactive simulations in physics, chemistry and maths", "3D Solar System from JPL orbital elements",
-                         "Spaceflight Lab with 13 real launch vehicles", "AI analyst that explains every result",
+                         "Space Program with 13 real launch vehicles", "AI analyst that explains every result",
                          "ASM Teach: 281 classroom experiments, Equation Lab and Listen mode"]},
         {"@type": "SoftwareApplication", "name": "ASM Teach", "url": f"{site}/#teach", "applicationCategory": "EducationalApplication",
          "operatingSystem": "Any modern web browser", "publisher": {"@id": f"{site}/#org"},

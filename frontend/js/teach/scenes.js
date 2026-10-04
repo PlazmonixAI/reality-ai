@@ -3,6 +3,12 @@
 import { cssVar } from "../core/ui.js";
 import { fmt } from "../core/format.js";
 import { arrow, label, niceStep } from "../core/stage.js";
+import { PHYS } from "./worlds_phys.js";
+import { CHEM } from "./worlds_chem.js";
+import { MATH } from "./worlds_math.js";
+
+const WORLDS = { ...PHYS, ...CHEM, ...MATH };
+export const worldTypes = () => Object.keys(WORLDS);
 
 const INK = "#0B1526", EMBER = "#FF5B2E";
 const col = () => ({ s1: cssVar("--series-1") || "#2a78d6", s2: cssVar("--series-2") || "#eb6834", s3: cssVar("--series-3") || "#1baf7a",
@@ -459,8 +465,15 @@ const SCENES = {
 export function drawScene(ctx, w, h, res, t) {
   ctx.clearRect(0, 0, w, h);
   if (!res) return;
-  const draw = SCENES[res.scene?.type] || SCENES.gauges;
   const c = col();
+  const world = res.world && WORLDS[res.world.type];
+  if (world) {  // the real-life picture, moving with the engine's numbers
+    ctx.save();
+    try { world(ctx, w, h, t, res.world); } catch (err) { console.error(err); SCENES.gauges(ctx, w, h, res, t, c); }
+    ctx.restore();
+    return;
+  }
+  const draw = SCENES[res.scene?.type] || SCENES.gauges;
   ctx.save();
   try { draw(ctx, w, h, res, t, c); } catch (err) { console.error(err); SCENES.gauges(ctx, w, h, res, t, c); }
   ctx.restore();

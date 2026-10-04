@@ -309,3 +309,13 @@
 - UI: dropper/pipette and spatula quick amounts, test buttons with results (and colour swatches) in the notebook, delivery-tube picker drawn on the bench, Filter into…, tools listed on the Equipment shelf, seven bench places.
 - Tests: 8 more in tests/test_chemistry_labbench.py (CO₂ piped into limewater then cleared, gas jar of O₂ relights a splint, KSCN and copper ammine colours, flame tests and litmus, filtering AgCl, evaporating salt water, conc. H₂SO₄ dilution and sugar, starch-iodine).
 - Next: a burette or pipette rinse step and reading parallax for practicals; more organic tests (Fehling's, iodoform, ester smell).
+
+## 2026-10-04: Real-life pictures for every experiment, any value, Space Program, phones
+- ASM Teach worlds: every experiment that used to show only numbers (229 of them) now has a moving real-life picture beside the graph: cars braking, satellites orbiting, carts colliding, beakers heating, gas in pistons, sound echoing, current flowing, fringes on a screen, molecules reacting, cells and electrolysis, dice, Venn diagrams, rotating 3D solids and more. The picture types are drawn in `frontend/js/teach/worlds_phys.js`, `worlds_chem.js` and `worlds_math.js`. The numbers each picture uses are defined per experiment in `app/modules/teach/worlds.py` and evaluated by the engine in the experiment's own namespace (inputs, outputs, constants), so the browser draws engine numbers only. `teach.experiment` returns them as `world`.
+- Any value: inputs are no longer limited to the slider range. Every input has a box that takes any finite number; the engine computes it, notes when it is outside the usual range or gives no real value, and the graph sweep widens to include it. The voice listener keeps spoken values as said.
+- Graph made secondary: smaller, with Hide graph / Show graph.
+- Simulations gallery split into shelves: motion and forces; waves, sound and light; electricity and magnetism; heat and fluids; quantum mechanics; relativity and nuclear; space and astronomy; chemistry; mathematics.
+- Spaceflight Lab renamed Space Program, with Mission Control inside it as a tab (Build and fly | Mission Control). One nav entry.
+- Phones: menu button with a fold-out menu, two-column cards, Teach inputs under the picture, Space Program and Solar System fill the screen.
+- Tests: worlds exist for every number-only experiment and match a drawing; world numbers follow the inputs (braking distance scales with speed squared, AP terms, binomial probabilities, photoelectric threshold); any-value inputs and notes.
+- Next: worlds for the 21 graph-type maths experiments; the same any-value boxes in the stand-alone simulations.

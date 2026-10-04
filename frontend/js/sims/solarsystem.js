@@ -119,7 +119,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   const status = el("div", { class: "ss-status" }, "Loading the Solar System…");
   const fade = el("div", { class: "ss-fade" });
   let simJd = dateToJd(new Date()), window_ = null, loading = false, firstLoad = true;
-  try { // arriving from a Spaceflight Lab mission: open on its date
+  try { // arriving from a Space Program mission: open on its date
     const d = localStorage.getItem("reality-asm.solar-date");
     if (d) { localStorage.removeItem("reality-asm.solar-date"); simJd = dateToJd(new Date(d)); }
   } catch { /* storage unavailable */ }
@@ -131,7 +131,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   const bMinor = tool("☄", "Dwarf planets, asteroids and comets", () => { showMinor = !showMinor; bMinor.classList.toggle("off", !showMinor); minorGroup.visible = showMinor; minorOrbits.visible = showMinor; });
   const bBelts = tool("⁘", "Asteroid belt, trojans and Kuiper belt", () => { showBelts = !showBelts; bBelts.classList.toggle("off", !showBelts); beltPoints.visible = showBelts; });
   const bList = tool("☰", "All bodies", () => list.classList.toggle("hidden"));
-  const bLaunch = tool("⇧", "Launch a rocket on this date (Spaceflight Lab)", () => {
+  const bLaunch = tool("⇧", "Launch a rocket on this date (Space Program)", () => {
     try { localStorage.setItem("reality-asm.mission-date", jdToDate(simJd).toISOString()); } catch { /* storage unavailable */ }
     location.hash = "#/sim/spaceflight";
   });
