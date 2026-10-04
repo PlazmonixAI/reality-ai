@@ -59,7 +59,8 @@ export default {
       }
       const x = res.result;
       const col = x.wavelength_nm >= 380 && x.wavelength_nm <= 750 ? `rgb(${wavelengthRGB(x.wavelength_nm).join(",")})` : SERIES_COLORS[x.series] || "#fff";
-      arrow(ctx, (lx0 + lx1) / 2 + 20, Y(res.levels[up.value - 1].energy_ev), (lx0 + lx1) / 2 + 20, Y(res.levels[low.value - 1].energy_ev), col, 4, 12);
+      const lu = res.levels[up.value - 1], ll = res.levels[low.value - 1];  // a typed level the engine has not computed yet is skipped
+      if (lu && ll) arrow(ctx, (lx0 + lx1) / 2 + 20, Y(lu.energy_ev), (lx0 + lx1) / 2 + 20, Y(ll.energy_ev), col, 4, 12);
       // Bohr picture (right)
       const cx = w * 0.74, cy = (top + bottom) / 2, s = Math.min(w * 0.22, (bottom - top) / 2) / Math.sqrt(res.levels[6].orbit_radius_nm);
       for (const lv of res.levels) {
