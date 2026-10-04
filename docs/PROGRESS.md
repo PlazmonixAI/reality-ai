@@ -319,3 +319,18 @@
 - Phones: menu button with a fold-out menu, two-column cards, Teach inputs under the picture, Space Program and Solar System fill the screen.
 - Tests: worlds exist for every number-only experiment and match a drawing; world numbers follow the inputs (braking distance scales with speed squared, AP terms, binomial probabilities, photoelectric threshold); any-value inputs and notes.
 - Next: worlds for the 21 graph-type maths experiments; the same any-value boxes in the stand-alone simulations.
+
+## 2026-10-04 (later): The rest of the worlds, and any value in every simulation
+- The 21 maths graph experiments now have real-life pictures too, so all 249 number-only or graph-only experiments have one:
+  - function graphs as a roller coaster on the curve (roots where it meets the ground, hilltops and valleys, the slope curve, the tangent);
+  - the sine graph as a Ferris wheel tracing its height;
+  - the parabola as a satellite dish focusing rays;
+  - the ellipse as a planet's orbit with the Sun at a focus;
+  - the hyperbola as a comet fly-by;
+  - growth as a bacteria colony;
+  - the linear differential equation as a tank filling to a steady level;
+  - two lines as crossing roads;
+  - the circle as a running track.
+  Every curve is sampled by the engine (60 points).
+- Every slider in every simulation now takes any value: tap the number beside the slider and type it. The engine computes it, and shows its message if the value cannot be used.
+- Known issue: none open from this round.

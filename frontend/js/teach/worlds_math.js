@@ -21,6 +21,18 @@ function axes(ctx, w, h, m) {
   seg(ctx, 0, m.Y(0), w, m.Y(0), "#9aa3b2", 1.5); seg(ctx, m.X(0), 0, m.X(0), h, "#9aa3b2", 1.5);
 }
 
+function person2(ctx, x, y) { ball(ctx, x, y - 10, 5, EMBER); seg(ctx, x, y - 5, x, y + 6, INK, 2); }
+/** Separate x and y scales for a track: x fills the width, y keeps the bulk of the curve (spikes are cut off). */
+function trackFit(w, h, xs, ys, pad = 50) {
+  const pts = xs.map((x, i) => [finite(x), finite(ys[i])]).filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y));
+  const sorted = pts.map((p) => p[1]).sort((u, v) => u - v), q = (f) => sorted[Math.floor(f * (sorted.length - 1))] ?? 0;
+  let y0 = Math.min(q(0.03), 0), y1 = Math.max(q(0.97), 0); const sp = (y1 - y0) || 1; y0 -= sp * 0.12; y1 += sp * 0.12;
+  const x0 = Math.min(...pts.map((p) => p[0])), x1 = Math.max(...pts.map((p) => p[0])) || x0 + 1;
+  const X = (x) => pad + (x - x0) / ((x1 - x0) || 1) * (w - 2 * pad), Y = (y) => h - pad - (Math.max(y0 - sp, Math.min(y1 + sp, y)) - y0) / (y1 - y0) * (h - 2 * pad - 30);
+  return { pts, m: { X, Y, x0, x1, y0, y1, s: 1 } };
+}
+function curveFit(w, h, xs, ys, pad = 50) { const pts = xs.map((x, i) => [finite(x), finite(ys[i])]).filter(([x, y]) => Number.isFinite(x) && Number.isFinite(y)); return { pts, m: fit(w, h, pts.length ? pts : [[0, 0], [1, 1]], pad) }; }
+
 export const MATH = {
   /** Points, segments and shaded polygons on a grid. pts [{x,y,label}], segs [[i,j]], poly [i...], note lines. */
   plane(ctx, w, h, t, a) {
@@ -29,6 +41,9 @@ export const MATH = {
     const m = fit(w, h, P.length ? P : [[0, 0], [1, 1]]); axes(ctx, w, h, m);
     if (a.poly) { ctx.fillStyle = "rgba(255,91,46,.15)"; ctx.beginPath(); a.poly.forEach((i) => ctx.lineTo(m.X(P[i][0]), m.Y(P[i][1]))); ctx.closePath(); ctx.fill(); }
     (a.segs || []).forEach(([i, j], k) => { const draw = Math.min(1, cyc(t, 4) * 2.5 - k * 0.3); if (draw <= 0) return; seg(ctx, m.X(P[i][0]), m.Y(P[i][1]), m.X(P[i][0] + (P[j][0] - P[i][0]) * draw), m.Y(P[i][1] + (P[j][1] - P[i][1]) * draw), k ? BLUE : EMBER, 3); });
+    if (a.circle) { const c0 = a.circle.map(finite); ctx.strokeStyle = BLUE; ctx.lineWidth = 6; ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(m.X(c0[0]), m.Y(c0[1]), c0[2] * m.s, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(m.X(c0[0]), m.Y(c0[1]), c0[2] * m.s, 0, 7); ctx.stroke();
+      const q = t * 0.8; person2(ctx, m.X(c0[0]) + c0[2] * m.s * Math.cos(q), m.Y(c0[1]) - c0[2] * m.s * Math.sin(q)); }
+    if (a.line2) { const [A, B, C] = a.line2.map(finite); const xs = [m.x0 - 10, m.x1 + 10]; if (Math.abs(B) > 1e-9) seg(ctx, m.X(xs[0]), m.Y(-(A * xs[0] + C) / B), m.X(xs[1]), m.Y(-(A * xs[1] + C) / B), GREEN, 2.5); else seg(ctx, m.X(-C / A), 0, m.X(-C / A), h, GREEN, 2.5); }
     if (a.line) { const [A, B, C] = a.line.map(finite); const xs = [m.x0 - 10, m.x1 + 10]; if (Math.abs(B) > 1e-9) seg(ctx, m.X(xs[0]), m.Y(-(A * xs[0] + C) / B), m.X(xs[1]), m.Y(-(A * xs[1] + C) / B), BLUE, 2.5); else seg(ctx, m.X(-C / A), 0, m.X(-C / A), h, BLUE, 2.5); }
     (a.pts || []).forEach((p, i) => { ball(ctx, m.X(P[i][0]), m.Y(P[i][1]), 6, p.colour || INK); small(ctx, `${p.label || ""}(${fmt(p.x, 3)}, ${fmt(p.y, 3)})`, m.X(P[i][0]) + 8, m.Y(P[i][1]) - 14, { align: "left" }); });
     (a.lines || []).forEach((s, i) => big(ctx, s, 16, 24 + i * 24, { align: "left" }));
@@ -251,5 +266,83 @@ export const MATH = {
     draw(40, b1); draw(w / 2 + 20, b2);
     small(ctx, `parallelogram: ${fmt(a.Ap, 4)}`, 40 + b1 * s / 2, h * 0.75 + 22); small(ctx, `trapezium: ${fmt(a.At, 4)}`, w / 2 + 20 + b1 * s / 2, h * 0.75 + 22);
     big(ctx, "Sliding the top does not change the area", w / 2, 24);
+  },
+  /** A roller coaster riding along y = f(x) sampled by the engine; ground at y = 0, marked points (roots, peaks). */
+  coaster(ctx, w, h, t, a) {
+    ctx.fillStyle = "#eaf2fb"; ctx.fillRect(0, 0, w, h);
+    const { pts, m } = trackFit(w, h, a.xs || [], a.fy || []); if (pts.length < 2) return;
+    ctx.fillStyle = "rgba(70,140,220,.25)"; ctx.fillRect(0, m.Y(0), w, h - m.Y(0)); seg(ctx, 0, m.Y(0), w, m.Y(0), "#5b8fd0", 2);
+    small(ctx, "ground level y = 0", 10, m.Y(0) - 10, { align: "left", color: "#2f5f9a" });
+    for (let i = 0; i < pts.length; i += 3) seg(ctx, m.X(pts[i][0]), m.Y(pts[i][1]), m.X(pts[i][0]), h, "rgba(90,98,112,.35)", 1.5);
+    ctx.strokeStyle = "#5b4636"; ctx.lineWidth = 5; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(m.X(x), m.Y(y)) : ctx.moveTo(m.X(x), m.Y(y)))); ctx.stroke();
+    if (a.fp) { const q = a.xs.map((x, i) => [finite(x), finite(a.fp[i])]); ctx.strokeStyle = "rgba(27,175,122,.7)"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.beginPath(); q.forEach(([x, y], i) => (i ? ctx.lineTo(m.X(x), m.Y(y)) : ctx.moveTo(m.X(x), m.Y(y)))); ctx.stroke(); ctx.setLineDash([]); small(ctx, "green dashed: the slope f′(x)", w - 10, h - 14, { align: "right", color: GREEN }); }
+    if (a.tl) { const q = a.xs.map((x, i) => [finite(x), finite(a.tl[i])]); ctx.strokeStyle = EMBER; ctx.lineWidth = 2; ctx.beginPath(); q.forEach(([x, y], i) => (i ? ctx.lineTo(m.X(x), m.Y(y)) : ctx.moveTo(m.X(x), m.Y(y)))); ctx.stroke(); }
+    const f = (t * 0.12) % 1, i0 = Math.floor(f * (pts.length - 1)), fr = f * (pts.length - 1) - i0, p0 = pts[i0], p1 = pts[Math.min(i0 + 1, pts.length - 1)];
+    const cx = m.X(p0[0] + (p1[0] - p0[0]) * fr), cy = m.Y(p0[1] + (p1[1] - p0[1]) * fr), ang = Math.atan2(m.Y(p1[1]) - m.Y(p0[1]), m.X(p1[0]) - m.X(p0[0]));
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang); rrect(ctx, -16, -16, 32, 13, 4, EMBER, INK); ball(ctx, -9, -2, 3.5, INK); ball(ctx, 9, -2, 3.5, INK); ctx.restore();
+    (a.marks || []).forEach((p) => { if (p.x === null || p.y === null) return; ball(ctx, m.X(p.x), m.Y(p.y), 6, "#fff", INK); small(ctx, p.label || "", m.X(p.x), m.Y(p.y) - 16); });
+    (a.lines || []).forEach((s2, i) => big(ctx, s2, 16, 24 + i * 24, { align: "left" }));
+  },
+  /** A Ferris wheel: the rider's height is A sin(Bx + C) + D; heights and angles sampled by the engine. */
+  ferris(ctx, w, h, t, a) {
+    ctx.fillStyle = "#eaf2fb"; ctx.fillRect(0, 0, w, h);
+    const ys = (a.fy || []).map(finite), angs = (a.ang || []).map(finite), n = ys.length; if (n < 2) return;
+    const A = Math.abs(finite(a.A, 1)), D = finite(a.D), lo = Math.min(D - A, 0) - 0.3 * (A || 1), hi = Math.max(D + A, 0) + 0.3 * (A || 1);
+    const k0 = Math.min((h - 90) / ((hi - lo) || 1), (w * 0.2) / (A || 1)), Y = (v) => h - 30 - (v - lo) * k0, cx = w * 0.24, R = A * k0;
+    seg(ctx, 0, Y(0), w, Y(0), "#9aa58c", 2); small(ctx, "ground (height 0)", 8, Y(0) + 12, { align: "left" });
+    seg(ctx, cx, Y(D), cx - 30, Y(lo), INK, 3); seg(ctx, cx, Y(D), cx + 30, Y(lo), INK, 3);
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, Y(D), Math.max(4, R), 0, 7); ctx.stroke();
+    const k = Math.floor((t * 6) % n), q = angs[k];  // rider angle and height both from the engine
+    for (let s2 = 0; s2 < 8; s2++) { const qq = q + s2 * Math.PI / 4; seg(ctx, cx, Y(D), cx + R * Math.cos(qq), Y(D) - R * Math.sin(qq) * Math.sign(finite(a.A, 1)), "#9aa3b2", 1); }
+    const rx = cx + R * Math.cos(q), ry = Y(ys[k]); ball(ctx, rx, ry, 9, EMBER, INK);
+    const x0 = w * 0.5, x1 = w - 20; ctx.strokeStyle = BLUE; ctx.lineWidth = 2.5; ctx.beginPath(); for (let i = 0; i <= k; i++) { const x = x0 + (x1 - x0) * i / (n - 1); if (i) ctx.lineTo(x, Y(ys[i])); else ctx.moveTo(x, Y(ys[i])); } ctx.stroke();
+    seg(ctx, rx, ry, x0 + (x1 - x0) * k / (n - 1), ry, "rgba(255,91,46,.5)", 1.5, [4, 4]);
+    (a.lines || []).forEach((s2, i) => big(ctx, s2, w - 16, 24 + i * 24, { align: "right" }));
+  },
+  /** A satellite dish y² = 4ax: incoming rays reflect to the focus (a, 0). rays: heights; hx: where each meets the dish. */
+  dish(ctx, w, h, t, a) {
+    ctx.fillStyle = "#101522"; ctx.fillRect(0, 0, w, h);
+    const { pts, m } = curveFit(w, h, a.xs || [], a.fy || [], 60), F = finite(a.a, 1);
+    ctx.strokeStyle = "#cfd6e2"; ctx.lineWidth = 5; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(m.X(x), m.Y(y)) : ctx.moveTo(m.X(x), m.Y(y)))); ctx.stroke();
+    const p = (t * 0.6) % 1;
+    (a.rays || []).forEach((y, i) => { const hx = finite((a.hx || [])[i]); const sx = m.X(m.x1) + 40, ex = m.X(hx), ey = m.Y(finite(y)); ctx.strokeStyle = "rgba(255,214,90,.8)"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx, ey); ctx.lineTo(ex, ey); ctx.lineTo(m.X(F), m.Y(0)); ctx.stroke();
+      const d1 = sx - ex, d2 = Math.hypot(ex - m.X(F), ey - m.Y(0)), s2 = p * (d1 + d2); const px = s2 < d1 ? sx - s2 : ex + (m.X(F) - ex) * (s2 - d1) / d2, py = s2 < d1 ? ey : ey + (m.Y(0) - ey) * (s2 - d1) / d2; ball(ctx, px, py, 3, "#ffd65a"); });
+    ball(ctx, m.X(F), m.Y(0), 7, EMBER); T(ctx, `focus (${fmt(F, 3)}, 0)`, m.X(F), m.Y(0) + 22, { color: "#fff", halo: null });
+    (a.lines || []).forEach((s2, i) => T(ctx, s2, 16, 24 + i * 24, { align: "left", color: "#fff", halo: null, font: "700 16px Plex, system-ui" }));
+  },
+  /** A planet on an ellipse (xs, ys from the engine) with the Sun at a focus c; or a comet on a hyperbola. */
+  conicorbit(ctx, w, h, t, a) {
+    ctx.fillStyle = "#0B1526"; ctx.fillRect(0, 0, w, h); for (let i = 0; i < 50; i++) ball(ctx, (i * 137.5) % w, (i * 71.3) % h, 1, "rgba(255,255,255,.5)");
+    const { pts, m } = curveFit(w, h, a.xs || [], a.fy || [], 60); if (pts.length < 2) return;
+    ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.setLineDash([5, 6]); ctx.lineWidth = 1.5; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(m.X(x), m.Y(y)) : ctx.moveTo(m.X(x), m.Y(y)))); ctx.stroke(); ctx.setLineDash([]);
+    if (a.slope !== undefined) { const s0 = finite(a.slope); for (const sg of [1, -1]) seg(ctx, m.X(m.x0), m.Y(sg * s0 * m.x0), m.X(m.x1), m.Y(sg * s0 * m.x1), "rgba(255,91,46,.45)", 1.5, [4, 4]); }
+    const g = ctx.createRadialGradient(m.X(finite(a.c)), m.Y(0), 2, m.X(finite(a.c)), m.Y(0), 22); g.addColorStop(0, "#fff6c2"); g.addColorStop(1, "rgba(255,190,60,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(m.X(finite(a.c)), m.Y(0), 22, 0, 7); ctx.fill();
+    const i = Math.floor((t * 8) % pts.length); ball(ctx, m.X(pts[i][0]), m.Y(pts[i][1]), 7, a.comet ? "#cfe8ff" : "#4f9be6");
+    if (a.comet) seg(ctx, m.X(pts[i][0]), m.Y(pts[i][1]), m.X(pts[i][0]) + 30, m.Y(pts[i][1]) - 10, "rgba(207,232,255,.5)", 3);
+    (a.lines || []).forEach((s2, k) => T(ctx, s2, 16, 24 + k * 24, { align: "left", color: "#fff", halo: null, font: "700 16px Plex, system-ui" }));
+  },
+  /** Bacteria in a dish: the count follows the engine's values over time (vals), dots capped for drawing. */
+  colony(ctx, w, h, t, a) {
+    bg(ctx, w, h);
+    const vals = (a.vals || []).map(finite), n = vals.length; if (!n) return;
+    const k = Math.floor((t * 4) % n), max = Math.max(...vals.map(Math.abs), 1e-9), N = Math.round(400 * Math.abs(vals[k]) / max);
+    const cx = w * 0.32, cy = h * 0.55, R = Math.min(w * 0.28, h * 0.4);
+    ball(ctx, cx, cy, R, "#f4f0e2", INK);
+    for (let i = 0; i < N; i++) { const r = R * 0.92 * Math.sqrt((i + 0.5) / 400), q = i * 2.39996; ball(ctx, cx + r * Math.cos(q), cy + r * Math.sin(q), 3, a.colour || GREEN); }
+    const x0 = w * 0.62, x1 = w - 20, by = h - 40; ctx.strokeStyle = BLUE; ctx.lineWidth = 2.5; ctx.beginPath(); for (let i = 0; i <= k; i++) { const x = x0 + (x1 - x0) * i / Math.max(1, n - 1), y = by - (by - 70) * Math.abs(vals[i]) / max; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.stroke();
+    small(ctx, `now: ${fmt(vals[k], 4)}`, x0, 60, { align: "left" });
+    (a.lines || []).forEach((s2, i) => big(ctx, s2, 16, 24 + i * 24, { align: "left" }));
+  },
+  /** A tank filling (or draining) towards a steady level: vals over time from the engine, target yinf. */
+  tank(ctx, w, h, t, a) {
+    bg(ctx, w, h);
+    const vals = (a.vals || []).map(finite), n = vals.length; if (!n) return;
+    const k = Math.floor((t * 4) % n), top = Math.max(...vals.map(Math.abs), Math.abs(finite(a.yinf)), 1e-9) * 1.15, x0 = w * 0.18, x1 = w * 0.42, y0 = 90, y1 = h - 30;
+    const lvl = (v) => y1 - (y1 - y0) * Math.max(0, v) / top;
+    ctx.fillStyle = "rgba(70,140,220,.35)"; ctx.fillRect(x0, lvl(vals[k]), x1 - x0, y1 - lvl(vals[k])); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+    seg(ctx, x0 - 10, lvl(finite(a.yinf)), x1 + 10, lvl(finite(a.yinf)), EMBER, 2, [6, 4]); small(ctx, `steady level ${fmt(a.yinf, 4)}`, x1 + 14, lvl(finite(a.yinf)), { align: "left", color: EMBER });
+    for (let i = 0; i < 5; i++) { const p = cyc(t + i * 0.2, 1); ball(ctx, (x0 + x1) / 2, y0 - 20 + p * 30, 3, BLUE); }
+    const gx0 = w * 0.58, gx1 = w - 20; ctx.strokeStyle = BLUE; ctx.lineWidth = 2.5; ctx.beginPath(); for (let i = 0; i <= k; i++) { const x = gx0 + (gx1 - gx0) * i / Math.max(1, n - 1); if (i) ctx.lineTo(x, lvl(vals[i])); else ctx.moveTo(x, lvl(vals[i])); } ctx.stroke();
+    (a.lines || []).forEach((s2, i) => big(ctx, s2, 16, 24 + i * 24, { align: "left" }));
   },
 };

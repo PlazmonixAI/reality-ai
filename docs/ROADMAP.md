@@ -208,3 +208,5 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Simulations gallery shelves (quantum, space, relativity and nuclear separate from physics)
 - [x] Space Program: Build and fly plus Mission Control in one place
 - [x] Phone layout for the app shell, gallery, Teach and the Space Program
+- [x] Worlds for the 21 maths graph experiments (roller coaster, Ferris wheel, dish, orbits, colony, tank)
+- [x] Type-any-value on every simulation slider

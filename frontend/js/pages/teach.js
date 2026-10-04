@@ -236,7 +236,7 @@ function classroom(root, id, params) {
       values[p.name] = p.default;
       // the slider covers the usual classroom range; the box takes any number at all (the engine flags unusual ones)
       const box = el("input", { type: "text", inputmode: "decimal", class: "teach-num", value: String(p.default), "aria-label": `${p.label}: type any value`, title: "Type any value, even outside the slider's range" });
-      const s = slider({ label: `${p.label}${p.symbol && p.symbol !== p.label ? ` (${p.symbol})` : ""}`, min: p.min, max: p.max, step: p.step || "any", value: p.default, unit: p.unit, digits: 4,
+      const s = slider({ label: `${p.label}${p.symbol && p.symbol !== p.label ? ` (${p.symbol})` : ""}`, min: p.min, max: p.max, step: p.step || "any", value: p.default, unit: p.unit, digits: 4, typeable: false,
         onInput: (v) => { values[p.name] = p.step ? Math.round(v / p.step) * p.step : v; box.value = String(Number(values[p.name].toPrecision(6))); box.classList.remove("bad"); run(); } });
       const typed = () => {
         const v = Number(box.value.replace(/[×x]\s*10\^?/i, "e").replace(/[^\d.eE+-]/g, ""));

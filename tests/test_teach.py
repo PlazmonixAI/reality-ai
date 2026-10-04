@@ -198,7 +198,7 @@ def test_every_number_only_experiment_has_a_real_world_picture():
     js = "".join((Path(__file__).parent.parent / "frontend/js/teach" / f).read_text() for f in ("worlds_phys.js", "worlds_chem.js", "worlds_math.js"))
     drawn = set(re.findall(r"^  (\w+)\(ctx, w, h, t, a\)", js, re.M))
     for e in CATALOG.values():
-        if e.scene == "gauges":
+        if e.scene in ("gauges", "graph"):
             assert e.id in WORLDS, f"{e.id} has no world"
     for exp_id, spec in WORLDS.items():
         assert spec["type"] in drawn, f"{exp_id}: no drawing for world {spec['type']}"

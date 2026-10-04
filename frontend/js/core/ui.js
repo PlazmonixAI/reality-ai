@@ -57,7 +57,7 @@ export function panel(title, ...children) {
  * Slider with label and live value. With log=true the slider moves in log10 space.
  * format(v) customises the displayed value.
  */
-export function slider({ label, min, max, step = "any", value, unit = "", log = false, digits = 3, format, onInput }) {
+export function slider({ label, min, max, step = "any", value, unit = "", log = false, digits = 3, format, onInput, typeable = true }) {
   const id = nextId("s");
   const toPos = (v) => (log ? Math.log10(v) : v);
   const fromPos = (p) => (log ? 10 ** p : p);
@@ -67,22 +67,49 @@ export function slider({ label, min, max, step = "any", value, unit = "", log = 
     step: log ? "any" : step,
     value: toPos(value),
   });
-  const out = el("output", { for: id });
+  // Tap the value to type any number, even outside the slider's range; the engine decides if it is usable.
+  let typed = null;
+  const out = el("output", { for: id, title: typeable ? "Tap to type any value" : null, class: typeable ? "typeable" : null, tabindex: typeable ? "0" : null, role: typeable ? "button" : null });
   const show = (v) => { out.textContent = format ? format(v) : `${fmt(v, digits)}${unit ? " " + unit : ""}`; };
+  const place = (v) => { const lo = Math.min(Number(input.min), Number(input.max)), hi = Math.max(Number(input.min), Number(input.max)); const p = log && v <= 0 ? lo : toPos(v); input.value = Math.max(lo, Math.min(hi, p)); };
   const api = {
     root: el("div", { class: "control" }, el("div", { class: "control-head" }, el("label", { for: id }, label), out), input),
-    get value() { return fromPos(Number(input.value)); },
+    get value() { return typed ?? fromPos(Number(input.value)); },
     set(v, { silent = true } = {}) {
-      input.value = toPos(v); show(api.value);
+      place(v); const p = fromPos(Number(input.value));
+      typed = Math.abs(p - v) > 1e-9 * Math.max(1, Math.abs(v)) ? v : null;
+      show(api.value);
       if (!silent) onInput?.(api.value);
     },
     setRange(lo, hi) {
       input.min = toPos(lo); input.max = toPos(hi);
       show(api.value);
     },
-    disable(flag) { input.disabled = flag; api.root.style.opacity = flag ? 0.5 : 1; },
+    disable(flag) { input.disabled = flag; out.style.pointerEvents = flag ? "none" : ""; api.root.style.opacity = flag ? 0.5 : 1; },
   };
-  input.addEventListener("input", () => { show(api.value); onInput?.(api.value); });
+  input.addEventListener("input", () => { typed = null; show(api.value); onInput?.(api.value); });
+  if (typeable) {
+    const edit = () => {
+      if (input.disabled || api.root.querySelector(".control-type")) return;
+      const box = el("input", { type: "text", inputmode: "decimal", class: "control-type", value: String(Number(api.value.toPrecision(6))), "aria-label": `${label}: type any value` });
+      let finished = false;
+      const done = (commit) => {
+        if (finished) return;
+        finished = true;
+        if (commit) {
+          let v = Number(box.value.replace(/[×x]\s*10\^?/i, "e").replace(/[^\d.eE+-]/g, ""));
+          if (box.value.trim() && Number.isFinite(v)) { if (Number(step) >= 1) v = Math.round(v); api.set(v, { silent: false }); }
+        }
+        if (box.isConnected) box.replaceWith(out);
+        show(api.value);
+      };
+      box.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); done(true); } else if (e.key === "Escape") done(false); });
+      box.addEventListener("blur", () => { if (box.isConnected) done(true); });
+      out.replaceWith(box); box.focus(); box.select();
+    };
+    out.addEventListener("click", edit);
+    out.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); edit(); } });
+  }
   show(value);
   return api;
 }

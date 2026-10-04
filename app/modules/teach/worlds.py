@@ -7,7 +7,7 @@ these world numbers are recomputed together and the picture changes the way the 
 
 Spec values:
   number or expression string   evaluated to a float (None if not a real number)
-  "list:N:expr"                 the values of expr for k = 1..N (N is an expression too; at most 60 terms)
+  "list:N:expr"                 the values of expr for kk = 1..N (N is an expression too; at most 60 terms)
   text keys (lines, title, ...) text with {expr} placeholders formatted to 4 significant figures
   dicts and lists               evaluated item by item
 """
@@ -25,7 +25,7 @@ from app.modules.teach.core import CATALOG, _call, _lambdify
 TEXT_KEYS = {"lines", "title", "label", "sub", "name", "nameA", "nameB", "left", "right", "meter", "peak", "rms", "top", "bottom",
              "Vtext", "distText", "load", "markLabel", "barLabel", "dir", "kind", "colour", "metal", "tint", "leftTint", "rightTint",
              "reactant", "product", "dot", "solidColour", "gasColour", "labels", "el", "onlyA", "onlyB", "both"}
-FLAG_KEYS = {"sea", "escape", "field", "split", "single", "slab", "heat", "ice", "mirror"}
+FLAG_KEYS = {"sea", "escape", "field", "split", "single", "slab", "heat", "ice", "mirror", "comet"}
 MAX_TERMS = 60
 WORLDS: dict[str, dict[str, Any]] = {}
 
@@ -102,10 +102,10 @@ def _eval(key: str, spec: Any, ns: dict[str, Any]) -> Any:
     if spec.startswith("list:"):
         _, n_expr, expr = spec.split(":", 2)
         n = _scalar(_num(n_expr, ns)) or 0
-        k = np.arange(1, int(max(0, min(MAX_TERMS, round(n)))) + 1, dtype=float)
-        if not len(k):
+        kk = np.arange(1, int(max(0, min(MAX_TERMS, round(n)))) + 1, dtype=float)
+        if not len(kk):
             return []
-        vals = np.broadcast_to(np.asarray(_num(expr, {**ns, "k": k}), dtype=float), k.shape)
+        vals = np.broadcast_to(np.asarray(_num(expr, {**ns, "kk": kk}), dtype=float), kk.shape)
         return [round(float(v), 12) if math.isfinite(v) else None for v in vals]
     try:
         return _scalar(_num(spec, ns))
@@ -308,12 +308,12 @@ W("c12-acetanilide", "yieldDish", got="got", theo="theo", pct="pct", colour="#ff
 
 # ================================================================ mathematics
 W("m9-parallelogram", "quad", b1="b1", b2="b2", h="h", Ap="A_par", At="A_trap")
-W("m9-mean", "bars", vals="list:n:first + (k - 1)*step", mark="mean", markLabel="mean {mean}", lines=["{n} values, total {total}", "Mean = median = {mean}"])
-W("m10-ap", "stairs", vals="list:n:a + (k - 1)*d", lines=["nth term {an}", "Sum of {n} terms {Sn}"])
-W("m11-gp", "stairs", vals="list:n:a*r**(k - 1)", lines=["nth term {an}", "Sum {Sn}"])
+W("m9-mean", "bars", vals="list:n:first + (kk - 1)*step", mark="mean", markLabel="mean {mean}", lines=["{n} values, total {total}", "Mean = median = {mean}"])
+W("m10-ap", "stairs", vals="list:n:a + (kk - 1)*d", lines=["nth term {an}", "Sum of {n} terms {Sn}"])
+W("m11-gp", "stairs", vals="list:n:a*r**(kk - 1)", lines=["nth term {an}", "Sum {Sn}"])
 W("m11-means", "bars", vals=["a", "AM", "GM", "HM", "b"], labels=["a", "AM", "GM", "HM", "b"], hi=1, lines=["AM {AM} ≥ GM {GM} ≥ HM {HM}"])
-W("m10-recurring-deposit", "money", vals="list:n:P*k + P*k*(k + 1)/24*r/100", lines=["Pay {P} a month for {n} months", "Maturity value {MV} (interest {I})"])
-W("m10-compound", "money", vals="list:n:P*(1 + r/100)**k", lines=["Amount after {n} years {A}", "Compound interest {CI}, simple would be {SI}"])
+W("m10-recurring-deposit", "money", vals="list:n:P*kk + P*kk*(kk + 1)/24*r/100", lines=["Pay {P} a month for {n} months", "Maturity value {MV} (interest {I})"])
+W("m10-compound", "money", vals="list:n:P*(1 + r/100)**kk", lines=["Amount after {n} years {A}", "Compound interest {CI}, simple would be {SI}"])
 W("m10-distance", "plane", pts=[{"x": "x1", "y": "y1", "label": "A"}, {"x": "x2", "y": "y2", "label": "B"}, {"x": "mx", "y": "my", "label": "M"}], segs=[[0, 1]], lines=["AB = {d}", "Midpoint ({mx}, {my})"])
 W("m10-section", "plane", pts=[{"x": "x1", "y": "y1", "label": "A"}, {"x": "x2", "y": "y2", "label": "B"}, {"x": "px", "y": "py", "label": "P", "colour": "#FF5B2E"}], segs=[[0, 1]], lines=["P divides AB in {m} : {n}", "P = ({px}, {py})"])
 W("m10-triangle-area", "plane", pts=[{"x": "x1", "y": "y1"}, {"x": "x2", "y": "y2"}, {"x": "x3", "y": "y3"}], segs=[[0, 1], [1, 2], [2, 0]], poly=[0, 1, 2], lines=["Area {A}"])
@@ -328,15 +328,15 @@ W("m10-dice", "dice", S="S", ways="ways", P="P")
 W("m10-probability", "bag", total="total", fav="fav", P="P", lines=["P(not) = {Pnot}"])
 W("m10-mode", "bars", vals=["f0", "f1", "f2"], labels=["before", "modal", "after"], hi=1, lines=["Mode = {mode}"])
 W("m10-median", "bars", vals=["cf", "f", "n - cf - f"], labels=["below", "median class", "above"], hi=1, lines=["Median = {median}"])
-W("m11-variance", "bars", vals="list:n:k", mark="mean", markLabel="mean {mean}", lines=["Variance {var}, standard deviation {sd}"])
-W("m12-binomial-dist", "bars", vals="list:n + 1:binomial(n, k - 1)*p**(k - 1)*(1 - p)**(n - k + 1)", hi="r", labels="list:n + 1:k - 1", lines=["P(X = {r}) = {Pr}", "Mean {mean}, variance {var}"])
+W("m11-variance", "bars", vals="list:n:kk", mark="mean", markLabel="mean {mean}", lines=["Variance {var}, standard deviation {sd}"])
+W("m12-binomial-dist", "bars", vals="list:n + 1:binomial(n, kk - 1)*p**(kk - 1)*(1 - p)**(n - kk + 1)", hi="r", labels="list:n + 1:kk - 1", lines=["P(X = {r}) = {Pr}", "Mean {mean}, variance {var}"])
 W("m10-zeros", "plane", pts=[{"x": "(-b + sqrt(b**2 - 4*a*c))/(2*a)", "y": 0, "label": "α"}, {"x": "(-b - sqrt(b**2 - 4*a*c))/(2*a)", "y": 0, "label": "β"}], lines=["Sum of zeros −b/a = {s}", "Product c/a = {p}"])
 W("m11-radian", "angle", A="deg", lines=["{deg}° = {rad} rad", "Arc length {s} cm on radius {r} cm"])
 W("m11-compound-angle", "angle", A="A", B="B", lines=["sin(A + B) = {lhs}", "cos(A + B) = {cosAB}"])
 W("m12-inverse-trig", "angle", A="asn", lines=["sin⁻¹({x}) = {asn}°", "cos⁻¹ = {acs}°, tan⁻¹ = {atn}°"])
 W("m11-de-moivre", "complex", r="r", th="th", n="n", lines=["zⁿ has length {rn} and angle {argn}°", "= {re} + {im}i"])
 W("m11-perm-comb", "arrange", n="n", r="r", lines=["Arrangements nPr = {nPr}", "Selections nCr = {nCr}"])
-W("m11-binomial", "bars", vals="list:n + 1:binomial(n, k - 1)", hi="r", labels="list:n + 1:k - 1", lines=["Coefficients of (a + b)^{n}", "Term {r + 1} = {T}"])
+W("m11-binomial", "bars", vals="list:n + 1:binomial(n, kk - 1)", hi="r", labels="list:n + 1:kk - 1", lines=["Coefficients of (a + b)^{n}", "Term {r + 1} = {T}"])
 W("m11-3d-distance", "space", pts=[{"x": "x1", "y": "y1", "z": "z1"}, {"x": "x2", "y": "y2", "z": "z2"}], segs=[[0, 1]], lines=["Distance {d}"])
 W("m12-line-angle", "space", lineDirs=[{"v": ["a1", "b1", "c1"]}, {"v": ["a2", "b2", "c2"]}], lines=["Angle between the lines {th}°"])
 W("m12-plane-distance", "space", pts=[{"x": "x0", "y": "y0", "z": "z0"}], lineDirs=[{"v": ["a", "b", "c"], "p": ["x0", "y0", "z0"]}], lines=["Distance to the plane {D}"])
@@ -352,10 +352,10 @@ W("m12-rate", "ripple", r="r", drdt="drdt", lines=["Radius {r} cm growing {drdt}
 W("m12-lpp", "lpp", corners=[[0, 0], [0, "A"], ["Min(A, B)", "A - Min(A, B)"], ["Min(A, B)", 0]], p="p", q="q", Zmax="Zmax", best="2*(Zmax == Z_2) + 1*(Zmax == Z_1)*(Zmax != Z_2)", lines=["Maximum Z = {Zmax}"])
 
 # curves for the area and slope pictures: 60 sample points computed here (k = 1..60)
-_X = "{lo} + ({hi} - ({lo}))*(k - 1)/59"
+_X = "{lo} + ({hi} - ({lo}))*(kk - 1)/59"
 W("m12-riemann", "area", xs="list:60:" + _X.format(lo=0, hi="b"), fy="list:60:(" + _X.format(lo=0, hi="b") + ")**2",
-  rx="list:n:(k - 1)*b/n", rh="list:n:(k*b/n)**2", rw="b/n", lines=["{n} rectangles: {S}", "Exact {exact}, error {err}"])
-W("m12-area-between", "area", xs="list:60:" + _X.format(lo=0, hi="xm"), fy="list:60:k*0 + (" + _X.format(lo=0, hi="xm") + ")*xm",
+  rx="list:n:(kk - 1)*b/n", rh="list:n:(kk*b/n)**2", rw="b/n", lines=["{n} rectangles: {S}", "Exact {exact}, error {err}"])
+W("m12-area-between", "area", xs="list:60:" + _X.format(lo=0, hi="xm"), fy="list:60:kk*0 + (" + _X.format(lo=0, hi="xm") + ")*xm",
   gy="list:60:(" + _X.format(lo=0, hi="xm") + ")**2", lines=["Between y = {k}x and y = x²: area {A}"])
 W("m12-by-parts", "area", xs="list:60:" + _X.format(lo=0, hi="b"), fy="list:60:(" + _X.format(lo=0, hi="b") + ")*exp(" + _X.format(lo=0, hi="b") + ")",
   lines=["∫ x eˣ dx from 0 to {b} = {I}"])
@@ -374,3 +374,47 @@ W("p12-concave-lens", "lensbench", lenses=[{"x": 0, "f": "f2"}], lines=["Combina
 W("p12-liquid-n", "lensbench", lenses=[{"x": 0, "f": "fl"}], lines=["Liquid lens focal length {fl} cm", "Refractive index of the liquid {n}"])
 W("p12-min-dev", "refract", i="i", r="A/2", n2="n", top="air", bottom="prism n = {n}", lines=["Minimum deviation {dm}° at incidence {i}°"])
 W("p12-glass-slab", "refract", i=30, r="asin(sin(pi/6)/n)*180/pi", n2="n", slab=True, top="air", bottom="glass", lines=["Real depth {real} cm, apparent {app} cm", "n = {n}"])
+
+# ---------------------------------------------------------------- maths graphs as real things
+def _curve(lo, hi, expr: str) -> tuple[str, str]:
+    x = _X.format(lo=lo, hi=hi)
+    return "list:60:" + x, "list:60:" + expr.replace("X", "(" + x + ")")
+
+
+_xs, _fy = _curve(-6, 6, "a*X**2 + b*X + c")
+W("m9-polynomial", "coaster", xs=_xs, fy=_fy, marks=[{"x": "x0", "y": "p0", "label": "p({x0}) = {p0}"}], lines=["p(x) = {a}x² + {b}x + {c}", "At x = {x0} the track is at height {p0}"])
+_xs, _fy = _curve(-2, 5, "X**3 + b*X**2 + c*X + d")
+W("m9-cubic", "coaster", xs=_xs, fy=_fy, marks=[{"x": "k", "y": "pk", "label": "p({k}) = {pk}"}], lines=["Where the track touches the ground, p(x) = 0: a zero"])
+_xs, _fy = _curve(-10, 10, "(c - a*X)/b")
+W("m9-linear-eq", "coaster", xs=_xs, fy=_fy, marks=[{"x": "xint", "y": 0, "label": "x-intercept {xint}"}, {"x": 0, "y": "yint", "label": "y-intercept {yint}"}], lines=["{a}x + {b}y = {c}: a straight ramp of slope {slope}"])
+_xs, _fy = _curve(-10, 10, "a*X**2 + b*X + c")
+W("m10-quadratic", "coaster", xs=_xs, fy=_fy, marks=[{"x": "x1", "y": 0, "label": "x₁ = {x1}"}, {"x": "x2", "y": 0, "label": "x₂ = {x2}"}, {"x": "xv", "y": "a*xv**2 + b*xv + c", "label": "turning point"}],
+  lines=["Discriminant {D}: the track meets the ground at the roots"])
+W("m10-linear-pair", "plane", pts=[{"x": "x", "y": "y", "label": "meet "}], line=["a1", "b1", "-c1"], line2=["a2", "b2", "-c2"], lines=["Two straight roads cross at ({x}, {y})", "det = {det} (0 means parallel roads)"])
+W("m11-sine-graph", "ferris", A="A", D="D", fy="list:60:A*sin(B*(" + _X.format(lo=0, hi="4*pi") + ") + C) + D", ang="list:60:B*(" + _X.format(lo=0, hi="4*pi") + ") + C",
+  lines=["Height = {A} sin({B}x + {C}) + {D}", "One turn every {period}; highest {ymax}, lowest {ymin}"])
+W("m11-circle", "plane", pts=[{"x": "h", "y": "k", "label": "centre "}], circle=["h", "k", "r"], lines=["A running track of radius {r}", "Area {area}, one lap {circ}"])
+W("m11-parabola", "dish", a="a", xs="list:60:a*(" + _X.format(lo=-3, hi=3) + ")**2", fy="list:60:2*a*(" + _X.format(lo=-3, hi=3) + ")",
+  rays="list:7:2*a*(kk - 4)*0.75", hx="list:7:a*((kk - 4)*0.75)**2", lines=["A dish y² = {4*a}x sends every ray to the focus", "Focus ({focus}, 0), latus rectum {LR}"])
+W("m11-ellipse", "conicorbit", c="c", xs="list:60:a*cos(" + _X.format(lo=0, hi="2*pi") + ")", fy="list:60:b*sin(" + _X.format(lo=0, hi="2*pi") + ")",
+  lines=["A planet's orbit: the Sun sits at a focus, {c} from the centre", "Eccentricity {e}, area {area}"])
+W("m11-hyperbola", "conicorbit", comet=True, c="c", slope="slope", xs="list:60:a*cosh(" + _X.format(lo=-2, hi=2) + ")", fy="list:60:b*sinh(" + _X.format(lo=-2, hi=2) + ")",
+  lines=["A comet swings past the Sun once and leaves", "Eccentricity {e}; it heads out along slope ±{slope}"])
+W("m11-limit", "angle", A="x0*180/pi", lines=["At {x0} rad: sin x / x = {val}", "The arc and the chord become equal as x → 0"])
+_xs, _fy = _curve(-3, 3, "sin(a*X**2)")
+W("m12-chain", "coaster", xs=_xs, fy=_fy, fp=_curve(-3, 3, "2*a*X*cos(a*X**2)")[1], marks=[{"x": "x0", "y": "f0", "label": "slope here {d0}"}], lines=["f(x) = sin({a}x²): the chain rule gives f′ = 2{a}x cos({a}x²)"])
+_xs, _fy = _curve(-2, 8, "Heaviside(p - X)*((3*p - 6)/p*X + 1) + Heaviside(X - p)*(3*X - 5)")
+W("m12-continuity", "coaster", xs=_xs, fy=_fy, marks=[{"x": "p", "y": "3*p - 5", "label": "the join at x = {p}"}], lines=["With k = {k} the two pieces of track meet with no gap"])
+_xs, _fy = _curve(-5, 6, "a*X**3 + b*X**2 + c*X + d")
+W("m12-cubic-extrema", "coaster", xs=_xs, fy=_fy, fp=_curve(-5, 6, "3*a*X**2 + 2*b*X + c")[1],
+  marks=[{"x": "x1", "y": "fmin", "label": "valley"}, {"x": "x2", "y": "a*x2**3 + b*x2**2 + c*x2 + d", "label": "hilltop"}], lines=["Hilltop and valley where the slope f′(x) = 0"])
+_xs, _fy = _curve(-5, 5, "X**2")
+W("m12-tangent", "coaster", xs=_xs, fy=_fy, tl=_curve(-5, 5, "2*a*X - a**2")[1], marks=[{"x": "a", "y": "a**2", "label": "touch point"}], lines=["Tangent y = {m}x + ({c})", "Normal slope {mn}"])
+_xs, _fy = _curve("a", "b", "X**n")
+W("m12-integral-power", "area", xs=_xs, fy=_fy, lines=["∫ xⁿ dx from {a} to {b} = {I}"])
+_xs, _fy = _curve(0, "b", "2*sqrt(a*X)")
+W("m12-area-parabola", "area", xs=_xs, fy=_fy, gy=_curve(0, "b", "-2*sqrt(a*X)")[1], lines=["Area inside y² = {4*a}x up to x = {b}: {A}"])
+_xs, _fy = _curve("-a", "a", "b*sqrt(Max(0, 1 - X**2/a**2))")
+W("m12-area-ellipse", "area", xs=_xs, fy=_fy, gy=_curve("-a", "a", "-b*sqrt(Max(0, 1 - X**2/a**2))")[1], lines=["Area of the ellipse πab = {A}"])
+W("m12-growth", "colony", vals="list:60:y0*exp(k*(" + _X.format(lo=0, hi=20) + "))", lines=["Starts at {y0}, rate k = {k}", "After {x0}: {y}; doubles every {double}"])
+W("m12-linear-de", "tank", yinf="yinf", vals="list:60:Q/P + (y0 - Q/P)*exp(-P*(" + _X.format(lo=0, hi=20) + "))", lines=["dy/dx + {P}y = {Q}", "At x = {x0}: y = {y}; settles at {yinf}"])
