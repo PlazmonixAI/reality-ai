@@ -338,3 +338,15 @@
 ## 2026-10-05: Most powerful simulations first
 - The Simulations page opens with a "Most powerful" section: Space Program, Solar System 3D, Universe Explorer, Black Hole, Hydrogen Atom, Quantum Wells, Tunnelling, Wave Packets, Special Relativity, Double Pendulum, Charges in E and B Fields, Wave Interference, the Virtual Chemistry Lab, Titration, Galvanic Cells, Equilibrium, Fourier Series, Fractals, Linear Transformations and the Complex Plane.
 - Shelves now start with space, quantum and relativity, and inside every shelf the strongest simulations come first (`FEATURED` and `RANK` in `frontend/js/sims/index.js`).
+
+## 2026-10-05 (later): Finishing the open items
+- **Virtual Chemistry Lab:**
+  - Fehling's solution A and B: the tartrate keeps the copper in solution, then glucose gives brick red Cu₂O on warming.
+  - Ethanol and glacial acetic acid on a new Organic shelf.
+  - The iodoform test (yellow CHI₃; balanced with explicit textbook coefficients because the redox has two balances).
+  - Esterification with a concentrated sulphuric acid catalyst (ethyl ethanoate, ΔH ≈ −3 kJ/mol).
+  - Wash and Rinse actions: washing leaves a wet film of water that dilutes the next solution; rinsing with the solution itself keeps its strength, which is why a burette is rinsed with the titrant.
+  - 72 chemicals and 125 reactions in total.
+- **Space Program:** side boosters have symmetry choices (2, 3, 4 or 6 around the core). The boosters behind the core are drawn faded.
+- **Checked in the browser:** the simulations without a plain slider (circuit builder, charges, molecule shapes, build an atom, phase portraits, vectors, fitting, shortest paths, balancing, Universe, Solar System) have no errors. The only network notice is the expected "no space company yet" reply for a new account.
+- **Still open (larger projects):** handwriting recognition on the board, Hindi interface and Hindi listen mode, class assignments, email verification, inclined 3D ascents, constellation lines and exoplanets, Kerr black hole, 2D wave packets, and real Groq keys for the AI.

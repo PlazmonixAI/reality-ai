@@ -1080,3 +1080,4 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .featured-note { margin: -6px 0 12px; }
 .cards.featured .card { border-color: rgba(255,91,46,.35); }
 .cards.featured .card-body h3::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #FF5B2E; margin-right: 7px; vertical-align: 1px; }
+.sf-small.on { background: #FF5B2E; color: #0B1526; border-color: #FF5B2E; }

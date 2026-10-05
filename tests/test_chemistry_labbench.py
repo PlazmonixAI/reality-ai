@@ -221,3 +221,31 @@ def test_starch_turns_blue_black_with_iodine():
                 {"type": "add", "chemical": "iodine", "amount": 1})
     r, g, b = (int(res["vessels"][0]["liquid_colour"][i:i + 2], 16) for i in (1, 3, 5))
     assert r < 60 and g < 60 and b < 110
+
+
+def test_fehling_iodoform_and_ester():
+    res = bench({"type": "add", "chemical": "fehling_a", "amount": 2}, {"type": "add", "chemical": "fehling_b", "amount": 2}, dt=0.5, kind="test_tube")
+    v = res["vessels"][0]
+    assert "Cu(OH)2(s)" not in v["contents"]  # the tartrate keeps the copper in solution
+    res = bench({"type": "add", "chemical": "fehling_a", "amount": 2}, {"type": "add", "chemical": "fehling_b", "amount": 2},
+                {"type": "add", "chemical": "glucose", "amount": 2}, kind="test_tube", heat=1.0, dt=60)
+    assert res["vessels"][0]["contents"].get("Cu2O(s)", 0) > 1e-5 and any(e["reaction"] == "Fehling's test" for e in res["events"])
+    res = bench({"type": "add", "chemical": "water", "amount": 5}, {"type": "add", "chemical": "ethanol", "amount": 0.5},
+                {"type": "add", "chemical": "iodine", "amount": 10}, {"type": "add", "chemical": "naoh", "amount": 3}, kind="boiling_tube", heat=0.6, dt=60)
+    assert res["vessels"][0]["contents"].get("CHI3(s)", 0) > 0
+    r = next(r for r in REACTIONS if r["name"] == "Esterification (ethyl ethanoate)")
+    assert r["dh"] == pytest.approx(-479.3 + -285.83 - (-484.3 + -277.69), abs=0.05)
+    res = bench({"type": "add", "chemical": "glacial_acetic", "amount": 3}, {"type": "add", "chemical": "ethanol", "amount": 3},
+                {"type": "add", "chemical": "conc_h2so4", "amount": 0.5}, kind="boiling_tube", heat=0.5, dt=120)
+    assert res["vessels"][0]["contents"].get("CH3COOC2H5(l)", 0) > 0
+
+
+def test_rinsing_a_burette_keeps_the_titrant_strength():
+    def titrant_strength(prep):
+        r = lab_step([{"id": "b", "kind": "burette"}], [prep, {"type": "add", "vessel": "b", "chemical": "naoh", "amount": 20}], 0)["result"]
+        c = r["vessels"][0]["contents"]
+        return c["NaOH(aq)"] / (c["H2O(l)"] * 18.015 / 1000)
+    washed = titrant_strength({"type": "wash", "vessel": "b"})
+    rinsed = titrant_strength({"type": "rinse", "vessel": "b", "chemical": "naoh"})
+    assert rinsed == pytest.approx(1.0, rel=1e-5)  # still 1 mol/L
+    assert washed == pytest.approx(20 / 20.6, rel=1e-5)  # the 0.6 mL water film dilutes it
