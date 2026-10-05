@@ -236,7 +236,9 @@ function drawStack(ctx, parts, cx, yb, s, opts = {}) { // → [[top, bottom], �
     let last = first; while (last < parts.length - 1 && !isDecoupler(parts[last])) last++;
     const coreW = Math.max(0, ...parts.slice(first, last + 1).filter((q) => !isBooster(q) && !isDecoupler(q) && !isFairing(q)).map((q) => q.width)) * s || p.width * s;
     const base = layout[first][1];
-    for (const side of [-1, 1]) drawPart(ctx, { ...p, count: 1 }, cx + side * (coreW / 2 + (p.width * s) / 2), base, s, { selected: i === opts.selected });
+    const n = p.count || 1, back = Math.max(0, n - 2);  // boosters behind the core show as faded copies between the side ones
+    if (back) { ctx.save(); ctx.globalAlpha = 0.45; for (let k = 0; k < Math.min(back, 4); k++) { const off = back === 1 ? 0 : (k / (Math.min(back, 4) - 1) - 0.5) * coreW * 0.6; drawPart(ctx, { ...p, count: 1 }, cx + off, base, s * 0.92, {}); } ctx.restore(); }
+    for (const side of n === 1 ? [1] : [-1, 1]) drawPart(ctx, { ...p, count: 1 }, cx + side * (coreW / 2 + (p.width * s) / 2), base, s, { selected: i === opts.selected });
     if ((p.count || 1) > 2) { ctx.save(); ctx.fillStyle = "#fff"; ctx.font = `bold ${Math.max(10, s * 1.2)}px system-ui`; ctx.textAlign = "left"; ctx.fillText(`×${p.count}`, cx + coreW / 2 + p.width * s + 6, base - p.height * s * 0.5); ctx.restore(); }
     layout[i] = [base - p.height * s, base];
   }
@@ -325,6 +327,8 @@ export default {
         row.push(el("div", { class: "sf-row" }, el("span", {}, "Boosters"),
           el("button", { class: "sf-small", type: "button", onclick: () => { stack[selected].count = Math.max(1, (stack[selected].count || 1) - 1); refresh(); } }, "−"),
           el("b", {}, String(p.count)), el("button", { class: "sf-small", type: "button", onclick: () => { stack[selected].count = Math.min(9, (stack[selected].count || 1) + 1); refresh(); } }, "+")),
+          el("div", { class: "sf-row" }, el("span", {}, "Symmetry"),
+            ...[2, 3, 4, 6].map((m) => el("button", { class: `sf-small${p.count === m ? " on" : ""}`, type: "button", title: `${m} boosters spaced evenly around the core`, onclick: () => { stack[selected].count = m; refresh(); } }, `${m} around`))),
           el("div", { class: "sf-row" }, el("span", {}, `On stage ${k + 1}`),
             el("button", { class: "sf-small", type: "button", disabled: k <= 0, onclick: () => moveBooster(selected, k - 1) }, "Stage below"),
             el("button", { class: "sf-small", type: "button", disabled: k >= n - 1, onclick: () => moveBooster(selected, k + 1) }, "Stage above"),

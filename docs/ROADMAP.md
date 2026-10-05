@@ -210,3 +210,5 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Phone layout for the app shell, gallery, Teach and the Space Program
 - [x] Worlds for the 21 maths graph experiments (roller coaster, Ferris wheel, dish, orbits, colony, tank)
 - [x] Type-any-value on every simulation slider
+- [x] Lab: Fehling's test, iodoform test, esterification, wash and rinse glassware
+- [x] Space Program: booster symmetry (2, 3, 4 or 6 around the core)

@@ -171,6 +171,9 @@ export default {
         ...others.filter((x) => x.kind !== "burette").map((x) => el("option", { value: x.id, selected: v.gasTo === x.id }, `Gas into ${nameOf(x.id)}`)));
       tubeSel.addEventListener("change", () => { v.gasTo = tubeSel.value || null; renderInspector(); draw(); });
       const tests = el("div", { class: "lab-seg" }, el("span", {}, "Test"), ...cat.tests.map((k) => el("button", { type: "button", onclick: () => step([{ type: "test", vessel: v.id, test: k }], 0) }, TEST_LABEL[k])));
+      const rinseSel = el("select", { class: "lab-sel", "aria-label": "Rinse with", title: "Rinse with the solution it will hold, so the film left behind does not dilute it" },
+        el("option", { value: "" }, "Rinse with…"), ...cat.chemicals.filter((c) => c.kind === "solution" || c.kind === "liquid" || c.kind === "pure").map((c) => el("option", { value: c.id }, c.name)));
+      rinseSel.addEventListener("change", () => { if (rinseSel.value) step([{ type: "rinse", vessel: v.id, chemical: rinseSel.value }], 0); rinseSel.value = ""; });
       const extra = [];
       if (v.kind === "burette") {
         const overSel = el("select", { class: "lab-sel", "aria-label": "Burette over" }, el("option", { value: "" }, "Not over a vessel"), ...others.map((x) => el("option", { value: x.id, selected: v.over === x.id }, nameOf(x.id))));
@@ -183,6 +186,8 @@ export default {
         v.kind === "burette" ? "" : el("div", { class: "lab-actions" }, el("span", { class: "muted small" }, "Delivery tube"), tubeSel),
         el("div", { class: "lab-actions" }, pourSel, filterSel,
         el("button", { class: "btn small", type: "button", onclick: () => step([{ type: "empty", vessel: v.id }], 0) }, "Empty"),
+        el("button", { class: "btn small", type: "button", title: "Wash with distilled water: a thin film of water stays on the glass", onclick: () => step([{ type: "wash", vessel: v.id }], 0) }, "Wash"),
+        rinseSel,
         el("button", { class: "btn small danger", type: "button", onclick: () => { vessels = vessels.filter((x) => x !== v); vessels.forEach((x) => { if (x.over === v.id) x.over = null; if (x.gasTo === v.id) x.gasTo = null; }); selected = null; renderInspector(); draw(); } }, "Remove")),
         el("h4", {}, "Contents"), contents);
     }
