@@ -334,3 +334,7 @@
   Every curve is sampled by the engine (60 points).
 - Every slider in every simulation now takes any value: tap the number beside the slider and type it. The engine computes it, and shows its message if the value cannot be used.
 - Known issue: none open from this round.
+
+## 2026-10-05: Most powerful simulations first
+- The Simulations page opens with a "Most powerful" section: Space Program, Solar System 3D, Universe Explorer, Black Hole, Hydrogen Atom, Quantum Wells, Tunnelling, Wave Packets, Special Relativity, Double Pendulum, Charges in E and B Fields, Wave Interference, the Virtual Chemistry Lab, Titration, Galvanic Cells, Equilibrium, Fourier Series, Fractals, Linear Transformations and the Complex Plane.
+- Shelves now start with space, quantum and relativity, and inside every shelf the strongest simulations come first (`FEATURED` and `RANK` in `frontend/js/sims/index.js`).

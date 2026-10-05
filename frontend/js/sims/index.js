@@ -5,13 +5,13 @@ const sky = (inner) => `<svg viewBox="0 0 240 128" xmlns="http://www.w3.org/2000
 
 /** Gallery sections. Physics is split by topic so quantum, space and the rest each have their own shelf. */
 export const DOMAINS = [
+  { id: "space", label: "Space and astronomy" },
+  { id: "quantum", label: "Quantum mechanics" },
+  { id: "modern", label: "Relativity and nuclear physics" },
   { id: "mechanics", label: "Physics: motion and forces" },
   { id: "waves", label: "Physics: waves, sound and light" },
   { id: "electricity", label: "Physics: electricity and magnetism" },
   { id: "heat", label: "Physics: heat and fluids" },
-  { id: "quantum", label: "Quantum mechanics" },
-  { id: "modern", label: "Relativity and nuclear physics" },
-  { id: "space", label: "Space and astronomy" },
   { id: "chemistry", label: "Chemistry" },
   { id: "mathematics", label: "Mathematics" },
 ];
@@ -26,6 +26,18 @@ const SECTION = {
   spaceflight: "space", orbits: "space", kepler: "space", hohmann: "space", solarsystem: "space", universe: "space", blackhole: "space",
   "earth-moon": "space", orbitdecay: "space", precession: "space", rocket: "space",
 };
+/** The most powerful simulations, shown first on the Simulations page (one or more from every area). */
+export const FEATURED = ["spaceflight", "solarsystem", "universe", "blackhole", "hydrogen", "quantum", "tunnelling", "wavepacket",
+  "relativity", "doublependulum", "lorentz", "interference", "labbench", "titration", "galvanic", "equilibrium", "fourier", "fractal", "transform", "complex"];
+/** Inside every shelf the strongest simulations come first, then the rest in catalogue order. */
+const RANK = ["spaceflight", "solarsystem", "universe", "blackhole", "earth-moon", "hohmann", "orbitdecay", "precession",
+  "hydrogen", "quantum", "tunnelling", "wavepacket", "rabi", "oscillator", "photoelectric", "relativity", "decay",
+  "doublependulum", "projectile", "collisions", "coupled", "pendulum", "skate", "resonance",
+  "interference", "lenses", "refraction", "doppler", "waves", "lorentz", "faraday", "circuit", "rlc", "charges",
+  "engine", "blackbody", "bernoulli", "heat", "buoyancy",
+  "labbench", "titration", "galvanic", "equilibrium", "molecules", "atom", "kinetics", "profile", "speciation", "realgas", "phasediagram",
+  "fourier", "fractal", "transform", "complex", "grapher", "taylor", "phase", "montecarlo", "newton", "riemann", "probability", "conics"];
+export const rankOf = (sim) => { const i = RANK.indexOf(sim.id); return i < 0 ? RANK.length + SIMS.indexOf(sim) : i; };
 /** The gallery section a simulation belongs to (chemistry and maths keep their subject). */
 export const sectionOf = (sim) => SECTION[sim.id] || (sim.domain === "physics" ? "mechanics" : sim.domain);
 

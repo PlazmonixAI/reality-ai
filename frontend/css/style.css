@@ -1074,3 +1074,9 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
   /* full-screen simulators keep the whole screen on phones (their layout fills the page) */
   .sim-page:has(.sf-root), .sim-page:has(.ss-root) { height: calc(100dvh - var(--topbar-h)); }
 }
+
+/* Most powerful simulations at the top of the gallery */
+.featured-title { margin-top: 10px; }
+.featured-note { margin: -6px 0 12px; }
+.cards.featured .card { border-color: rgba(255,91,46,.35); }
+.cards.featured .card-body h3::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #FF5B2E; margin-right: 7px; vertical-align: 1px; }

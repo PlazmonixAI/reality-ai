@@ -3,7 +3,7 @@
 //   #/sim/<id>?…       one simulation            #/company         Mission Control (space company)
 //   #/challenges       challenge missions        #/history         saved work
 //   #/account          account settings          #/ask             ask the AI
-import { SIMS, DOMAINS, sectionOf } from "./sims/index.js";
+import { SIMS, DOMAINS, sectionOf, FEATURED, rankOf } from "./sims/index.js";
 import { el } from "./core/ui.js";
 import { health, clearRecentCalls, recentCalls } from "./core/api.js";
 import { mountAsk } from "./ask.js";
@@ -82,15 +82,22 @@ function renderGallery() {
   const draw = () => {
     const q = query.trim().toLowerCase();
     sections.replaceChildren();
+    const card = (s) => el("a", { class: "card", href: `#/sim/${s.id}` },
+      el("div", { class: "card-art", html: s.art }),
+      el("div", { class: "card-body" }, el("h3", {}, s.title), el("p", {}, s.blurb)));
+    if (!shelf && !q) {  // the most powerful simulations first, from every area
+      const top = FEATURED.map((id) => SIMS.find((s) => s.id === id)).filter(Boolean);
+      sections.append(el("h2", { class: "domain-title featured-title" }, "Most powerful", el("span", { class: "count" }, `${top.length}`)),
+        el("p", { class: "muted small featured-note" }, "Space, quantum physics, physics, chemistry and mathematics: the deepest simulations in Reality ASM."),
+        el("div", { class: "cards featured" }, top.map(card)));
+    }
     for (const d of DOMAINS) {
       if (shelf && shelf !== d.id) continue;
-      const sims = SIMS.filter((s) => sectionOf(s) === d.id && (!q || `${s.title} ${s.blurb}`.toLowerCase().includes(q)));
+      const sims = SIMS.filter((s) => sectionOf(s) === d.id && (!q || `${s.title} ${s.blurb}`.toLowerCase().includes(q))).sort((x, y) => rankOf(x) - rankOf(y));
       if (!sims.length) continue;
       sections.append(
         el("h2", { class: "domain-title" }, d.label, el("span", { class: "count" }, `${sims.length}`)),
-        el("div", { class: "cards" }, sims.map((s) => el("a", { class: "card", href: `#/sim/${s.id}` },
-          el("div", { class: "card-art", html: s.art }),
-          el("div", { class: "card-body" }, el("h3", {}, s.title), el("p", {}, s.blurb))))),
+        el("div", { class: "cards" }, sims.map(card)),
       );
     }
     if (!sections.children.length) sections.append(el("p", { class: "empty" }, "No simulations match your search."));
