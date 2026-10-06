@@ -182,7 +182,10 @@ EQUIPMENT: dict[str, dict[str, Any]] = {
     "cylinder": {"name": "Measuring cylinder (100 mL)", "capacity": 100, "glass": 90, "flame": 0.0, "loss": 0.8, "max_t": 60},
     "gas_jar": {"name": "Gas jar (250 mL)", "capacity": 250, "glass": 150, "flame": 0.0, "loss": 1.0, "max_t": 60, "holds_gas": True},
     "watch_glass": {"name": "Watch glass", "capacity": 10, "glass": 20, "flame": 0.0, "loss": 0.4, "max_t": 60},
+    "reagent_bottle": {"name": "Reagent bottle (500 mL)", "capacity": 500, "glass": 250, "flame": 0.0, "loss": 1.5, "max_t": 60},
 }
+# Gas cylinders on the bench: bubble a measured volume (at 25 °C, 1 atm) into a vessel
+GAS_SUPPLY = {"H2(g)": "Hydrogen", "O2(g)": "Oxygen", "CO2(g)": "Carbon dioxide", "NH3(g)": "Ammonia", "SO2(g)": "Sulphur dioxide", "NO2(g)": "Nitrogen dioxide"}
 TOOLS = {"burner": "Bunsen burner on a tripod and gauze (or a holder for tubes)", "stand": "Burette stand", "dropper": "Dropper (one drop = 0.05 mL)",
          "pipette": "Pipette (10 or 25 mL, exact)", "thermometer": "Thermometer (reads the vessel's temperature)", "delivery_tube": "Delivery tube (sends a vessel's gas into another vessel)",
          "funnel": "Funnel and filter paper", "splint": "Splint, lighted or glowing (tests the gas)", "litmus": "Red and blue litmus paper",
@@ -649,6 +652,7 @@ def _add(v: dict[str, Any], chem: dict[str, Any], amount: float) -> str:
                   "glassware with capacities, tools, and the reactions the lab knows with balanced equations and ΔH.")
 def lab_catalog() -> dict:
     return {"result": {"chemicals": list(CHEMICALS.values()), "equipment": [{"id": k, **v} for k, v in EQUIPMENT.items()], "tools": TOOLS, "tests": list(TESTS),
+                       "gases": [{"id": k, "name": v, "test": GAS_TEST.get(k, "")} for k, v in GAS_SUPPLY.items()],
                        "reactions": [{"name": r["name"], "equation": r["equation"], "delta_h_kj_per_mol": None if r["dh"] is None else round(r["dh"], 2), "min_t": r["min_t"],
                                       "needs": list(r["needs"]), "observation": r["see"]} for r in REACTIONS]},
             "units": {"capacity": "mL", "delta_h_kj_per_mol": "kJ per mole of reaction as written", "min_t": "degC", "conc": "mol/L"},
@@ -658,11 +662,11 @@ def lab_catalog() -> dict:
 @tool(domain="chemistry", name="lab_step",
       description="Virtual chemistry lab: advance a bench of vessels by dt seconds after applying actions. vessels: "
                   "[{id, kind, contents{species: mol}, T (°C), indicators[], heat (0..1 burner setting)}]; kind is one of "
-                  "beaker, conical, test_tube, boiling_tube, crucible, dish, burette, cylinder, gas_jar, watch_glass; gas_to "
+                  "beaker, conical, test_tube, boiling_tube, crucible, dish, burette, cylinder, gas_jar, watch_glass, reagent_bottle; gas_to "
                   "(optional) sends the vessel's gas through a delivery tube into another vessel. actions: {type: 'add', vessel, "
                   "chemical, amount (g for solids, mL for liquids and solutions)}, {type: 'pour', from, to, volume_ml}, "
                   "{type: 'filter', from, to} (solids stay on the paper), {type: 'empty', vessel}, {type: 'wash', vessel} (a film of "
-                  "water stays), {type: 'rinse', vessel, chemical} (a film of that solution stays), {type: 'test', vessel, test} with test "
+                  "water stays), {type: 'rinse', vessel, chemical} (a film of that solution stays), {type: 'gas', vessel, gas, volume_ml} (bubble gas from a cylinder: H2, O2, CO2, NH3, SO2 or NO2 as e.g. 'CO2(g)'), {type: 'test', vessel, test} with test "
                   "one of litmus_red, litmus_blue, ph_paper, lighted_splint, glowing_splint, flame. Returns each vessel's contents, temperature, pH, colour, solids, gases given off "
                   "with their tests, and the reactions that ran with balanced equations and ΔH.")
 def lab_step(vessels: list[dict], actions: list[dict] | None = None, dt: float = 1.0, t: float = 0.0) -> dict:
@@ -683,6 +687,7 @@ def lab_step(vessels: list[dict], actions: list[dict] | None = None, dt: float =
                                "heat": max(0.0, min(1.0, float(v.get("heat", 0) or 0)))}
     log: list[str] = []
     tests: list[tuple[str, str]] = []
+    supplied: dict[str, dict[str, float]] = {}
     for a in actions or []:
         kind = a.get("type")
         if kind == "add":
@@ -749,12 +754,22 @@ def lab_step(vessels: list[dict], actions: list[dict] | None = None, dt: float =
                     raise ValueError("rinse needs a liquid or solution from lab_catalog")
                 _add(v, chem, film)
                 log.append(f"Rinsed the {_lower(EQUIPMENT[v['kind']]['name'])} with {_lower(chem['name'])}: the film left is the same solution")
+        elif kind == "gas":
+            v, gas = bench.get(str(a.get("vessel"))), a.get("gas")
+            if not v or gas not in GAS_SUPPLY:
+                raise ValueError(f"gas needs an existing vessel and a gas from {', '.join(GAS_SUPPLY)}")
+            vol = float(a.get("volume_ml", 100) or 0)
+            if not 0 < vol <= 5000:
+                raise ValueError("gas volume_ml must be between 0 and 5000 mL")
+            n = vol * 1e-6 * 101325 / (R_GAS * (ROOM_T + 273.15))  # ideal gas at 25 °C, 1 atm
+            supplied.setdefault(v["id"], {})[gas] = supplied.get(v["id"], {}).get(gas, 0.0) + n
+            log.append(f"Bubbled {vol:g} mL of {_lower(GAS_SUPPLY[gas])} ({n * 1000:.3g} mmol) from the cylinder into the {_lower(EQUIPMENT[v['kind']]['name'])}")
         elif kind == "test":
             if str(a.get("vessel")) not in bench or a.get("test") not in TESTS:
                 raise ValueError(f"test needs an existing vessel and a test from {', '.join(TESTS)}")
             tests.append((str(a["vessel"]), a["test"]))
         else:
-            raise ValueError("action type must be add, pour, filter, empty, wash, rinse or test")
+            raise ValueError("action type must be add, pour, filter, empty, wash, rinse, gas or test")
     # vessels that pipe gas into another go first, so the gas arrives in the same step
     order: list[str] = []
     def visit(vid: str, seen: tuple = ()) -> None:  # noqa: E306
@@ -767,7 +782,7 @@ def lab_step(vessels: list[dict], actions: list[dict] | None = None, dt: float =
     for vid in bench:
         visit(vid)
     events: list[dict] = []
-    inflow: dict[str, dict[str, float]] = {}
+    inflow: dict[str, dict[str, float]] = {vid: dict(g) for vid, g in supplied.items()}
     done: dict[str, dict] = {}
     for vid in order:
         v = bench[vid]

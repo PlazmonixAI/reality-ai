@@ -37,8 +37,18 @@ function glowSprite(size, stops) {
   return s;
 }
 
-export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, goLevel }) {
+const KIND_SETTING = { star: ["labels_stars"], galaxy: ["labels_galaxies"], galaxyCat: ["labels_galaxies", "labels_all_galaxies"], structure: ["labels_structures"],
+  deepsky: ["labels_deepsky"], exo: ["labels_exoplanets"], con: ["constellation_names"], ring: ["rings"] };
+const DSO_COLOR = (t) => (/Planetary/.test(t) ? "#5fd6c4" : /Supernova/.test(t) ? "#ff9b5a" : /Emission|HII|Nebula/.test(t) ? "#ff6f8e" : /Reflection/.test(t) ? "#8fb4ff"
+  : /Dark/.test(t) ? "#8c7f74" : /Globular/.test(t) ? "#ffd27a" : "#bcd4ff");
+const STRUCT_COLOR = { group: 0xffd9a8, cluster: 0xffc27a, supercluster: 0x9fc3ff, attractor: 0xff8a5a, wall: 0xc3a6ff, void: 0x5a6b85 };
+const DOME_LY = 1500; // constellation figures as seen from Earth, drawn on a far sphere behind the nearby stars
+const hex6 = (n) => `#${n.toString(16).padStart(6, "0")}`;
+
+export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, goLevel, settings }) {
   const data = {};
+  const S = settings || { get: () => true, onChange: () => {} };
+  const kindOn = (kind) => !kind || !KIND_SETTING[kind] || KIND_SETTING[kind].every((k) => S.get(k));
   const listeners = [];
   const base = (name, icon, { start, min, max, near, far, prev, next }) => {
     const scene = new THREE.Scene();
@@ -47,7 +57,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     controls.enabled = false; controls.enableDamping = true; controls.dampingFactor = 0.08;
     controls.minDistance = min; controls.maxDistance = max;
     const L = {
-      name, icon, scene, camera, controls, labelItems: [], ready: false,
+      name, icon, scene, camera, controls, labelItems: [], ready: false, groups: {}, atlasDone: false,
       enter(direction) {
         controls.enabled = true;
         const d = direction === "in" ? max * 0.8 : Math.max(min * 3, start.length() * 0.35);
@@ -72,6 +82,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
         }
         controls.update();
         L.update?.(dt);
+        L.beforeRender?.();
         placeLabels(L);
         renderer.render(scene, camera);
       },
@@ -80,10 +91,10 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     listeners.push(controls);
     return L;
   };
-  function label(L, text, color, pos, { cls = "", onclick = null, priority = 0, minDist = 0, maxDist = Infinity, lum = null } = {}) {
+  function label(L, text, color, pos, { cls = "", onclick = null, priority = 0, minDist = 0, maxDist = Infinity, lum = null, kind = null } = {}) {
     const e = el("button", { class: `ss-label ${cls}`, type: "button", onclick }, text);
     e.style.setProperty("--c", color);
-    const it = { el: e, pos, priority, minDist, maxDist, lum };
+    const it = { el: e, pos, priority, minDist, maxDist, lum, kind };
     L.labelItems.push(it);
     if (L.controls.enabled) labels.append(e);
     return it;
@@ -95,12 +106,14 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     for (const it of L.labelItems) if (it.lum !== null) it.priority = Math.log10(it.lum / Math.max(cam.distanceToSquared(it.pos), 1e-6)); // brightest as seen from here
     const items = L.labelItems.slice().sort((a, b) => b.priority - a.priority);
     let shown = 0;
+    const cap = Math.round((L.maxLabels || 60) * (S.get("density") || 1));
     for (const it of items) {
+      if (it.hidden || !kindOn(it.kind)) { it.el.style.display = "none"; continue; }
       const d = cam.distanceTo(it.pos);
       tmp.copy(it.pos).project(L.camera);
       let ok = tmp.z < 1 && Math.abs(tmp.x) < 1.02 && Math.abs(tmp.y) < 1.02 && d >= it.minDist && d <= it.maxDist;
       const x = ((tmp.x + 1) / 2) * w, y = ((1 - tmp.y) / 2) * h, lw = (it.w = it.el.offsetWidth || it.w || 120);
-      if (ok && (shown >= (L.maxLabels || 60) || placed.some(([px, py, pw]) => Math.abs(px - x) < (pw + lw) / 2 + 6 && Math.abs(py - y) < 18))) ok = false; // avoid clutter
+      if (ok && (shown >= cap || placed.some(([px, py, pw]) => Math.abs(px - x) < (pw + lw) / 2 + 6 && Math.abs(py - y) < 18))) ok = false; // avoid clutter
       if (ok) { placed.push([x, y, lw]); shown++; }
       it.el.style.display = ok ? "" : "none";
       if (ok) it.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -130%)`;
@@ -130,17 +143,20 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     stars.scene.add(pointCloud(pos, col, size, { scale: 1, fixedSize: false, minSize: 1.4, maxSize: 26 }));
     stars.scene.add(pointCloud([0, 0, 0], [1, 0.95, 0.9], [110], { scale: 1, fixedSize: false, minSize: 4, maxSize: 26 }));
     stars.maxLabels = 28;
+    const rings = (stars.groups.rings = new THREE.Group()); stars.scene.add(rings);
     for (const r of [10, 50, 100, 500, 1000]) {
-      stars.scene.add(circle(r, 0x4f78b0, 0.35));
-      label(stars, `${commas(r)} light years`, "#4f78b0", new THREE.Vector3(r, 0, 0), { cls: "minor", priority: -1, maxDist: r * 12 });
+      rings.add(circle(r, 0x4f78b0, 0.35));
+      label(stars, `${commas(r)} light years`, "#4f78b0", new THREE.Vector3(r, 0, 0), { cls: "minor", priority: -1, maxDist: r * 12, kind: "ring" });
     }
     label(stars, "Sun · you are here", "#ffcc55", new THREE.Vector3(0, 0, 0), { priority: 100, onclick: () => goLevel(0) });
     const named = [];
     for (let i = 0; i < n; i++) if (s.proper_name[i]) named.push(i);
     for (const i of named) {
       const lum = s.luminosity_solar[i];
-      label(stars, s.name[i], s.color[i], toScene(s.x_ly[i], s.y_ly[i], s.z_ly[i]), { cls: "star", lum, onclick: () => starInfo(i) });
+      label(stars, s.name[i], s.color[i], toScene(s.x_ly[i], s.y_ly[i], s.z_ly[i]), { cls: "star", lum, onclick: () => starInfo(i), kind: "star" });
     }
+    if (data.atlas) atlasStars();
+    applySettings();
     stars.onEnter();
   };
   stars.onEnter = () => showPanel("Our stellar neighbourhood", "#cfe0ff", [
@@ -183,7 +199,9 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     label(galaxy, "Sagittarius A* · central black hole", "#ffd9a8", new THREE.Vector3(0, 0, 0), { priority: 90 });
     for (const a of m.arms) { const p = a.points_kpc[80]; label(galaxy, `${a.name} Arm`, "#9fc3ff", toScene(...p), { cls: "minor", priority: 50 }); }
     const famous = { "OME Cen": "ω Centauri", "47 Tuc": "47 Tucanae", "M 13": "M13 (Hercules)", "M 4": "M4", "M 22": "M22" };
-    gc.name.forEach((nm, i) => { if (famous[nm]) label(galaxy, famous[nm], "#ffd98a", toScene(gc.x_kpc[i], gc.y_kpc[i], gc.z_kpc[i]), { cls: "minor", priority: 10, maxDist: 60 }); });
+    gc.name.forEach((nm, i) => { if (famous[nm]) label(galaxy, famous[nm], "#ffd98a", toScene(gc.x_kpc[i], gc.y_kpc[i], gc.z_kpc[i]), { cls: "minor", priority: 10, maxDist: 60, kind: "deepsky" }); });
+    if (data.atlas) atlasGalaxy();
+    applySettings();
     galaxy.onEnter();
   };
   galaxy.onEnter = () => {
@@ -200,7 +218,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
   // ---------- 3. Galaxies of the local universe (1 unit = 1 million ly) ----------
   const galaxies = base("Galaxies", "✺", { start: new THREE.Vector3(0, 60, 150), min: 0.25, max: 9000, near: 0.001, far: 1e6, prev: 2, next: 4 });
   galaxies.load = async () => {
-    const r = (await simulate("physics", "galaxy_catalog", { max_distance_mly: 3000 })).result;
+    const r = (await simulate("physics", "galaxy_catalog", { max_distance_mly: 6000, limit: 25000, include_redshift: true })).result;
     data.galaxies = r;
     const pos = [], col = [], size = [];
     for (let i = 0; i < r.count; i++) {
@@ -213,15 +231,24 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     galaxies.scene.add(glowSprite(0.12, [[0, "rgba(255,240,215,1)"], [0.3, "rgba(200,210,255,.4)"], [1, "rgba(150,170,255,0)"]]));
     label(galaxies, "Milky Way · you are here", "#ffcc55", new THREE.Vector3(0, 0, 0), { priority: 100, onclick: () => goLevel(2) });
     const catalogueName = /^(NGC|IC|UGC|PGC|ESO|MCG|CGCG|KK|KDG|DDO|UGCA|HIPASS|LSBC|FGC|AGC|KUG|Mrk|BK|FM|LEDA|AM|dw|Dw|HIZSS|KKH|KKs|KKSG|MB|A \d|F \d|Cas|Cam|Ho |Sc )/;
+    const catalogued = [], common = r.common_name || [];
+    const gname = (i) => (common[i] && !r.name[i].includes(common[i]) ? `${common[i]} · ${r.name[i]}` : r.name[i]);
     for (let i = 0; i < r.count; i++) {
-      if (catalogueName.test(r.name[i]) && !/^NGC (5128|4594|4486|3031|5194|224|598)$/.test(r.name[i])) continue;
       const lum = Math.pow(10, -0.4 * (r.absolute_magnitude[i] + 20));
-      label(galaxies, r.name[i], "#cfe0ff", toScene(r.x_mly[i], r.y_mly[i], r.z_mly[i]), { cls: "minor", lum: lum * 1e4, onclick: () => galaxyInfo(i) });
+      if (!common[i] && catalogueName.test(r.name[i])) { catalogued.push([lum / Math.max(r.distance_mly[i], 0.5) ** 2, i]); continue; }
+      label(galaxies, gname(i), "#cfe0ff", toScene(r.x_mly[i], r.y_mly[i], r.z_mly[i]), { cls: "minor", lum: lum * (common[i] ? 4e4 : 1e4), onclick: () => galaxyInfo(i), kind: "galaxy" });
+    }
+    catalogued.sort((a, b) => b[0] - a[0]);  // the brightest-looking catalogue galaxies get names too, when switched on
+    for (const [, i] of catalogued.slice(0, 2500)) {
+      const lum = Math.pow(10, -0.4 * (r.absolute_magnitude[i] + 20));
+      label(galaxies, r.name[i], "#a9bedb", toScene(r.x_mly[i], r.y_mly[i], r.z_mly[i]), { cls: "minor", lum: lum * 3e3, onclick: () => galaxyInfo(i), kind: "galaxyCat" });
     }
     const m87 = r.name.indexOf("M 87");
     if (m87 >= 0) label(galaxies, "Virgo Cluster", "#ffd9a8", toScene(r.x_mly[m87], r.y_mly[m87], r.z_mly[m87] + 4), { priority: 80, minDist: 60 });
-    label(galaxies, "Local Group", "#ffd9a8", new THREE.Vector3(0, 2.2, 0), { priority: 85, minDist: 8, maxDist: 400 });
-    for (const d of [10, 100, 1000]) { galaxies.scene.add(circle(d, 0x4f78b0, 0.3)); label(galaxies, `${commas(d)} million ly`, "#4f78b0", new THREE.Vector3(d, 0, 0), { cls: "minor", priority: -1, maxDist: d * 10 }); }
+    const grings = (galaxies.groups.rings = new THREE.Group()); galaxies.scene.add(grings);
+    for (const d of [10, 100, 1000]) { grings.add(circle(d, 0x4f78b0, 0.3)); label(galaxies, `${commas(d)} million ly`, "#4f78b0", new THREE.Vector3(d, 0, 0), { cls: "minor", priority: -1, maxDist: d * 10, kind: "ring" }); }
+    if (data.atlas) atlasGalaxies();
+    applySettings();
     galaxies.onEnter();
   };
   galaxies.onEnter = () => {
@@ -234,8 +261,9 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
   };
   function galaxyInfo(i) {
     const r = data.galaxies;
-    showPanel(r.name[i], "#cfe0ff", [
-      ["Type", r.type[i] || "–"], ["Distance", `${fmt(r.distance_mly[i], 4)} million ly`],
+    const nick = r.common_name?.[i] && !r.name[i].includes(r.common_name[i]) ? r.common_name[i] : null;
+    showPanel(nick || r.name[i], "#cfe0ff", [
+      ...(nick ? [["Catalogue", r.name[i]]] : []), ["Type", r.type[i] || "–"], ["Distance", `${fmt(r.distance_mly[i], 4)} million ly`],
       ["Light left it", `${fmt(r.distance_mly[i], 4)} million years ago`], ["Radius", `${commas(r.radius_ly[i])} ly`],
       ["Absolute magnitude", fmt(r.absolute_magnitude[i], 3)],
       ["Moving away (Hubble law)", r.hubble_velocity_km_s[i] === null ? "bound by local gravity" : `${commas(r.hubble_velocity_km_s[i])} km/s`],
@@ -272,6 +300,8 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
       label(cosmos, `z = ${s.z} · light left ${fmt(s.lookback_time_gyr, 3)} billion years ago`, "#7fa6d8", new THREE.Vector3(d * Math.cos(a), 0, d * Math.sin(a)), { cls: "minor", priority: 30 - s.z });
     });
     label(cosmos, "Mapped galaxies (~2 billion ly)", "#ffcc55", new THREE.Vector3(0, 0, 0), { priority: 100, onclick: () => goLevel(3), maxDist: 150 });
+    if (data.atlas) atlasCosmos();
+    applySettings();
     cosmos.onEnter();
   };
   cosmos.onEnter = () => {
@@ -286,10 +316,132 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     ], "physics.cosmology: Friedmann equation, Planck 2018 ΛCDM. Distances are comoving (where those regions are now). The universe is 13.8 billion years old but 93 billion ly across because space expanded while light travelled.");
   };
 
+  // ---------- the sky atlas on every scale (physics.sky_atlas) ----------
+  const lineSegs = (pairs, color, opacity) => {
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pairs), 3));
+    return new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false }));
+  };
+  const conName = (c) => (S.get("constellation_hindi") && c.hindi ? `${c.name} · ${c.hindi}` : c.name);
+  const conLabels = [];
+  function conInfo(c) {
+    const stars_ = c.lines.flat().filter((p) => p.distance_ly);
+    const near = Math.min(...stars_.map((p) => p.distance_ly)), far = Math.max(...stars_.map((p) => p.distance_ly));
+    showPanel(c.name, "#9fc3ff", [["Hindi name", c.hindi || "–"], ["Latin genitive", c.genitive || "–"], ["Abbreviation", c.abbr],
+      ["Nearest star in the figure", `${fmt(near, 4)} ly`], ["Farthest star in the figure", `${fmt(far, 4)} ly`]],
+      "The stars of a constellation only line up as seen from Earth: in 3D they are at very different distances. Fly around and the figure falls apart.");
+  }
+  function atlasStars() {
+    if (stars.atlasDone || !data.atlas) return; stars.atlasDone = true;
+    const A = data.atlas, pairs = [], dome = [], R = DOME_LY;
+    const onDome = (u) => toScene(u[0] * R, u[1] * R, u[2] * R);
+    for (const c of A.constellations) {
+      for (const line of c.lines) for (let k = 1; k < line.length; k++) {
+        const a = toScene(...line[k - 1].xyz_ly), b = toScene(...line[k].xyz_ly); pairs.push(a.x, a.y, a.z, b.x, b.y, b.z);
+        const p = onDome(line[k - 1].unit), q = onDome(line[k].unit); dome.push(p.x, p.y, p.z, q.x, q.y, q.z);
+      }
+      const it = label(stars, conName(c), "#9fc3ff", onDome(c.label_unit), { cls: "con", priority: 20 - c.rank * 4, onclick: () => conInfo(c), kind: "con" });
+      it.dome = it.pos; it.real = toScene(...c.centre_ly);
+      conLabels.push([it, c]);
+    }
+    stars.scene.add((stars.groups.constellation_real = lineSegs(pairs, 0x6f9fe0, 0.5)));
+    const domeLines = (stars.groups.constellation_dome = lineSegs(dome, 0x6f9fe0, 0.4));
+    stars.scene.add(domeLines);
+    stars.beforeRender = () => { // the dome is the sky seen from home; fade it out as the camera leaves it
+      const k = Math.min(1, Math.max(0, 1 - (stars.camera.position.length() - 600) / 700));
+      domeLines.material.opacity = 0.4 * k;
+      for (const [it] of conLabels) it.hidden = !S.get("constellation_3d") && k < 0.3;
+    };
+    // exoplanet systems
+    const E = A.exoplanets, epos = [], ecol = [], esize = [];
+    for (let i = 0; i < E.count; i++) { const v = toScene(E.x_ly[i], E.y_ly[i], E.z_ly[i]); epos.push(v.x, v.y, v.z); ecol.push(0.35, 0.95, 0.6); esize.push(0.6 + 0.25 * E.n[i]); }
+    stars.scene.add((stars.groups.exoplanets = pointCloud(epos, ecol, esize, { scale: 1, fixedSize: false, minSize: 1.6, maxSize: 7 })));
+    for (let i = 0; i < E.count; i++) {
+      if (!(E.n[i] >= 3 || E.distance_ly[i] < 40)) continue;
+      label(stars, `${E.host[i]} · ${E.n[i]} planet${E.n[i] > 1 ? "s" : ""}`, "#5ff29a", toScene(E.x_ly[i], E.y_ly[i], E.z_ly[i]), { cls: "minor exo", lum: E.n[i] * 2, onclick: () => exoInfo(i), kind: "exo" });
+    }
+    // nebulae and clusters with a known distance
+    const dso = new THREE.Group();
+    for (const d of A.deep_sky) {
+      if (!d.xyz_ly || d.distance_ly > 9000) continue;
+      const col = DSO_COLOR(d.type), sp = glowSprite(Math.max(4, Math.min(60, (d.size_arcmin || 10) / 60 * Math.PI / 180 * d.distance_ly * 6)), [[0, col + "cc"], [0.4, col + "44"], [1, col + "00"]]);
+      sp.position.copy(toScene(...d.xyz_ly)); dso.add(sp);
+      label(stars, d.name, col, sp.position.clone(), { cls: "minor dso", priority: 12 - (d.magnitude || 8), onclick: () => dsoInfo(d), kind: "deepsky", minDist: 5 });
+    }
+    stars.scene.add((stars.groups.deep_sky = dso));
+    applySettings();
+  }
+  function exoInfo(i) {
+    const E = data.atlas.exoplanets;
+    showPanel(E.host[i], "#5ff29a", [["Planets", String(E.n[i])], ["Names", E.planets[i].join(", ")], ["Distance", `${fmt(E.distance_ly[i], 4)} ly`],
+      ["Found by", E.methods[i].join(", ")], ["First found", E.year[i] ? String(E.year[i]) : "–"]],
+      "Open Exoplanet Catalogue via physics.sky_atlas. Every green dot is a star with known planets.");
+  }
+  function dsoInfo(d) {
+    showPanel(d.name, DSO_COLOR(d.type), [["Type", d.type], ["Catalogue", [d.messier, d.id].filter(Boolean).join(" · ")],
+      ["Distance", d.distance_ly ? `${commas(d.distance_ly)} ly` : "not measured"], ["Light you see left it", d.distance_ly ? `${commas(d.distance_ly)} years ago` : "–"],
+      ["Brightness (magnitude)", d.magnitude === null ? "–" : fmt(d.magnitude, 3)], ["Size on the sky", d.size_arcmin ? `${fmt(d.size_arcmin, 3)}′` : "–"]],
+      `OpenNGC (NGC/IC/Messier) via physics.sky_atlas; distance from ${d.distance_source || "no measurement"}.`);
+  }
+  function atlasGalaxy() {
+    if (galaxy.atlasDone || !data.atlas) return; galaxy.atlasDone = true;
+    const A = data.atlas, O = A.open_clusters, pos = [], col = [], size = [];
+    for (let i = 0; i < O.count; i++) { const v = toScene(O.x_kpc[i], O.y_kpc[i], O.z_kpc[i]); pos.push(v.x, v.y, v.z); col.push(0.55, 0.75, 1.0); size.push(0.05); }
+    galaxy.scene.add((galaxy.groups.open_clusters = pointCloud(pos, col, size, { scale: 700, fixedSize: false, minSize: 1.2, maxSize: 4, opacity: 0.8 })));
+    const dso = new THREE.Group();
+    for (const d of A.deep_sky) {
+      if (!d.galactocentric_kpc || d.distance_ly > 60000) continue;
+      const colr = DSO_COLOR(d.type), sp = glowSprite(0.35, [[0, colr + "ee"], [0.4, colr + "55"], [1, colr + "00"]]);
+      sp.position.copy(toScene(...d.galactocentric_kpc)); dso.add(sp);
+      label(galaxy, d.name, colr, sp.position.clone(), { cls: "minor dso", priority: 8 - (d.magnitude || 8) / 2, onclick: () => dsoInfo(d), kind: "deepsky", maxDist: 40 });
+    }
+    galaxy.scene.add((galaxy.groups.deep_sky = dso));
+    applySettings();
+  }
+  function structInfo(s) {
+    showPanel(s.name, hex6(STRUCT_COLOR[s.kind] || 0xffffff), [["What it is", s.kind[0].toUpperCase() + s.kind.slice(1)], ["Distance", `${commas(s.distance_mly)} million ly`],
+      ...(s.redshift ? [["Redshift z", String(s.redshift)]] : []), ...(s.radius_mly ? [["Typical radius", `${commas(s.radius_mly)} million ly`]] : [])], s.note);
+  }
+  function atlasGalaxies() {
+    if (galaxies.atlasDone || !data.atlas) return; galaxies.atlasDone = true;
+    const shapes = new THREE.Group();
+    for (const s of data.atlas.structures) {
+      if (s.distance_mly > 6000) continue;
+      const c = STRUCT_COLOR[s.kind] || 0xffffff, p = toScene(s.x_mly, s.y_mly, s.z_mly);
+      const sh = shell(s.radius_mly, c, s.kind === "void" ? 0.18 : 0.12); sh.position.copy(p); shapes.add(sh);
+      label(galaxies, s.name, hex6(c), p.clone().add(new THREE.Vector3(0, s.radius_mly * 0.6, 0)), { priority: s.kind === "supercluster" ? 70 : 60, onclick: () => structInfo(s), kind: "structure", minDist: s.radius_mly * 0.8 });
+    }
+    galaxies.scene.add((galaxies.groups.structures = shapes));
+    applySettings();
+  }
+  function atlasCosmos() {
+    if (cosmos.atlasDone || !data.atlas) return; cosmos.atlasDone = true;
+    const shapes = new THREE.Group(), pos = [], col = [], size = [];
+    for (const s of [...data.atlas.structures, ...data.atlas.far_objects.map((f) => ({ ...f, kind: "far" }))]) {
+      const p = toScene(s.x_mly / 1000, s.y_mly / 1000, s.z_mly / 1000);
+      pos.push(p.x, p.y, p.z); col.push(1, 0.75, 0.45); size.push(0.25);
+      if (s.distance_mly > 400) label(cosmos, `${s.name}${s.redshift ? ` · z = ${s.redshift}` : ""}`, s.kind === "far" ? "#ffb37a" : hex6(STRUCT_COLOR[s.kind] || 0xffffff), p,
+        { cls: "minor", priority: 50 + Math.log10(s.distance_mly), onclick: () => structInfo({ ...s, kind: s.kind === "far" ? "distant object" : s.kind }), kind: "structure" });
+    }
+    shapes.add(pointCloud(pos, col, size, { scale: 900, fixedSize: false, minSize: 3, maxSize: 9 }));
+    cosmos.scene.add((cosmos.groups.structures = shapes));
+    applySettings();
+  }
+  function applySettings() {
+    const real = !!S.get("constellation_3d"), lines = !!S.get("constellation_lines");
+    for (const L of [stars, galaxy, galaxies, cosmos]) for (const [k, g] of Object.entries(L.groups)) {
+      g.visible = k === "constellation_real" ? lines && real : k === "constellation_dome" ? lines && !real : !!S.get(k);
+    }
+    for (const [it, c] of conLabels) { it.el.textContent = conName(c); it.pos = real ? it.real : it.dome; it.minDist = real ? 40 : 0; }
+  }
+  S.onChange(() => applySettings());
+
   const levels = [stars, galaxy, galaxies, cosmos];
   return {
     levels,
-    setData(d) { Object.assign(data, d); },
+    setData(d) {
+      Object.assign(data, d);
+      if (d.atlas) { if (stars.ready) atlasStars(); if (galaxy.ready) atlasGalaxy(); if (data.galaxies && galaxies.ready) atlasGalaxies(); if (data.cosmology && cosmos.ready) atlasCosmos(); }
+    },
     resize(w, h) { for (const L of levels) { L.camera.aspect = w / h; L.camera.updateProjectionMatrix(); } },
     dispose() {
       for (const c of listeners) c.dispose();

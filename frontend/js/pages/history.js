@@ -4,7 +4,7 @@ import { history, when, toast, confirmBox, promptBox } from "../core/session.js"
 
 export const KIND_LABEL = { flight: "Flight", design: "Rocket design", mission: "Mission", photo: "Photo", sim: "Simulation",
   space_view: "Space view", ask: "Question", challenge: "Challenge", lesson: "Lesson" };
-const TABS = [["", "All"], ["lesson", "Lessons"], ["flight", "Flights"], ["design", "Designs"], ["mission", "Missions"], ["photo", "Photos"],
+const TABS = [["", "All"], ["flight", "Flights"], ["design", "Designs"], ["mission", "Missions"], ["photo", "Photos"],
   ["sim", "Simulations"], ["challenge", "Challenges"], ["ask", "Questions"]];
 
 export function openLink(r) {
@@ -84,7 +84,7 @@ export default {
     async function load(append = false) {
       try {
         const before = append && items.length ? items[items.length - 1].updated_at : undefined;
-        const res = await history.list({ kind, q, starred, before, limit: 40 });
+        const res = await history.list({ kind, q, starred, before, limit: 40, exclude: "lesson" }); // ASM Teach lessons live in ASM Teach
         items = append ? items.concat(res.items) : res.items;
         more = res.more; counts = res.counts;
         drawTabs();

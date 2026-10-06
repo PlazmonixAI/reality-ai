@@ -125,6 +125,16 @@ def test_history_is_private_and_editable():
     assert a.get(f"/api/history/{rid}").status_code == 404
 
 
+def test_history_can_leave_out_teach_lessons():
+    a, _ = new_client("Lessons")
+    a.post("/api/history", json={"kind": "lesson", "sim_id": "p11-pendulum", "title": "Pendulum lesson"})
+    a.post("/api/history", json={"kind": "sim", "sim_id": "hydrogen", "title": "Hydrogen"})
+    asm = a.get("/api/history?exclude=lesson").json()
+    assert [r["kind"] for r in asm["items"]] == ["sim"] and asm["counts"] == {"sim": 1}
+    assert len(a.get("/api/history").json()["items"]) == 2
+    assert a.get("/api/history?kind=lesson").json()["items"][0]["title"] == "Pendulum lesson"
+
+
 def test_export_and_delete_account():
     c, user = new_client()
     c.post("/api/history", json={"kind": "sim", "title": "Pendulum", "payload": {"a": 1}})

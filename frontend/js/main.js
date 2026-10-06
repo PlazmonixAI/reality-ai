@@ -3,21 +3,19 @@
 //   #/sim/<id>?…       one simulation            #/company         Mission Control (space company)
 //   #/challenges       challenge missions        #/history         saved work
 //   #/account          account settings          #/ask             ask the AI
-import { SIMS, DOMAINS, sectionOf, FEATURED, rankOf } from "./sims/index.js";
+import { SIMS } from "./sims/index.js";
+import { simGallery, mountSim } from "./pages/simgallery.js";
 import { el } from "./core/ui.js";
-import { health, clearRecentCalls, recentCalls } from "./core/api.js";
+import { health, recentCalls } from "./core/api.js";
 import { mountAsk } from "./ask.js";
-import { mountAiPanel } from "./core/aichat.js";
 import { currentUser, signOut, history, toast, feedbackBox } from "./core/session.js";
 
 const app = document.getElementById("app");
 const crumb = document.getElementById("crumb");
 let cleanup = null;
-let query = "";
 
 const PAGES = {
   home: () => import("./pages/home.js"),
-  teach: () => import("./pages/teach.js"),
   company: () => import("./pages/company.js"),
   challenges: () => import("./pages/challenges.js"),
   history: () => import("./pages/history.js"),
@@ -48,7 +46,7 @@ async function route() {
   const simMatch = path.match(/^\/sim\/([\w-]+)/);
   const sim = simMatch && SIMS.find((s) => s.id === simMatch[1]);
   crumb.textContent = "";
-  if (sim) { setActive(sim.id === "spaceflight" ? "spaceflight" : "sims"); await openSim(sim, params); }
+  if (sim) { setActive(["spaceflight", "solarsystem"].includes(sim.id) ? sim.id : sim.id === "universe" ? "solarsystem" : "sims"); await openSim(sim, params); }
   else if (path.startsWith("/ask")) { setActive("ask"); crumb.textContent = ""; document.title = "Ask AI · Reality ASM"; mountAsk(app, params); }
   else if (path.startsWith("/sims")) { setActive("sims"); renderGallery(); }
   else {
@@ -71,44 +69,7 @@ async function route() {
 
 function renderGallery() {
   document.title = "Simulations · Reality ASM";
-  const search = el("input", { class: "search", type: "search", placeholder: "Search simulations", value: query, "aria-label": "Search simulations" });
-  const sections = el("div");
-  let shelf = sessionStorage.getItem("sims.shelf") || "";
-  const shelves = el("div", { class: "shelf-tabs", role: "tablist", "aria-label": "Sections" });
-  const drawShelves = () => shelves.replaceChildren(...[{ id: "", label: "All" }, ...DOMAINS].map((d) => el("button", { type: "button", role: "tab", class: `chip${shelf === d.id ? " on" : ""}`, "aria-selected": String(shelf === d.id),
-    onclick: () => { shelf = d.id; try { sessionStorage.setItem("sims.shelf", shelf); } catch { /* private mode */ } drawShelves(); draw(); } },
-    d.label.replace(/^Physics: /, ""), el("span", { class: "count" }, String(d.id ? SIMS.filter((s) => sectionOf(s) === d.id).length : SIMS.length)))));
-  drawShelves();
-  const draw = () => {
-    const q = query.trim().toLowerCase();
-    sections.replaceChildren();
-    const card = (s) => el("a", { class: "card", href: `#/sim/${s.id}` },
-      el("div", { class: "card-art", html: s.art }),
-      el("div", { class: "card-body" }, el("h3", {}, s.title), el("p", {}, s.blurb)));
-    if (!shelf && !q) {  // the most powerful simulations first, from every area
-      const top = FEATURED.map((id) => SIMS.find((s) => s.id === id)).filter(Boolean);
-      sections.append(el("h2", { class: "domain-title featured-title" }, "Most powerful", el("span", { class: "count" }, `${top.length}`)),
-        el("p", { class: "muted small featured-note" }, "Space, quantum physics, physics, chemistry and mathematics: the deepest simulations in Reality ASM."),
-        el("div", { class: "cards featured" }, top.map(card)));
-    }
-    for (const d of DOMAINS) {
-      if (shelf && shelf !== d.id) continue;
-      const sims = SIMS.filter((s) => sectionOf(s) === d.id && (!q || `${s.title} ${s.blurb}`.toLowerCase().includes(q))).sort((x, y) => rankOf(x) - rankOf(y));
-      if (!sims.length) continue;
-      sections.append(
-        el("h2", { class: "domain-title" }, d.label, el("span", { class: "count" }, `${sims.length}`)),
-        el("div", { class: "cards" }, sims.map(card)),
-      );
-    }
-    if (!sections.children.length) sections.append(el("p", { class: "empty" }, "No simulations match your search."));
-  };
-  search.addEventListener("input", () => { query = search.value; draw(); });
-  draw();
-  app.append(el("div", { class: "gallery" },
-    el("div", { class: "hero" },
-      el("h1", {}, "Simulations"),
-      el("p", {}, "Every number on screen is computed by the Reality ASM engine: real numerical and symbolic physics, chemistry and maths, animated in your browser.")),
-    shelves, search, sections));
+  simGallery(app, { intro: "Every number on screen is computed by the Reality ASM engine: real numerical and symbolic physics, chemistry and maths, animated in your browser." });
 }
 
 async function openSim(sim, params) {
@@ -117,12 +78,9 @@ async function openSim(sim, params) {
   const page = el("div", { class: "sim-page" });
   app.append(page);
   try {
-    clearRecentCalls();
-    const mod = await sim.load();
-    const simCleanup = mod.default.mount(page, params) || null;
-    const aiCleanup = mountAiPanel(page, sim);
+    const simCleanup = await mountSim(page, sim, params);
     const saveCleanup = ["spaceflight", "solarsystem"].includes(sim.id) ? () => {} : mountSnapshot(page, sim, params); // those two save their own state
-    cleanup = () => { aiCleanup(); saveCleanup(); simCleanup?.(); };
+    cleanup = () => { saveCleanup(); simCleanup(); };
   } catch (err) {
     console.error(err);
     page.append(el("p", { class: "empty" }, `Could not load this simulation: ${err.message}`));

@@ -249,3 +249,29 @@ def test_rinsing_a_burette_keeps_the_titrant_strength():
     rinsed = titrant_strength({"type": "rinse", "vessel": "b", "chemical": "naoh"})
     assert rinsed == pytest.approx(1.0, rel=1e-5)  # still 1 mol/L
     assert washed == pytest.approx(20 / 20.6, rel=1e-5)  # the 0.6 mL water film dilutes it
+
+
+def test_gas_cylinder_co2_turns_limewater_milky():
+    # 100 mL of 0.02 M limewater holds 2 mmol Ca(OH)2; 24.5 mL of CO2 at 25 °C is 1.0 mmol, so 1.0 mmol CaCO3 (0.100 g) forms
+    r = bench({"type": "add", "chemical": "limewater", "amount": 100}, {"type": "gas", "gas": "CO2(g)", "volume_ml": V_M * 1e-3}, dt=2.0)
+    v = r["vessels"][0]
+    assert v["contents"]["CaCO3(s)"] == pytest.approx(1e-3, rel=1e-3)
+    assert v["contents"]["Ca(OH)2(aq)"] == pytest.approx(1e-3, rel=1e-3)
+    assert "cylinder" in r["log"][-1]
+
+
+def test_gas_cylinder_fills_a_gas_jar_and_checks_input():
+    r = bench({"type": "gas", "gas": "O2(g)", "volume_ml": 100}, kind="gas_jar")
+    assert r["vessels"][0]["contents"]["O2(g)"] == pytest.approx(100 / V_M, rel=1e-5)
+    with pytest.raises(ValueError):
+        bench({"type": "gas", "gas": "Xe(g)", "volume_ml": 10})
+    with pytest.raises(ValueError):
+        bench({"type": "gas", "gas": "O2(g)", "volume_ml": -1})
+
+
+def test_reagent_bottle_pours_like_any_vessel():
+    r = lab_step([{"id": "b", "kind": "reagent_bottle"}, {"id": "t", "kind": "test_tube"}],
+                 [{"type": "add", "vessel": "b", "chemical": "hcl", "amount": 250}, {"type": "pour", "from": "b", "to": "t", "volume_ml": 5}], 0)["result"]
+    b, t = r["vessels"]
+    assert b["volume_ml"] == pytest.approx(245, rel=1e-3) and t["volume_ml"] == pytest.approx(5, rel=1e-3)
+    assert {g["id"] for g in lab_catalog()["result"]["gases"]} >= {"CO2(g)", "O2(g)", "H2(g)"}

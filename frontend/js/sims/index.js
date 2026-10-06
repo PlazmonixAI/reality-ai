@@ -8,12 +8,18 @@ export const DOMAINS = [
   { id: "space", label: "Space and astronomy" },
   { id: "quantum", label: "Quantum mechanics" },
   { id: "modern", label: "Relativity and nuclear physics" },
-  { id: "mechanics", label: "Physics: motion and forces" },
-  { id: "waves", label: "Physics: waves, sound and light" },
-  { id: "electricity", label: "Physics: electricity and magnetism" },
-  { id: "heat", label: "Physics: heat and fluids" },
+  { id: "mechanics", label: "Motion and forces" },
+  { id: "waves", label: "Waves, sound and light" },
+  { id: "electricity", label: "Electricity and magnetism" },
+  { id: "heat", label: "Heat and fluids" },
   { id: "chemistry", label: "Chemistry" },
   { id: "mathematics", label: "Mathematics" },
+];
+/** The three subjects at the top of the gallery, each made of one or more shelves. */
+export const SUBJECTS = [
+  { id: "physics", label: "Physics", shelves: ["space", "quantum", "modern", "mechanics", "waves", "electricity", "heat"] },
+  { id: "chemistry", label: "Chemistry", shelves: ["chemistry"] },
+  { id: "mathematics", label: "Mathematics", shelves: ["mathematics"] },
 ];
 const SECTION = {
   projectile: "mechanics", ramp: "mechanics", collisions: "mechanics", pendulum: "mechanics", doublependulum: "mechanics", springs: "mechanics",
@@ -27,19 +33,19 @@ const SECTION = {
   "earth-moon": "space", orbitdecay: "space", precession: "space", rocket: "space",
 };
 /** The most powerful simulations, shown first on the Simulations page (one or more from every area). */
-export const FEATURED = ["spaceflight", "solarsystem", "universe", "blackhole", "hydrogen", "quantum", "tunnelling", "wavepacket",
-  "relativity", "doublependulum", "lorentz", "interference", "labbench", "titration", "galvanic", "equilibrium", "fourier", "fractal", "transform", "complex"];
+export const FEATURED = ["solarsystem", "spaceflight", "blackhole", "hydrogen", "quantum", "tunnelling", "wavepacket",
+  "relativity", "doublependulum", "lorentz", "interference", "labbench", "titration", "galvanic", "equilibrium", "mathsandbox", "fourier", "fractal", "transform", "complex"];
 /** Inside every shelf the strongest simulations come first, then the rest in catalogue order. */
-const RANK = ["spaceflight", "solarsystem", "universe", "blackhole", "earth-moon", "hohmann", "orbitdecay", "precession",
+const RANK = ["solarsystem", "spaceflight", "universe", "blackhole", "earth-moon", "hohmann", "orbitdecay", "precession",
   "hydrogen", "quantum", "tunnelling", "wavepacket", "rabi", "oscillator", "photoelectric", "relativity", "decay",
   "doublependulum", "projectile", "collisions", "coupled", "pendulum", "skate", "resonance",
   "interference", "lenses", "refraction", "doppler", "waves", "lorentz", "faraday", "circuit", "rlc", "charges",
   "engine", "blackbody", "bernoulli", "heat", "buoyancy",
   "labbench", "titration", "galvanic", "equilibrium", "molecules", "atom", "kinetics", "profile", "speciation", "realgas", "phasediagram",
-  "fourier", "fractal", "transform", "complex", "grapher", "taylor", "phase", "montecarlo", "newton", "riemann", "probability", "conics"];
+  "mathsandbox", "fourier", "fractal", "transform", "complex", "grapher", "taylor", "phase", "montecarlo", "newton", "riemann", "probability", "conics"];
 export const rankOf = (sim) => { const i = RANK.indexOf(sim.id); return i < 0 ? RANK.length + SIMS.indexOf(sim) : i; };
 /** The gallery section a simulation belongs to (chemistry and maths keep their subject). */
-export const sectionOf = (sim) => SECTION[sim.id] || (sim.domain === "physics" ? "mechanics" : sim.domain);
+export const sectionOf = (sim) => (sim.hidden ? "hidden" : SECTION[sim.id] || (sim.domain === "physics" ? "mechanics" : sim.domain));
 
 export const SIMS = [
   {
@@ -231,7 +237,7 @@ export const SIMS = [
   },
   {
     id: "labbench", domain: "chemistry", title: "Virtual Chemistry Lab",
-    blurb: "A sandbox bench: glassware, a Bunsen burner, a burette and 40 chemicals. Mix, pour, heat and titrate, and see what really happens.",
+    blurb: "A sandbox bench: 72 chemicals, glassware, gas cylinders, a burner and a burette. Put things anywhere, lift and pour, heat, titrate and see what really happens.",
     load: () => import("./labbench.js"),
     art: sky(`<rect width="240" height="128" fill="#eef2f7"/><rect y="100" width="240" height="28" fill="#3b4658"/>
       <path d="M70 44 h28 v52 h-28z" fill="none" stroke="#0B1526" stroke-width="3"/><rect x="72" y="70" width="24" height="26" fill="#2f7fd8" opacity=".7"/>
@@ -279,6 +285,16 @@ export const SIMS = [
       <circle cx="120" cy="64" r="52" fill="none" stroke="#c9ced6" stroke-opacity=".4"/>
       <circle cx="115" cy="60" r="7" fill="#e34948"/><circle cx="125" cy="62" r="7" fill="#9aa6b5"/><circle cx="118" cy="70" r="7" fill="#9aa6b5"/><circle cx="126" cy="70" r="7" fill="#e34948"/>
       <circle cx="150" cy="64" r="5" fill="#5598e7"/><circle cx="90" cy="64" r="5" fill="#5598e7"/><circle cx="120" cy="12" r="5" fill="#5598e7"/>`),
+  },
+  {
+    id: "mathsandbox", domain: "mathematics", title: "Maths Sandbox",
+    blurb: "A graphing notebook: type functions, equations, inequalities, points, polar and parametric curves, sliders and sums. Roots, turning points and crossings appear on their own.",
+    load: () => import("./mathsandbox.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/>${Array.from({ length: 12 }, (_, i) => `<line x1="${i * 20}" y1="0" x2="${i * 20}" y2="128" stroke="#e6ebf2"/>`).join("")}${Array.from({ length: 7 }, (_, i) => `<line x1="0" y1="${i * 20 + 4}" x2="240" y2="${i * 20 + 4}" stroke="#e6ebf2"/>`).join("")}
+      <line x1="0" y1="64" x2="240" y2="64" stroke="#0B1526"/><line x1="120" y1="0" x2="120" y2="128" stroke="#0B1526"/>
+      <path d="M40 8 Q120 140 200 8" fill="none" stroke="#2a78d6" stroke-width="3"/><circle cx="120" cy="64" r="34" fill="none" stroke="#eb6834" stroke-width="3"/>
+      <path d="M0 110 L240 20 L240 128 L0 128Z" fill="#1baf7a" fill-opacity=".12"/><line x1="0" y1="110" x2="240" y2="20" stroke="#1baf7a" stroke-width="2" stroke-dasharray="6 5"/>
+      <circle cx="91" cy="44" r="4" fill="#fff" stroke="#8a94a6" stroke-width="1.5"/><circle cx="149" cy="44" r="4" fill="#fff" stroke="#8a94a6" stroke-width="1.5"/>`),
   },
   {
     id: "grapher", domain: "mathematics", title: "Calculus Grapher",
@@ -654,15 +670,16 @@ export const SIMS = [
       <text x="30" y="40" font-size="12" font-family="system-ui" fill="#7b8796">SOLID</text><text x="120" y="40" font-size="12" font-family="system-ui" fill="#7b8796">LIQUID</text><text x="150" y="105" font-size="12" font-family="system-ui" fill="#7b8796">GAS</text>`),
   },
   {
-    id: "solarsystem", domain: "physics", title: "Solar System 3D",
-    blurb: "The real Solar System on any date: planets, 29 moons, dwarf planets, asteroids, comets and belts, then zoom out to the stars and galaxies.",
+    id: "solarsystem", domain: "physics", title: "Universe Map",
+    blurb: "One map from the Sun to the edge of the observable universe: every planet and moon on any date, 12,000 stars, all 88 constellations, 3,800 planetary systems, the Milky Way and 11,000 named galaxies.",
     load: () => import("./solarsystem.js"),
-    art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="40" cy="64" r="26" fill="#ffb640"/><circle cx="40" cy="64" r="34" fill="#ffb640" fill-opacity=".2"/>
-      <ellipse cx="40" cy="64" rx="80" ry="22" fill="none" stroke="#4f8fe0" stroke-opacity=".5"/><ellipse cx="40" cy="64" rx="150" ry="44" fill="none" stroke="#d6a77a" stroke-opacity=".4"/>
-      <circle cx="118" cy="70" r="6" fill="#4f8fe0"/><circle cx="186" cy="92" r="12" fill="#d6a77a"/><ellipse cx="186" cy="92" rx="22" ry="5" fill="none" stroke="#e3cf96" stroke-width="2"/>`),
+    art: sky(`<rect width="240" height="128" fill="#02040a"/>${Array.from({ length: 40 }, (_, i) => `<circle cx="${(i * 89) % 240}" cy="${(i * 47) % 128}" r="${i % 4 ? 0.7 : 1.3}" fill="#fff" fill-opacity=".75"/>`).join("")}
+      <path d="M150 22 L172 34 L196 30 L214 48 M172 34 L178 58" fill="none" stroke="#6f9fe0" stroke-opacity=".8"/><circle cx="150" cy="22" r="1.8" fill="#cfe0ff"/><circle cx="172" cy="34" r="1.8" fill="#cfe0ff"/><circle cx="196" cy="30" r="1.8" fill="#cfe0ff"/><circle cx="214" cy="48" r="1.8" fill="#cfe0ff"/><circle cx="178" cy="58" r="1.8" fill="#cfe0ff"/>
+      <ellipse cx="196" cy="98" rx="30" ry="9" fill="#cfd8ff" fill-opacity=".35" transform="rotate(-24 196 98)"/><ellipse cx="196" cy="98" rx="12" ry="4" fill="#fff3d6" fill-opacity=".7" transform="rotate(-24 196 98)"/>
+      <circle cx="58" cy="70" r="16" fill="#ffb640"/><circle cx="58" cy="70" r="24" fill="#ffb640" fill-opacity=".18"/><ellipse cx="58" cy="70" rx="52" ry="15" fill="none" stroke="#4f8fe0" stroke-opacity=".55"/><ellipse cx="58" cy="70" rx="92" ry="28" fill="none" stroke="#d6a77a" stroke-opacity=".4"/><circle cx="110" cy="74" r="4" fill="#4f8fe0"/>`),
   },
   {
-    id: "universe", domain: "physics", title: "Universe Explorer",
+    id: "universe", domain: "physics", title: "Universe Map (outer view)", hidden: true, // same map as solarsystem, opened at the largest scale
     blurb: "From planets to the edge of the observable universe: 12,000 real stars, the Milky Way, 11,000 galaxies and the cosmic microwave background.",
     load: () => import("./universe.js"),
     art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="120" cy="64" r="58" fill="none" stroke="#ff9a5a" stroke-opacity=".55" stroke-width="3"/><circle cx="120" cy="64" r="40" fill="none" stroke="#4f78b0" stroke-opacity=".5"/>

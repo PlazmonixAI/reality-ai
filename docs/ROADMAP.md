@@ -144,7 +144,7 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Moons of Jupiter/Saturn, asteroid belt and comets in the 3D view (29 moons, dwarf planets, asteroids, comets with tails, main belt/trojans/Kuiper belt)
 - [x] Realistic rendering for every body: normal maps, ring shadows, atmospheres, Celestia/NASA textures for all major moons
 - [x] Universe scale ladder: real stars (HYG), Milky Way model with rotation curve, ~11,000 real galaxies, ΛCDM observable universe (`star_catalog`, `milky_way`, `galaxy_catalog`, `cosmology`)
-- [ ] Constellation lines and exoplanet systems in the Stars view
+- [x] Constellation lines and exoplanet systems in the Stars view (`sky_atlas`: 88 constellations joined to real stars, boundaries, Hindi names, 3,800 exoplanet systems, nebulae, open clusters, large-scale structure)
 - [ ] Deeper-survey galaxies (beyond ~2 billion ly) if an openly licensed catalogue can be bundled
 - [x] Transfers between bodies: the Moon moves and pulls in Earth flights (restricted three-body), lunar orbit, landing and lift-off, TLI window planner
 - [x] Engine classes (small/medium/large/heavy), payload fairings, interstages, example satellites
@@ -212,3 +212,10 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Type-any-value on every simulation slider
 - [x] Lab: Fehling's test, iodoform test, esterification, wash and rinse glassware
 - [x] Space Program: booster symmetry (2, 3, 4 or 6 around the core)
+- [x] Universe Map as the main simulation: one map for all five scales, named galaxies, settings for names, constellations and layers
+- [x] Space Program starts from an empty pad; real rockets and examples added on demand
+- [x] Chemistry lab: free placement, lift-and-pour from above, reagent bottles, gas cylinders
+- [x] Maths Sandbox (`mathematics.sandbox`): functions, implicit curves, inequalities, points, polar and parametric curves, sliders, named functions
+- [x] ASM and ASM Teach separated: no Teach items in ASM; Teach gets the Universe Map and every simulation
+- [x] Simulations gallery by subject (Physics, Chemistry, Mathematics) with physics topics underneath
+- [x] Landing page with new screenshots and search tags built around the Universe Map

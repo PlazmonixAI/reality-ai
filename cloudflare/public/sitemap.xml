@@ -3,8 +3,10 @@
   <url>
     <loc>https://realityasm.com/</loc>
     <lastmod>2026-10-04</lastmod>
+    <image:image><image:loc>https://realityasm.com/static/img/lab_pour.jpg</image:loc></image:image>
+    <image:image><image:loc>https://realityasm.com/static/img/maths_sandbox.jpg</image:loc></image:image>
     <image:image><image:loc>https://realityasm.com/static/img/sf_3d_moon.jpg</image:loc></image:image>
-    <image:image><image:loc>https://realityasm.com/static/img/sf_builder_moon.jpg</image:loc></image:image>
+    <image:image><image:loc>https://realityasm.com/static/img/sf_pslv.jpg</image:loc></image:image>
     <image:image><image:loc>https://realityasm.com/static/img/sim_doublependulum.jpg</image:loc></image:image>
     <image:image><image:loc>https://realityasm.com/static/img/sim_fractal.jpg</image:loc></image:image>
     <image:image><image:loc>https://realityasm.com/static/img/sim_hydrogen.jpg</image:loc></image:image>
@@ -13,6 +15,10 @@
     <image:image><image:loc>https://realityasm.com/static/img/sim_titration.jpg</image:loc></image:image>
     <image:image><image:loc>https://realityasm.com/static/img/ss_saturn.jpg</image:loc></image:image>
     <image:image><image:loc>https://realityasm.com/static/img/teach_room.jpg</image:loc></image:image>
-    <image:image><image:loc>https://realityasm.com/static/img/uv_milkyway.jpg</image:loc></image:image>
+    <image:image><image:loc>https://realityasm.com/static/img/uv_constellations.jpg</image:loc></image:image>
+    <image:image><image:loc>https://realityasm.com/static/img/uv_cosmos.jpg</image:loc></image:image>
+    <image:image><image:loc>https://realityasm.com/static/img/uv_galaxies_named.jpg</image:loc></image:image>
+    <image:image><image:loc>https://realityasm.com/static/img/uv_milkyway_atlas.jpg</image:loc></image:image>
+    <image:image><image:loc>https://realityasm.com/static/img/uv_sky.jpg</image:loc></image:image>
   </url>
 </urlset>

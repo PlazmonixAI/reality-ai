@@ -10,8 +10,9 @@ import { api, history as saved, toast } from "../core/session.js";
 import { planetMaterial, atmosphereMaterial, ringMaterial, sunMaterial, glowTexture, pointsMaterial, hexToRgb, tailMaterial } from "../space/shaders.js";
 import { createUniverseLevels } from "../space/universe.js";
 import { buildSky } from "../space/sky.js";
+import { createSettings, settingsPanel } from "../space/settings.js";
 
-const TEX = "assets/textures/";
+const TEX = "/app/assets/textures/"; // absolute, so the same view works inside ASM Teach
 const COLORS = { sun: "#ffcc55", mercury: "#9c8f86", venus: "#d8b27a", earth: "#4f8fe0", moon: "#b9b9b9", mars: "#d0643b",
   jupiter: "#d6a77a", saturn: "#e3cf96", uranus: "#8fd3e0", neptune: "#4a6fe0", pluto: "#bfa58a" };
 const KIND_COLOR = { "natural satellite": "#b8c4d6", "dwarf planet": "#c9a27e", asteroid: "#9a9189", comet: "#7fd6ff", centaur: "#b58f6a", "Kuiper belt object": "#c98a6a" };
@@ -112,7 +113,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   const view = el("div", { class: "ss-view" });
   const labels = el("div", { class: "ss-labels" });
   const dateBig = el("div", { class: "ss-date" }), timeSmall = el("div", { class: "ss-time" });
-  const brand = el("div", { class: "ss-brand" }, "SOLAR SYSTEM ", el("b", {}, "3D"));
+  const brand = el("div", { class: "ss-brand" }, "UNIVERSE MAP ", el("b", {}, "SOLAR SYSTEM"));
   const speedText = el("span", { class: "ss-speed-text" });
   const info = el("aside", { class: "ss-info hidden" });
   const list = el("div", { class: "ss-list hidden" });
@@ -123,10 +124,11 @@ export function mountAt(root, startLevel = 0, params = {}) {
     const d = localStorage.getItem("reality-asm.solar-date");
     if (d) { localStorage.removeItem("reality-asm.solar-date"); simJd = dateToJd(new Date(d)); }
   } catch { /* storage unavailable */ }
-  let speedIdx = 5, playing = true, showOrbits = true, showLabels = true, realScale = false, showMinor = true, showBelts = true;
+  const settings = createSettings();
+  let speedIdx = 5, playing = true, showOrbits = true, showLabels = settings.get("labels_planets"), realScale = false, showMinor = true, showBelts = true;
   const tool = (icon, title, onclick) => el("button", { class: "ss-tool", type: "button", title, "aria-label": title, onclick }, icon);
   const bOrbits = tool("◯", "Orbits", () => { showOrbits = !showOrbits; bOrbits.classList.toggle("off", !showOrbits); orbitsGroup.visible = showOrbits; });
-  const bLabels = tool("Aa", "Labels", () => { showLabels = !showLabels; bLabels.classList.toggle("off", !showLabels); labels.style.display = showLabels ? "" : "none"; });
+  const bLabels = tool("Aa", "Names", () => settings.set("labels_planets", !showLabels));
   const bScale = tool("⤢", "Real scale (distances and sizes)", () => { realScale = !realScale; bScale.classList.toggle("on", realScale); rebuildScale(); });
   const bMinor = tool("☄", "Dwarf planets, asteroids and comets", () => { showMinor = !showMinor; bMinor.classList.toggle("off", !showMinor); minorGroup.visible = showMinor; minorOrbits.visible = showMinor; });
   const bBelts = tool("⁘", "Asteroid belt, trojans and Kuiper belt", () => { showBelts = !showBelts; bBelts.classList.toggle("off", !showBelts); beltPoints.visible = showBelts; });
@@ -158,8 +160,9 @@ export function mountAt(root, startLevel = 0, params = {}) {
     el("div", { class: "ss-clock-row" }, reverse, bPlay, today, dateInput));
   const ladder = el("nav", { class: "ss-ladder", "aria-label": "Scale" });
   const credit = el("div", { class: "ss-credit" }, "Engine: JPL elements, HYG stars, Celestia catalogues, ΛCDM · textures: NASA/JPL, USGS, Celestia (see CREDITS)");
+  const gear = settingsPanel(settings);
   const rootEl = el("div", { class: "ss-root" }, view, labels, el("div", { class: "ss-top" }, brand),
-    toolbar, ladder, list, info, status, timebar, credit, fade);
+    toolbar, ladder, list, info, status, timebar, credit, gear.btn, gear.sheet, fade);
   root.append(rootEl);
   function setSpeed(i) { speedIdx = Math.max(1, Math.min(SPEEDS.length - 1, i)); speedText.textContent = SPEEDS[speedIdx][1]; rate.value = speedIdx; window_ = null; }
   let dir = 1;
@@ -288,6 +291,39 @@ export function mountAt(root, startLevel = 0, params = {}) {
     rebuildScale();
     for (const m of moonsData) buildMoonOrbit(m.id);
     buildList();
+    simulate("physics", "sky_atlas", { frame: "ecliptic" }).then((r) => { universe.setData({ atlas: r.result }); buildSkyAtlas(r.result); }).catch((e) => console.warn("sky atlas", e));
+  }
+  // ---------- constellations on the night sky (directions only, as seen from the Sun) ----------
+  const skyCon = new THREE.Group(), skyBorders = new THREE.Group(), skyNames = [];
+  sky.add(skyCon, skyBorders);
+  function buildSkyAtlas(A) {
+    const R = 59000, pairs = [], bpairs = [];
+    for (const c of A.constellations) {
+      for (const line of c.lines) for (let k = 1; k < line.length; k++) { const a = toScene(line[k - 1].unit).multiplyScalar(R), b = toScene(line[k].unit).multiplyScalar(R); pairs.push(a.x, a.y, a.z, b.x, b.y, b.z); }
+      const e = el("button", { class: "ss-label con", type: "button", onclick: () => showPanel(c.name, "#9fc3ff", [["Hindi name", c.hindi || "–"], ["Latin genitive", c.genitive || "–"], ["Abbreviation", c.abbr]], "IAU constellation (d3-celestial stick figure). Its stars are at very different distances: zoom out to the stars scale to see them in 3D.") }, c.name);
+      e.style.setProperty("--c", "#9fc3ff");
+      skyNames.push({ el: e, dir: toScene(c.label_unit), c });
+      if (level === 0) labels.append(e);
+    }
+    for (const line of A.constellation_borders) for (let k = 1; k < line.length; k++) { const a = toScene(line[k - 1]).multiplyScalar(R * 1.001), b = toScene(line[k]).multiplyScalar(R * 1.001); bpairs.push(a.x, a.y, a.z, b.x, b.y, b.z); }
+    const seg = (arr, color, opacity) => { const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(arr), 3)); const m = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false })); m.frustumCulled = false; m.renderOrder = -1; return m; };
+    skyCon.add(seg(pairs, 0x6f9fe0, 0.5)); skyBorders.add(seg(bpairs, 0x8a6fd0, 0.25));
+    applySkySettings();
+  }
+  function applySkySettings() {
+    skyCon.visible = settings.get("constellation_lines"); skyBorders.visible = settings.get("constellation_borders");
+    for (const n of skyNames) n.el.textContent = settings.get("constellation_hindi") && n.c.hindi ? `${n.c.name} · ${n.c.hindi}` : n.c.name;
+    showLabels = settings.get("labels_planets"); bLabels.classList.toggle("off", !showLabels);
+  }
+  settings.onChange(() => applySkySettings());
+  function placeSkyNames() {
+    const w = view.clientWidth, h = view.clientHeight, on = settings.get("constellation_names");
+    for (const n of skyNames) {
+      tmp.copy(n.dir).multiplyScalar(1e4).add(camera.position).project(camera);
+      const ok = on && level === 0 && tmp.z < 1 && Math.abs(tmp.x) < 1.02 && Math.abs(tmp.y) < 1.02;
+      n.el.style.display = ok ? "" : "none";
+      if (ok) n.el.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px) translate(-50%, -50%)`;
+    }
   }
   function buildBelts() {
     const n = belts.groups.reduce((s, g) => s + g.count, 0);
@@ -455,7 +491,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   });
 
   // ---------- scale ladder: Solar System → stars → Milky Way → galaxies → observable Universe ----------
-  const universe = createUniverseLevels({ renderer, labels, showPanel, hidePanel: () => info.classList.add("hidden"), goLevel: (i) => goLevel(i) });
+  const universe = createUniverseLevels({ renderer, labels, showPanel, hidePanel: () => info.classList.add("hidden"), goLevel: (i) => goLevel(i), settings });
   const LEVELS = [{ name: "Solar System", icon: "☉" }, ...universe.levels];
   let level = 0;
   const ladderBtns = LEVELS.map((L, i) => el("button", { class: "ss-rung", type: "button", title: L.name, onclick: () => goLevel(i) }, el("span", {}, L.icon), el("small", {}, L.name)));
@@ -472,12 +508,13 @@ export function mountAt(root, startLevel = 0, params = {}) {
       if (level === 0) {
         for (const b of Object.values(bodies)) if (b?.label) labels.append(b.label);
         for (const p of probes) labels.append(p.label);
+        for (const n of skyNames) labels.append(n.el);
         controls.enabled = true;
         camera.position.set(0, 1800, 4200); controls.target.set(0, 0, 0); select(null); // glide in from the stars
       } else { controls.enabled = false; universe.levels[level - 1].enter(i < prevLevel ? "in" : "out"); }
       prevLevel = level;
       for (const x of [toolbar, timebar]) x.style.display = level === 0 ? "" : "none";
-      brand.replaceChildren(level === 0 ? "SOLAR SYSTEM " : "", el("b", {}, level === 0 ? "3D" : LEVELS[level].name.toUpperCase()));
+      brand.replaceChildren("UNIVERSE MAP ", el("b", {}, LEVELS[level].name.toUpperCase()));
       ladderBtns.forEach((b, k) => b.classList.toggle("on", k === level));
       resize();
       fade.classList.remove("on");
@@ -639,6 +676,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
       if (d < min && d > 0) camera.position.sub(c).multiplyScalar(min / d).add(c);
     }
     sky.position.copy(camera.position);
+    placeSkyNames();
     if (showLabels) {
       const w = view.clientWidth, h = view.clientHeight, camD = (b) => camera.position.distanceTo(b.group.position);
       for (const b of Object.values(bodies)) {
@@ -651,7 +689,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
         b.label.style.display = visible ? "" : "none";
         if (visible) b.label.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -120%)`;
       }
-    }
+    } else for (const b of Object.values(bodies)) if (b?.label) b.label.style.display = "none";
     renderer.render(scene, camera);
   }
   function frame(now) {
