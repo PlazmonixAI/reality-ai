@@ -6,11 +6,13 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { simulate } from "../core/api.js";
 import { el } from "../core/ui.js";
 import { fmt } from "../core/format.js";
+const commas = (n) => Math.round(n).toLocaleString("en-US");
 import { api, history as saved, toast } from "../core/session.js";
 import { planetMaterial, atmosphereMaterial, ringMaterial, sunMaterial, glowTexture, pointsMaterial, hexToRgb, tailMaterial } from "../space/shaders.js";
 import { createUniverseLevels } from "../space/universe.js";
 import { buildSky } from "../space/sky.js";
 import { createSettings, settingsPanel } from "../space/settings.js";
+import { createJourney } from "../space/journey.js";
 
 const TEX = "/app/assets/textures/"; // absolute, so the same view works inside ASM Teach
 const COLORS = { sun: "#ffcc55", mercury: "#9c8f86", venus: "#d8b27a", earth: "#4f8fe0", moon: "#b9b9b9", mars: "#d0643b",
@@ -131,7 +133,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   const bLabels = tool("Aa", "Names", () => settings.set("labels_planets", !showLabels));
   const bScale = tool("⤢", "Real scale (distances and sizes)", () => { realScale = !realScale; bScale.classList.toggle("on", realScale); rebuildScale(); });
   const bMinor = tool("☄", "Dwarf planets, asteroids and comets", () => { showMinor = !showMinor; bMinor.classList.toggle("off", !showMinor); minorGroup.visible = showMinor; minorOrbits.visible = showMinor; });
-  const bBelts = tool("⁘", "Asteroid belt, trojans and Kuiper belt", () => { showBelts = !showBelts; bBelts.classList.toggle("off", !showBelts); beltPoints.visible = showBelts; });
+  const bBelts = tool("⁘", "Asteroid belts, Kuiper belt, Oort cloud and heliosphere", () => { showBelts = !showBelts; bBelts.classList.toggle("off", !showBelts); beltPoints.visible = showBelts; });
   const bList = tool("☰", "All bodies", () => list.classList.toggle("hidden"));
   const bLaunch = tool("⇧", "Launch a rocket on this date (Space Program)", () => {
     try { localStorage.setItem("reality-asm.mission-date", jdToDate(simJd).toISOString()); } catch { /* storage unavailable */ }
@@ -178,7 +180,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   const camera = new THREE.PerspectiveCamera(45, 1, 0.0005, 200000);
   camera.position.set(0, 120, 260);
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 0.003; controls.maxDistance = 9000;
+  controls.enableDamping = true; controls.dampingFactor = 0.08; controls.minDistance = 0.003; controls.maxDistance = 24000; // out past the Oort cloud
   scene.add(new THREE.AmbientLight(0x404050, 0.3));
   const sunLight = new THREE.PointLight(0xffffff, 3.2, 0, 0);
   scene.add(sunLight);
@@ -278,7 +280,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   async function loadStatic() {
     const [moons, belt, stars, mw] = await Promise.all([
       simulate("physics", "planet_moons", { date: jdToDate(simJd).toISOString(), planet: "all", orbit_points: 256 }),
-      simulate("physics", "asteroid_belt", { date: jdToDate(simJd).toISOString(), n_main: 2600, n_trojans: 700, n_kuiper: 1500, samples_per_orbit: 16 }),
+      simulate("physics", "asteroid_belt", { date: jdToDate(simJd).toISOString(), n_main: 4500, n_trojans: 1100, n_kuiper: 2600, n_hilda: 500, n_nea: 260, n_scattered: 700, n_oort: 2500, samples_per_orbit: 16 }),
       simulate("physics", "star_catalog", { max_magnitude: 6.5, nearby_ly: 100, frame: "ecliptic" }),
       simulate("physics", "milky_way", { n_points: 40000 }),
     ]);
@@ -325,19 +327,67 @@ export function mountAt(root, startLevel = 0, params = {}) {
       if (ok) n.el.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px) translate(-50%, -50%)`;
     }
   }
+  // The debris belts, the Oort cloud and the edge of the Sun's wind (physics.asteroid_belt), each with a name tag
+  const BELT_LOOK = { "main belt": ["#b3a493", "Main asteroid belt", 2.4], "Jupiter trojans": ["#d0b07a", "Jupiter trojans", 2.4], "Kuiper belt": ["#9fb8d6", "Kuiper belt", 2.6],
+    Hildas: ["#c9a46a", "Hilda asteroids", 2.2], "near-Earth asteroids": ["#ff8a5c", "Near-Earth asteroids", 2.4], "scattered disc": ["#8aa0c8", "Scattered disc", 2.4], "Oort cloud": ["#7f93b8", "Oort cloud (model)", 2.2] };
+  const beltLabels = [], helio = new THREE.Group(), beltList = []; // beltList: what the Journey says about each belt
+  scene.add(helio);
   function buildBelts() {
     const n = belts.groups.reduce((s, g) => s + g.count, 0);
     const pos = new Float32Array(n * 3), col = new Float32Array(n * 3), size = new Float32Array(n);
-    const tints = [[0.62, 0.56, 0.5], [0.7, 0.6, 0.45], [0.55, 0.65, 0.8]];
     let k = 0;
-    belts.groups.forEach((g, gi) => { for (let i = 0; i < g.count; i++, k++) { col.set(tints[gi].map((c) => c * (0.7 + 0.3 * Math.random())), k * 3); size[k] = gi === 2 ? 1.8 : 1.5; } });
+    belts.groups.forEach((g) => {
+      const [hex, , px] = BELT_LOOK[g.name] || ["#a0a0a0", g.name, 2], c = new THREE.Color(hex);
+      for (let i = 0; i < g.count; i++, k++) { const f = 0.75 + 0.25 * ((i * 7919) % 100) / 100; col.set([c.r * f, c.g * f, c.b * f], k * 3); size[k] = px; }
+    });
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("color", new THREE.BufferAttribute(col, 3)); geo.setAttribute("size", new THREE.BufferAttribute(size, 1));
-    beltPoints = new THREE.Points(geo, pointsMaterial({ scale: 1, minSize: 1.2, maxSize: 3, opacity: 0.85 }));
+    beltPoints = new THREE.Points(geo, pointsMaterial({ scale: 1, minSize: 1.6, maxSize: 4.5, opacity: 0.95 }));
     beltPoints.frustumCulled = false;
     scene.add(beltPoints);
+    // name tags: placed at a typical member's distance, in a direction away from the planets' crowd
+    belts.groups.forEach((g, gi) => {
+      const [hex, name] = BELT_LOOK[g.name] || ["#a0a0a0", g.name];
+      const sa = [...g.semi_major_axis_au].sort((x, y) => x - y), lo = sa[Math.floor(sa.length * 0.05)], hi = sa[Math.floor(sa.length * 0.95)], mid = sa[Math.floor(sa.length / 2)];
+      const span = hi > 1000 ? `${commas(Math.round(lo / 100) * 100)}–${commas(Math.round(hi / 1000) * 1000)} AU` : `${fmt(lo, 2)}–${fmt(hi, 2)} AU`;
+      const ang = [3.9, 1.2, 2.5, 4.6, 5.4, 0.4, 3.3][gi % 7];
+      const e = el("button", { class: "ss-label belt", type: "button", title: `${name}: ${commas(g.count)} sample bodies`, onclick: () => beltInfo(g, name, span) }, `${name} · ${span}`);
+      beltList.push({ key: g.name, name, span, au: mid, note: BELT_NOTES[g.name] || "" });
+      e.style.setProperty("--c", hex);
+      beltLabels.push({ el: e, raw: [mid * Math.cos(ang), mid * Math.sin(ang), 0] });
+      if (level === 0) labels.append(e);
+    });
+    // the heliosphere: where the Voyagers crossed the termination shock and the heliopause
+    for (const bd of belts.boundaries.filter((x) => x.distance_au < 1000)) {
+      const r = compress([bd.distance_au, 0, 0], realScale).length(), helioPause = /Heliopause/.test(bd.name);
+      const ring = new THREE.Mesh(new THREE.RingGeometry(r * 0.998, r * 1.002, 256), new THREE.MeshBasicMaterial({ color: helioPause ? 0x7fb2ff : 0x5f86c0, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+      ring.rotation.x = -Math.PI / 2; ring.userData.au = bd.distance_au; helio.add(ring);
+      if (/Voyager 1/.test(bd.name)) {
+        const shellM = new THREE.Mesh(new THREE.SphereGeometry(r, 64, 48), new THREE.MeshBasicMaterial({ color: helioPause ? 0x6f9fff : 0x4f6fa0, transparent: true, opacity: helioPause ? 0.05 : 0.03, side: THREE.BackSide, depthWrite: false }));
+        shellM.userData.au = bd.distance_au; helio.add(shellM);
+        const e = el("button", { class: "ss-label belt", type: "button", onclick: () => showPanel(bd.name, "#7fb2ff", [["Distance from the Sun", `${fmt(bd.distance_au, 4)} AU`], ["Light takes", `${fmt(bd.distance_au * 499.005 / 3600, 3)} hours`]], helioPause ? "The heliopause: where the solar wind meets the gas between the stars. Voyager 1 crossed it in August 2012, Voyager 2 in November 2018." : "The termination shock: where the solar wind slows below the speed of sound.") }, `${helioPause ? "Heliopause" : "Termination shock"} · ${fmt(bd.distance_au, 4)} AU`);
+        e.style.setProperty("--c", "#7fb2ff");
+        beltLabels.push({ el: e, raw: [0, -bd.distance_au * 0.7071, bd.distance_au * 0.7071] });
+        beltList.push({ key: helioPause ? "heliopause" : "shock", name: helioPause ? "The heliopause" : "The termination shock", span: `${fmt(bd.distance_au, 4)} AU`, au: bd.distance_au,
+          note: helioPause ? "Where the Sun's wind ends and interstellar space begins. Voyager 1 crossed it in 2012." : "Where the solar wind slows below the speed of sound." });
+        if (level === 0) labels.append(e);
+      }
+    }
   }
+  function beltInfo(g, name, span) {
+    const notes = BELT_NOTES;
+    showPanel(name, (BELT_LOOK[g.name] || ["#a0a0a0"])[0], [["Where", span], ["Sample bodies drawn", commas(g.count)],
+      ...(g.name === "main belt" ? [["Kirkwood gaps (AU)", belts.kirkwood_gaps.map((k) => `${k.resonance} ${fmt(k.semi_major_axis_au, 3)}`).join(", ")]] : []),
+      ...(g.name === "Hildas" ? [["3:2 resonance with Jupiter", `${fmt(belts.hilda_resonance_au, 4)} AU`]] : [])],
+      `${notes[g.name] || ""} physics.asteroid_belt: a statistical sample; the dots are not individual real asteroids.`);
+  }
+  const BELT_NOTES = { "main belt": "Between Mars and Jupiter. The gaps are Kirkwood gaps, cleared by resonances with Jupiter.", "Jupiter trojans": "They share Jupiter's orbit, 60° ahead and behind it (the L4 and L5 points).",
+      "Kuiper belt": "Icy bodies beyond Neptune, home of Pluto. Plutinos orbit twice for every three of Neptune's.", Hildas: "Three orbits for every two of Jupiter's (the 3:2 resonance), so they trace a rounded triangle.",
+      "near-Earth asteroids": "Asteroids whose closest point to the Sun is within 1.3 AU: the ones watched for impacts.", "scattered disc": "Icy bodies flung onto long, tilted orbits by Neptune; Eris lives here.",
+      "Oort cloud": "A vast sphere of comets, never seen directly; long-period comets come from it. The points show the model, not real objects." };
   function updateBelts() {
+    helio.visible = showBelts;
+    for (const m of helio.children) m.scale.setScalar(compress([m.userData.au, 0, 0], realScale).length() / (m.geometry.parameters.radius || m.geometry.parameters.outerRadius / 1.002));
     if (!belts || !beltPoints.visible) return;
     const pos = beltPoints.geometry.attributes.position.array;
     let k = 0;
@@ -346,6 +396,18 @@ export function mountAt(root, startLevel = 0, params = {}) {
       pos[k * 3] = v.x; pos[k * 3 + 1] = v.y; pos[k * 3 + 2] = v.z;
     }
     beltPoints.geometry.attributes.position.needsUpdate = true;
+  }
+  // hide a name that would sit on top of the Sun's crowd when zoomed far out
+  const sunPx = () => { const v = SUN_POS.clone().project(camera); return [((v.x + 1) / 2) * view.clientWidth, ((1 - v.y) / 2) * view.clientHeight]; };
+  function placeBeltLabels() {
+    const w = view.clientWidth, h = view.clientHeight, [sx, sy] = sunPx();
+    for (const b of beltLabels) {
+      tmp.copy(compress(b.raw, realScale)).project(camera);
+      const x = ((tmp.x + 1) / 2) * w, y = ((1 - tmp.y) / 2) * h;
+      const ok = showBelts && showLabels && level === 0 && tmp.z < 1 && Math.abs(tmp.x) < 1.02 && Math.abs(tmp.y) < 1.02 && Math.hypot(x - sx, y - sy) > 90;
+      b.el.style.display = ok ? "" : "none";
+      if (ok) b.el.style.transform = `translate(${((tmp.x + 1) / 2) * w}px, ${((1 - tmp.y) / 2) * h}px) translate(-50%, -50%)`;
+    }
   }
   // A window of positions around the current time (planets + small bodies, with tracks for interpolation)
   async function loadWindow(startJd) {
@@ -509,9 +571,12 @@ export function mountAt(root, startLevel = 0, params = {}) {
         for (const b of Object.values(bodies)) if (b?.label) labels.append(b.label);
         for (const p of probes) labels.append(p.label);
         for (const n of skyNames) labels.append(n.el);
+        for (const b of beltLabels) labels.append(b.el);
         controls.enabled = true;
         camera.position.set(0, 1800, 4200); controls.target.set(0, 0, 0); select(null); // glide in from the stars
+        if (!interactive) fly = null;
       } else { controls.enabled = false; universe.levels[level - 1].enter(i < prevLevel ? "in" : "out"); }
+      if (!interactive) setInteractive(false);
       prevLevel = level;
       for (const x of [toolbar, timebar]) x.style.display = level === 0 ? "" : "none";
       brand.replaceChildren("UNIVERSE MAP ", el("b", {}, LEVELS[level].name.toUpperCase()));
@@ -522,12 +587,84 @@ export function mountAt(root, startLevel = 0, params = {}) {
   }
   let prevLevel = 0;
   ladderBtns[0].classList.add("on");
+
+  // ---------- one set of controls for mouse, keyboard and touch ----------
+  let interactive = true; // off while the Journey drives the camera
+  const camOf = () => (level === 0 ? { camera, controls } : universe.levels[level - 1]);
+  function setInteractive(on) {
+    interactive = on;
+    controls.enabled = on && level === 0;
+    universe.levels.forEach((L, i) => { L.controls.enabled = on && level === i + 1; });
+  }
+  function zoomBy(f) { // f < 1 moves closer; past the end of a scale, go to the next one
+    const { camera: c, controls: k } = camOf(), off = c.position.clone().sub(k.target), d = off.length(), nd = d * f;
+    if (f > 1 && d >= k.maxDistance * 0.97) return goLevel(level + 1);
+    if (f < 1 && d <= k.minDistance * 1.05 && level > 0) return goLevel(level - 1);
+    c.position.copy(k.target).add(off.setLength(Math.min(k.maxDistance, Math.max(k.minDistance, nd))));
+    if (level === 0) { follow = null; fly = null; }
+  }
+  function orbitBy(yaw, pitch) {
+    const { camera: c, controls: k } = camOf(), off = c.position.clone().sub(k.target);
+    const sph = new THREE.Spherical().setFromVector3(off);
+    sph.theta += yaw; sph.phi = Math.min(Math.PI - 0.05, Math.max(0.05, sph.phi + pitch));
+    c.position.copy(k.target).add(new THREE.Vector3().setFromSpherical(sph));
+  }
+  const zoomBtns = el("div", { class: "ss-zoom" },
+    el("button", { type: "button", class: "ss-tool", title: "Zoom in (+). Past the closest view: the smaller scale", "aria-label": "Zoom in", onclick: () => zoomBy(0.7) }, "+"),
+    el("button", { type: "button", class: "ss-tool", title: "Zoom out (−). Past the widest view: the next scale out", "aria-label": "Zoom out", onclick: () => zoomBy(1.45) }, "−"),
+    el("button", { type: "button", class: "ss-tool", title: "Keyboard and touch help (?)", "aria-label": "Controls help", onclick: () => help.classList.toggle("hidden") }, "?"));
+  const help = el("div", { class: "ss-help hidden", role: "dialog", "aria-label": "Controls" },
+    el("div", { class: "ss-settings-head" }, el("b", {}, "Controls"), el("button", { type: "button", class: "ss-close", "aria-label": "Close", onclick: () => help.classList.add("hidden") }, "×")),
+    el("table", {}, ...[["Look around", "drag · arrow keys or W A S D", "drag with one finger"], ["Zoom", "scroll · + and −", "pinch · + − buttons"],
+      ["Change scale", "zoom past the end · Page Up / Page Down · keys 1 to 5", "pinch past the end · scale buttons on top"],
+      ["Pick a body or star", "click it", "tap it"], ["Time (Solar System)", "Space: hold or run · , and . slower or faster", "clock panel"],
+      ["Names on or off", "N", "Aa button"], ["Back to the whole view", "H", "⌂ button"], ["Journey from the Big Bang", "J (Space pause, ← → chapters, Esc leave)", "Journey button"]]
+      .map(([a, b, c]) => el("tr", {}, el("th", {}, a), el("td", {}, b), el("td", {}, c)))));
+  rootEl.append(zoomBtns, help);
+  // touch and trackpad: pinching past the end of a scale changes scale, like the mouse wheel does
+  for (const [i, k] of [[0, controls], ...universe.levels.map((L, j) => [j + 1, L.controls])]) {
+    let startD = 0;
+    k.addEventListener("start", () => { startD = k.object.position.distanceTo(k.target); });
+    k.addEventListener("end", () => {
+      if (!interactive || level !== i || performance.now() - switchedAt < 1200) return;
+      const d = k.object.position.distanceTo(k.target);
+      if (d >= k.maxDistance * 0.97 && d > startD * 1.02) goLevel(i + 1);
+      else if (i > 0 && d <= k.minDistance * 1.05 && d < startD * 0.98) goLevel(i - 1);
+    });
+  }
+  function onKey(e) {
+    if (!rootEl.isConnected) return;
+    if (journey.key(e)) return;
+    if (e.target.closest?.("input, textarea, select") || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key;
+    const act = {
+      ArrowLeft: () => orbitBy(-0.08, 0), a: () => orbitBy(-0.08, 0), ArrowRight: () => orbitBy(0.08, 0), d: () => orbitBy(0.08, 0),
+      ArrowUp: () => orbitBy(0, -0.06), w: () => orbitBy(0, -0.06), ArrowDown: () => orbitBy(0, 0.06), s: () => orbitBy(0, 0.06),
+      "+": () => zoomBy(0.8), "=": () => zoomBy(0.8), "-": () => zoomBy(1.25), _: () => zoomBy(1.25),
+      PageUp: () => goLevel(level + 1), PageDown: () => goLevel(level - 1),
+      1: () => goLevel(0), 2: () => goLevel(1), 3: () => goLevel(2), 4: () => goLevel(3), 5: () => goLevel(4),
+      h: () => (level === 0 ? select(null) : universe.levels[level - 1].enter("out")), n: () => bLabels.click(), j: () => journey.start(), "?": () => help.classList.toggle("hidden"),
+      " ": () => level === 0 && bPlay.click(), ",": () => setSpeed(speedIdx - 1), ".": () => setSpeed(speedIdx + 1),
+      Escape: () => { help.classList.add("hidden"); gear.sheet.classList.add("hidden"); info.classList.add("hidden"); },
+    }[k.length === 1 ? k.toLowerCase() : k];
+    if (!act || !interactive) return;
+    e.preventDefault(); act();
+  }
+  window.addEventListener("keydown", onKey);
+
+  // ---------- Journey: from the Big Bang to the Earth ----------
+  const journey = createJourney({ rootEl, universe, goLevel: (i) => goLevel(i), getLevel: () => level,
+    solar: { camera, controls, select: (id) => select(id), bodies, stopFly: () => { fly = null; follow = null; }, setInteractive,
+      sceneOfAU: (au) => compress([au, 0, 0], realScale).length(), beltNames: () => beltList } });
+  const bJourney = el("button", { class: "ss-journey", type: "button", title: "Watch the universe begin, then fly from its edge to the Earth (J)", onclick: () => journey.start() }, "▶ Journey", el("span", { class: "long" }, " from the Big Bang"));
+  rootEl.append(bJourney);
+  if (params.journey) setTimeout(() => journey.start(), 600);
   // Labels sit above the canvas: pass their wheel events through so zooming works anywhere
   labels.addEventListener("wheel", (e) => { e.preventDefault(); renderer.domElement.dispatchEvent(new WheelEvent("wheel", e)); }, { passive: false });
   // Zooming past the edge of a level moves to the next scale
   let switchedAt = 0;
   renderer.domElement.addEventListener("wheel", (e) => {
-    if (performance.now() - switchedAt < 1200) return; // let one scroll gesture finish before changing scale again
+    if (!interactive || performance.now() - switchedAt < 1200) return; // let one scroll gesture finish before changing scale again
     if (level === 0) {
       if (e.deltaY > 0 && camera.position.distanceTo(controls.target) > controls.maxDistance * 0.97) goLevel(1);
     } else universe.levels[level - 1].wheel(e, (to) => goLevel(to));
@@ -677,15 +814,17 @@ export function mountAt(root, startLevel = 0, params = {}) {
     }
     sky.position.copy(camera.position);
     placeSkyNames();
+    placeBeltLabels();
     if (showLabels) {
-      const w = view.clientWidth, h = view.clientHeight, camD = (b) => camera.position.distanceTo(b.group.position);
+      const w = view.clientWidth, h = view.clientHeight, camD = (b) => camera.position.distanceTo(b.group.position), [sx, sy] = sunPx();
       for (const b of Object.values(bodies)) {
         if (!b?.label) continue;
         const parent = b.parent && bodies[b.parent];
         let show = b.group.visible && (b.kind !== "natural satellite" || (parent && camD(parent) < parent.group.scale.x * (b.data.id === "moon" ? 60 : 30)));
         if (!COLORS[b.data.id] && b.kind !== "natural satellite") show = show && showMinor && (camD(b) < 80 || b.kind === "dwarf planet" || b.kind === "comet");
         tmp.copy(b.group.position); tmp.y += b.group.scale.x * 1.2;
-        const v = tmp.project(camera), visible = show && v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+        const v = tmp.project(camera), px = ((v.x + 1) / 2) * w, py = ((1 - v.y) / 2) * h;
+        const visible = show && v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05 && (b.data.id === "sun" || b.parent || Math.hypot(px - sx, py - sy) > 16);
         b.label.style.display = visible ? "" : "none";
         if (visible) b.label.style.transform = `translate(${((v.x + 1) / 2) * w}px, ${((1 - v.y) / 2) * h}px) translate(-50%, -120%)`;
       }
@@ -695,6 +834,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   function frame(now) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (journey.covering) return; // the Big Bang fills the screen: no need to draw the 3D map under it
     if (level === 0) updateSolar(dt, now);
     else {
       if (!window_ && !loading) loadWindow(simJd); // the sky and stars data arrive with the first Solar System load
@@ -705,7 +845,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   if (startLevel) setTimeout(() => goLevel(startLevel), 50);
 
   return () => {
-    cancelAnimationFrame(raf); ro.disconnect(); controls.dispose(); universe.dispose();
+    cancelAnimationFrame(raf); ro.disconnect(); controls.dispose(); universe.dispose(); journey.stop(); window.removeEventListener("keydown", onKey);
     scene.traverse((o) => { o.geometry?.dispose?.(); const m = o.material; if (m) (Array.isArray(m) ? m : [m]).forEach((x) => x.dispose()); });
     Object.values(texCache).forEach((t) => t.dispose());
     renderer.dispose();

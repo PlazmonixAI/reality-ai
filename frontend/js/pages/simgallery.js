@@ -4,6 +4,7 @@ import { SIMS, DOMAINS, SUBJECTS, sectionOf, FEATURED, rankOf } from "../sims/in
 import { el } from "../core/ui.js";
 import { mountAiPanel } from "../core/aichat.js";
 import { clearRecentCalls } from "../core/api.js";
+import { playerKeys } from "../core/player.js";
 
 let query = "";
 const store = (k, v) => { try { if (v === undefined) return sessionStorage.getItem(k) || ""; sessionStorage.setItem(k, v); } catch { /* private mode */ } return v ?? ""; };
@@ -71,5 +72,6 @@ export async function mountSim(page, sim, params = {}) {
   const mod = await sim.load();
   const simCleanup = mod.default.mount(page, params) || null;
   const aiCleanup = mountAiPanel(page, sim);
-  return () => { aiCleanup(); simCleanup?.(); };
+  const keysCleanup = playerKeys(page); // Space, R, arrows and [ ] for any simulation with a playback bar
+  return () => { keysCleanup(); aiCleanup(); simCleanup?.(); };
 }

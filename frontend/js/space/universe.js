@@ -217,8 +217,12 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
 
   // ---------- 3. Galaxies of the local universe (1 unit = 1 million ly) ----------
   const galaxies = base("Galaxies", "✺", { start: new THREE.Vector3(0, 60, 150), min: 0.25, max: 9000, near: 0.001, far: 1e6, prev: 2, next: 4 });
+  // the full galaxy catalogue and the cosmology, fetched once and shared by both scales (and the Journey)
+  let fullGalaxies = null, cosmologyP = null;
+  const getGalaxies = () => (fullGalaxies ||= simulate("physics", "galaxy_catalog", { max_distance_mly: 6000, limit: 25000, include_redshift: true }).then((r) => r.result));
+  const getCosmology = () => (cosmologyP ||= simulate("physics", "cosmology", { z: 1 }).then((r) => r.result));
   galaxies.load = async () => {
-    const r = (await simulate("physics", "galaxy_catalog", { max_distance_mly: 6000, limit: 25000, include_redshift: true })).result;
+    const r = await getGalaxies();
     data.galaxies = r;
     const pos = [], col = [], size = [];
     for (let i = 0; i < r.count; i++) {
@@ -275,8 +279,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
   // ---------- 4. The observable universe (1 unit = 1 billion ly, comoving) ----------
   const cosmos = base("Universe", "◯", { start: new THREE.Vector3(0, 55, 125), min: 0.4, max: 400, near: 0.001, far: 1e5, prev: 3 });
   cosmos.load = async () => {
-    const [c, g] = await Promise.all([simulate("physics", "cosmology", { z: 1 }), data.galaxies ? Promise.resolve({ result: data.galaxies }) : simulate("physics", "galaxy_catalog", { max_distance_mly: 3000 })]);
-    const r = c.result, gal = g.result;
+    const [r, gal] = await Promise.all([getCosmology(), getGalaxies()]);
     data.cosmology = r; data.galaxies = gal;
     const pos = [], col = [], size = [];
     for (let i = 0; i < gal.count; i++) { const v = toScene(gal.x_mly[i] / 1000, gal.y_mly[i] / 1000, gal.z_mly[i] / 1000); pos.push(v.x, v.y, v.z); col.push(...TYPE_COLOR(gal.type[i]).map((x) => x * 0.8)); size.push(0.02); }
@@ -437,7 +440,8 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
 
   const levels = [stars, galaxy, galaxies, cosmos];
   return {
-    levels,
+    levels, data, toScene,
+    prefetch() { getGalaxies().catch(() => {}); getCosmology().catch(() => {}); },
     setData(d) {
       Object.assign(data, d);
       if (d.atlas) { if (stars.ready) atlasStars(); if (galaxy.ready) atlasGalaxy(); if (data.galaxies && galaxies.ready) atlasGalaxies(); if (data.cosmology && cosmos.ready) atlasCosmos(); }

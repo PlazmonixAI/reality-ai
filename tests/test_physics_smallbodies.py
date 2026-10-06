@@ -93,3 +93,20 @@ def test_mars_moon_frame_uses_mars_equator():
     phobos = next(m for m in planet_moons("2026-01-01", "mars")["result"]["moons"] if m["id"] == "phobos")
     n = np.cross(phobos["orbit"][0], phobos["orbit"][10])
     assert math.degrees(math.acos(abs(n @ pole_ecliptic("mars")) / np.linalg.norm(n))) < 4
+
+
+def test_hildas_neas_scattered_disc_and_oort_cloud():
+    r = asteroid_belt("2026-01-01", n_main=0, n_trojans=0, n_kuiper=0, n_hilda=300, n_nea=300, n_scattered=300, n_oort=300)["result"]
+    g = {x["name"]: x for x in r["groups"]}
+    assert r["hilda_resonance_au"] == pytest.approx(5.2026 * (2 / 3) ** (2 / 3), rel=2e-3)  # ≈ 3.97 AU
+    assert np.mean(g["Hildas"]["semi_major_axis_au"]) == pytest.approx(r["hilda_resonance_au"], abs=0.01)
+    # near-Earth asteroids come within 1.3 AU of the Sun: the closest sample points get there
+    assert min(min(np.linalg.norm(o, axis=1)) for o in np.array(g["near-Earth asteroids"]["orbits"])) < 1.3
+    a = np.array(g["Oort cloud"]["semi_major_axis_au"])
+    assert a.min() >= 2000 and a.max() <= 100000
+    assert np.array(g["scattered disc"]["semi_major_axis_au"]).min() >= 50
+    names = [b["name"] for b in r["boundaries"]]
+    assert any("Heliopause (Voyager 1" in n for n in names)
+    assert next(b for b in r["boundaries"] if "Heliopause (Voyager 1" in b["name"])["distance_au"] == pytest.approx(121.6)
+    with pytest.raises(ValueError):
+        asteroid_belt(n_oort=99999)

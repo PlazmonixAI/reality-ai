@@ -2,6 +2,9 @@
 import { el } from "./ui.js";
 import { fmtTime } from "./format.js";
 
+/** Every Player on screen; the keyboard drives the most recent one (see playerKeys). */
+const PLAYERS = new Set();
+
 export class Player {
   /**
    * @param parent container
@@ -27,7 +30,9 @@ export class Player {
       this.opts.speeds.map((s) => el("option", { value: s }, `${s}×`)));
     this.speedSel.value = String(this.speed);
     this.speedSel.addEventListener("change", () => { this.speed = Number(this.speedSel.value); });
+    this.playBtn.title = "Play or pause (Space)"; restart.title = "Restart (R)";
     this.root = el("div", { class: "player" }, this.playBtn, restart, this.scrub, this.timeLabel, this.speedSel);
+    PLAYERS.add(this);
     parent.append(this.root);
     this.tick = this.tick.bind(this);
     this.raf = requestAnimationFrame(this.tick);
@@ -79,7 +84,7 @@ export class Player {
     this.onFrame(this.time);
   }
 
-  destroy() { cancelAnimationFrame(this.raf); }
+  destroy() { cancelAnimationFrame(this.raf); PLAYERS.delete(this); }
 }
 
 /** Continuous animation loop (for purely visual motion like jiggling particles). */
@@ -94,4 +99,20 @@ export function animationLoop(fn) {
   };
   raf = requestAnimationFrame(step);
   return () => { alive = false; cancelAnimationFrame(raf); };
+}
+
+/** Keyboard for playback, for any simulation page: Space play/pause, R restart, ← → step 5%, [ ] slower/faster.
+ * Ignored while typing in a box or when a canvas that uses the arrow keys has focus. Returns a detach function. */
+export function playerKeys(root) {
+  const key = (e) => {
+    if (!root.isConnected || e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.("input, textarea, select, [contenteditable], button, canvas")) return;
+    const p = [...PLAYERS].reverse().find((x) => x.root.isConnected && root.contains(x.root));
+    if (!p) return;
+    const sp = p.opts.speeds, i = sp.indexOf(p.speed);
+    const act = { " ": () => p.toggle(), r: () => { p.seek(0); p.play(); }, ArrowLeft: () => p.seek(p.time - 0.05 * p.duration), ArrowRight: () => p.seek(p.time + 0.05 * p.duration),
+      "[": () => { if (i > 0) { p.speed = sp[i - 1]; p.speedSel.value = String(p.speed); } }, "]": () => { if (i < sp.length - 1) { p.speed = sp[i + 1]; p.speedSel.value = String(p.speed); } } }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+    if (act) { e.preventDefault(); act(); }
+  };
+  window.addEventListener("keydown", key);
+  return () => window.removeEventListener("keydown", key);
 }
