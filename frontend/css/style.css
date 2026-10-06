@@ -1106,3 +1106,27 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .ss-label.dso { color: #ffd0dc; }
 .ss-label.exo { color: #b9f7d0; }
 @media (max-width: 760px) { .ss-settings { left: 10px; right: 10px; width: auto; } .ss-gear { bottom: 64px; } }
+
+/* Maths Sandbox */
+.msb { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 12px; height: calc(100dvh - 92px); min-height: 520px; }
+.msb-side { display: flex; flex-direction: column; gap: 8px; min-height: 0; overflow: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+.msb-head h1 { margin: 0; font-size: 20px; } .msb-head p { margin: 4px 0 0; }
+.msb-select { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: inherit; font: inherit; }
+.msb-list { display: flex; flex-direction: column; gap: 6px; }
+.msb-row { display: grid; grid-template-columns: 22px 1fr 24px; gap: 6px; align-items: center; padding: 6px; border: 1px solid var(--border); border-radius: 8px; }
+.msb-row.bad { border-color: #e0a090; }
+.msb-swatch { width: 18px; height: 18px; border-radius: 50%; border: 3px solid var(--c); background: var(--c); cursor: pointer; padding: 0; }
+.msb-swatch.off { background: transparent; opacity: .5; } .msb-swatch.dashed { border-style: dashed; background: transparent; } .msb-swatch.dotted { border-style: dotted; background: transparent; }
+.msb-input { width: 100%; min-width: 0; border: 0; background: transparent; font: 15px/1.4 var(--mono, ui-monospace, monospace); color: inherit; padding: 4px 2px; outline: none; }
+.msb-input:focus { box-shadow: 0 1px 0 #FF5B2E; }
+.msb-del { border: 0; background: transparent; color: var(--muted, #7b8796); font-size: 18px; cursor: pointer; }
+.msb-out { grid-column: 2 / 4; font-size: 12px; line-height: 1.4; } .msb-out:empty { display: none; }
+.msb-err { color: #b8432a; }
+.msb-slider { display: grid; grid-template-columns: auto 1fr 64px; gap: 8px; align-items: center; } .msb-slider output { font-variant-numeric: tabular-nums; text-align: right; }
+.msb-range { width: 100%; accent-color: #FF5B2E; }
+.msb-stage { position: relative; min-height: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: #fff; }
+.msb-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.msb-tip { position: absolute; pointer-events: none; background: #fff; border: 2px solid #0B1526; border-radius: 6px; padding: 2px 6px; font-size: 12px; color: #0B1526; white-space: nowrap; transform: translateY(-100%); }
+.msb-zoom { position: absolute; left: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.msb-zoom button { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: #0B1526; font-size: 16px; cursor: pointer; }
+@media (max-width: 860px) { .msb { grid-template-columns: 1fr; height: auto; } .msb-stage { height: 62vh; } .msb-side { max-height: none; } }

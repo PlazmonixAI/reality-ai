@@ -35,9 +35,10 @@ _GLOBALS.update({
 })
 
 
-def parse_expression(text: str) -> sp.Expr:
+def parse_expression(text: str, functions: dict[str, sp.Lambda] | None = None) -> sp.Expr:
     """Parse a math expression string (e.g. 'sin(x)*exp(-x^2)') into sympy.
 
+    functions: extra user-defined functions by name (sympy Lambdas), e.g. {"f": Lambda(x, x**2)}.
     Raises ValueError for anything that is not a plain math expression.
     """
     if not isinstance(text, str) or not text.strip():
@@ -47,7 +48,12 @@ def parse_expression(text: str) -> sp.Expr:
     if _FORBIDDEN.search(text):
         raise ValueError(f"Expression contains forbidden syntax: {text!r}")
     try:
-        return parse_expr(text, global_dict=dict(_GLOBALS), transformations=_TRANSFORMS)
+        names = dict(_GLOBALS)
+        for k, f in (functions or {}).items():
+            if not k.isidentifier() or k.startswith("_") or not isinstance(f, sp.Lambda):
+                raise ValueError(f"Invalid function name: {k!r}")
+            names[k] = f
+        return parse_expr(text, global_dict=names, transformations=_TRANSFORMS)
     except TokenError:
         raise ValueError(f"Could not parse expression {text!r}: unbalanced brackets or an incomplete expression") from None
     except (SyntaxError, TypeError, NameError, AttributeError, sp.SympifyError) as e:

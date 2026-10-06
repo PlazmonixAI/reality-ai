@@ -28,7 +28,7 @@ const SECTION = {
 };
 /** The most powerful simulations, shown first on the Simulations page (one or more from every area). */
 export const FEATURED = ["solarsystem", "spaceflight", "blackhole", "hydrogen", "quantum", "tunnelling", "wavepacket",
-  "relativity", "doublependulum", "lorentz", "interference", "labbench", "titration", "galvanic", "equilibrium", "fourier", "fractal", "transform", "complex"];
+  "relativity", "doublependulum", "lorentz", "interference", "labbench", "titration", "galvanic", "equilibrium", "mathsandbox", "fourier", "fractal", "transform", "complex"];
 /** Inside every shelf the strongest simulations come first, then the rest in catalogue order. */
 const RANK = ["solarsystem", "spaceflight", "universe", "blackhole", "earth-moon", "hohmann", "orbitdecay", "precession",
   "hydrogen", "quantum", "tunnelling", "wavepacket", "rabi", "oscillator", "photoelectric", "relativity", "decay",
@@ -36,7 +36,7 @@ const RANK = ["solarsystem", "spaceflight", "universe", "blackhole", "earth-moon
   "interference", "lenses", "refraction", "doppler", "waves", "lorentz", "faraday", "circuit", "rlc", "charges",
   "engine", "blackbody", "bernoulli", "heat", "buoyancy",
   "labbench", "titration", "galvanic", "equilibrium", "molecules", "atom", "kinetics", "profile", "speciation", "realgas", "phasediagram",
-  "fourier", "fractal", "transform", "complex", "grapher", "taylor", "phase", "montecarlo", "newton", "riemann", "probability", "conics"];
+  "mathsandbox", "fourier", "fractal", "transform", "complex", "grapher", "taylor", "phase", "montecarlo", "newton", "riemann", "probability", "conics"];
 export const rankOf = (sim) => { const i = RANK.indexOf(sim.id); return i < 0 ? RANK.length + SIMS.indexOf(sim) : i; };
 /** The gallery section a simulation belongs to (chemistry and maths keep their subject). */
 export const sectionOf = (sim) => (sim.hidden ? "hidden" : SECTION[sim.id] || (sim.domain === "physics" ? "mechanics" : sim.domain));
@@ -279,6 +279,16 @@ export const SIMS = [
       <circle cx="120" cy="64" r="52" fill="none" stroke="#c9ced6" stroke-opacity=".4"/>
       <circle cx="115" cy="60" r="7" fill="#e34948"/><circle cx="125" cy="62" r="7" fill="#9aa6b5"/><circle cx="118" cy="70" r="7" fill="#9aa6b5"/><circle cx="126" cy="70" r="7" fill="#e34948"/>
       <circle cx="150" cy="64" r="5" fill="#5598e7"/><circle cx="90" cy="64" r="5" fill="#5598e7"/><circle cx="120" cy="12" r="5" fill="#5598e7"/>`),
+  },
+  {
+    id: "mathsandbox", domain: "mathematics", title: "Maths Sandbox",
+    blurb: "A graphing notebook: type functions, equations, inequalities, points, polar and parametric curves, sliders and sums. Roots, turning points and crossings appear on their own.",
+    load: () => import("./mathsandbox.js"),
+    art: sky(`<rect width="240" height="128" fill="#fff"/>${Array.from({ length: 12 }, (_, i) => `<line x1="${i * 20}" y1="0" x2="${i * 20}" y2="128" stroke="#e6ebf2"/>`).join("")}${Array.from({ length: 7 }, (_, i) => `<line x1="0" y1="${i * 20 + 4}" x2="240" y2="${i * 20 + 4}" stroke="#e6ebf2"/>`).join("")}
+      <line x1="0" y1="64" x2="240" y2="64" stroke="#0B1526"/><line x1="120" y1="0" x2="120" y2="128" stroke="#0B1526"/>
+      <path d="M40 8 Q120 140 200 8" fill="none" stroke="#2a78d6" stroke-width="3"/><circle cx="120" cy="64" r="34" fill="none" stroke="#eb6834" stroke-width="3"/>
+      <path d="M0 110 L240 20 L240 128 L0 128Z" fill="#1baf7a" fill-opacity=".12"/><line x1="0" y1="110" x2="240" y2="20" stroke="#1baf7a" stroke-width="2" stroke-dasharray="6 5"/>
+      <circle cx="91" cy="44" r="4" fill="#fff" stroke="#8a94a6" stroke-width="1.5"/><circle cx="149" cy="44" r="4" fill="#fff" stroke="#8a94a6" stroke-width="1.5"/>`),
   },
   {
     id: "grapher", domain: "mathematics", title: "Calculus Grapher",

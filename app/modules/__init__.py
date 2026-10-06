@@ -49,6 +49,7 @@ from app.modules.mathematics import fitting  # noqa: F401
 from app.modules.mathematics import monte_carlo  # noqa: F401
 from app.modules.mathematics import fractals  # noqa: F401
 from app.modules.mathematics import graphs  # noqa: F401
+from app.modules.mathematics import sandbox  # noqa: F401
 from app.modules.physics import rotation  # noqa: F401
 from app.modules.physics import fluids  # noqa: F401
 from app.modules.physics import heat  # noqa: F401
