@@ -231,7 +231,7 @@ export const SIMS = [
   },
   {
     id: "labbench", domain: "chemistry", title: "Virtual Chemistry Lab",
-    blurb: "A sandbox bench: glassware, a Bunsen burner, a burette and 40 chemicals. Mix, pour, heat and titrate, and see what really happens.",
+    blurb: "A sandbox bench: 72 chemicals, glassware, gas cylinders, a burner and a burette. Put things anywhere, lift and pour, heat, titrate and see what really happens.",
     load: () => import("./labbench.js"),
     art: sky(`<rect width="240" height="128" fill="#eef2f7"/><rect y="100" width="240" height="28" fill="#3b4658"/>
       <path d="M70 44 h28 v52 h-28z" fill="none" stroke="#0B1526" stroke-width="3"/><rect x="72" y="70" width="24" height="26" fill="#2f7fd8" opacity=".7"/>
