@@ -346,21 +346,64 @@ def galaxy_table() -> dict:
             "abs_mag": np.array([float(r["abs_mag"]) for r in rows])}
 
 
+# Well-known nicknames for catalogue galaxies (with the OpenNGC common names, used for map labels)
+GALAXY_NICKNAMES = {
+    "M 101": "Pinwheel Galaxy", "M 94": "Cat's Eye Galaxy", "M 64": "Black Eye Galaxy", "M 102": "Spindle Galaxy",
+    "M 86": "Markarian's Chain", "M 84": "Markarian's Chain",
+    "M 65": "Leo Triplet",
+    "M 66": "Leo Triplet", "NGC 3628": "Hamburger Galaxy", "M 77": "Squid Galaxy", "M 74": "Phantom Galaxy",
+    "M 108": "Surfboard Galaxy",
+    "M 109": "Vacuum Cleaner Galaxy", "NGC 1300": "Great Barred Spiral", "NGC 1365": "Great Barred Spiral (Fornax)",
+    "NGC 891": "Silver Sliver Galaxy", "NGC 7331": "Deer Lick Galaxy", "NGC 300": "Sculptor Pinwheel",
+    "NGC 55": "String of Pearls Galaxy", "NGC 247": "Needle's Eye Galaxy", "NGC 253": "Sculptor Galaxy",
+    "NGC 5195": "Whirlpool companion", "NGC 4594": "Sombrero Galaxy", "NGC 5457": "Pinwheel Galaxy", "NGC 4826": "Black Eye Galaxy",
+    "NGC 7317": "Stephan's Quintet", "NGC 7318": "Stephan's Quintet", "NGC 7319": "Stephan's Quintet", "NGC 7320": "Stephan's Quintet",
+    "NGC 3310": "Bow-tie Galaxy",
+    "NGC 1068": "Squid Galaxy", "NGC 4486": "Virgo A",
+    "LMC": "Large Magellanic Cloud", "SMC": "Small Magellanic Cloud", "Sag DEG": "Sagittarius Dwarf Galaxy",
+    "WLM": "Wolf-Lundmark-Melotte Galaxy", "IC 342": "Hidden Galaxy",
+    "NGC 6822": "Barnard's Galaxy", }
+
+
+@lru_cache(maxsize=1)
+def galaxy_common_names() -> dict[str, str]:
+    """Catalogue id (e.g. 'M 51', 'NGC 4565') to a common name, from OpenNGC plus GALAXY_NICKNAMES."""
+    out: dict[str, str] = {}
+    path = DATA / "deepsky.csv"
+    if path.exists():
+        with path.open() as f:
+            for r in csv.DictReader(f):
+                if r["common"] and "Galax" in r["type"]:
+                    for key in (r["messier"], r["id"]):
+                        if key:
+                            out[key] = r["common"]
+    out.update(GALAXY_NICKNAMES)  # the curated list wins (OpenNGC calls NGC 253 "Sculptor Filament")
+    out.update({"M 87": "Virgo A", "NGC 2537": "Bear Paw Galaxy"})
+    return out
+
+
 @tool(
     domain="physics",
     name="galaxy_catalog",
     description=(
         "Real galaxies with measured distances (~11,000: Local Group, Virgo cluster and beyond to ~2 billion "
-        "light years): 3D positions in millions of light years (galactic frame, Sun at the origin), Hubble type, "
+        "light years; include_redshift=True adds ~9,000 NGC/IC galaxies placed by redshift): 3D positions in millions of light years (galactic frame, Sun at the origin), Hubble type, "
         "radius, absolute magnitude, and the Hubble-law recession speed and redshift. name= finds a galaxy, "
         "e.g. name='Andromeda Galaxy'."
     ),
 )
 def galaxy_catalog(max_distance_mly: float = 3000.0, limit: int = 12000, name: str | None = None,
-                   h0: float = 67.66) -> dict:
-    if max_distance_mly <= 0 or not 1 <= limit <= 12000 or not 40 <= h0 <= 100:
-        raise ValueError("max_distance_mly must be > 0, limit 1..12000 and h0 40..100 km/s/Mpc")
+                   h0: float = 67.66, include_redshift: bool = False) -> dict:
+    if max_distance_mly <= 0 or not 1 <= limit <= 25000 or not 40 <= h0 <= 100:
+        raise ValueError("max_distance_mly must be > 0, limit 1..25000 and h0 40..100 km/s/Mpc")
     g = galaxy_table()
+    if include_redshift:  # add NGC/IC galaxies known only by redshift, at their comoving distance (physics.sky_atlas)
+        from app.modules.physics.skyatlas import redshift_galaxies
+        rz = redshift_galaxies()
+        g = {"name": g["name"] + rz["name"], "type": g["type"] + rz["type"], "unit": np.hstack([g["unit"], rz["unit"]]),
+             "dist_ly": np.concatenate([g["dist_ly"], rz["dist_ly"]]),
+             "radius_ly": np.concatenate([g["radius_ly"], np.radians(rz["major_arcmin"] / 60) * rz["dist_ly"] / 2]),
+             "abs_mag": np.concatenate([g["abs_mag"], np.full(len(rz["name"]), -20.0)])}
     if name is not None:
         key = name.strip().lower()
         sel = np.array([i for i, n in enumerate(g["name"]) if n.lower() == key or key in n.lower()][:10], int)
@@ -370,6 +413,7 @@ def galaxy_catalog(max_distance_mly: float = 3000.0, limit: int = 12000, name: s
         sel = np.flatnonzero(g["dist_ly"] <= max_distance_mly * 1e6)
         sel = sel[np.argsort(g["dist_ly"][sel])][:limit]
     d_mly = g["dist_ly"][sel] / 1e6
+    common = galaxy_common_names()
     xyz = (EQ_TO_GAL @ g["unit"][:, sel]) * d_mly
     v = h0 * d_mly / PC_LY  # km/s: H0 [km/s/Mpc] × d [Mpc], with d [Mpc] = d [Mly] / 3.2616
     z = np.sqrt((1 + v / C_KM_S) / (1 - np.minimum(v / C_KM_S, 0.99))) - 1
@@ -377,6 +421,7 @@ def galaxy_catalog(max_distance_mly: float = 3000.0, limit: int = 12000, name: s
         "result": {
             "count": int(sel.size), "frame": "galactic",
             "name": [g["name"][i] for i in sel], "type": [g["type"][i] for i in sel],
+            "common_name": [common.get(g["name"][i]) for i in sel],
             "x_mly": xyz[0].round(5).tolist(), "y_mly": xyz[1].round(5).tolist(), "z_mly": xyz[2].round(5).tolist(),
             "distance_mly": d_mly.round(5).tolist(), "radius_ly": g["radius_ly"][sel].round(0).tolist(),
             "absolute_magnitude": np.nan_to_num(g["abs_mag"][sel], nan=-18.0).tolist(),

@@ -27,10 +27,10 @@ const SECTION = {
   "earth-moon": "space", orbitdecay: "space", precession: "space", rocket: "space",
 };
 /** The most powerful simulations, shown first on the Simulations page (one or more from every area). */
-export const FEATURED = ["spaceflight", "solarsystem", "universe", "blackhole", "hydrogen", "quantum", "tunnelling", "wavepacket",
+export const FEATURED = ["solarsystem", "spaceflight", "blackhole", "hydrogen", "quantum", "tunnelling", "wavepacket",
   "relativity", "doublependulum", "lorentz", "interference", "labbench", "titration", "galvanic", "equilibrium", "fourier", "fractal", "transform", "complex"];
 /** Inside every shelf the strongest simulations come first, then the rest in catalogue order. */
-const RANK = ["spaceflight", "solarsystem", "universe", "blackhole", "earth-moon", "hohmann", "orbitdecay", "precession",
+const RANK = ["solarsystem", "spaceflight", "universe", "blackhole", "earth-moon", "hohmann", "orbitdecay", "precession",
   "hydrogen", "quantum", "tunnelling", "wavepacket", "rabi", "oscillator", "photoelectric", "relativity", "decay",
   "doublependulum", "projectile", "collisions", "coupled", "pendulum", "skate", "resonance",
   "interference", "lenses", "refraction", "doppler", "waves", "lorentz", "faraday", "circuit", "rlc", "charges",
@@ -39,7 +39,7 @@ const RANK = ["spaceflight", "solarsystem", "universe", "blackhole", "earth-moon
   "fourier", "fractal", "transform", "complex", "grapher", "taylor", "phase", "montecarlo", "newton", "riemann", "probability", "conics"];
 export const rankOf = (sim) => { const i = RANK.indexOf(sim.id); return i < 0 ? RANK.length + SIMS.indexOf(sim) : i; };
 /** The gallery section a simulation belongs to (chemistry and maths keep their subject). */
-export const sectionOf = (sim) => SECTION[sim.id] || (sim.domain === "physics" ? "mechanics" : sim.domain);
+export const sectionOf = (sim) => (sim.hidden ? "hidden" : SECTION[sim.id] || (sim.domain === "physics" ? "mechanics" : sim.domain));
 
 export const SIMS = [
   {
@@ -654,15 +654,15 @@ export const SIMS = [
       <text x="30" y="40" font-size="12" font-family="system-ui" fill="#7b8796">SOLID</text><text x="120" y="40" font-size="12" font-family="system-ui" fill="#7b8796">LIQUID</text><text x="150" y="105" font-size="12" font-family="system-ui" fill="#7b8796">GAS</text>`),
   },
   {
-    id: "solarsystem", domain: "physics", title: "Solar System 3D",
-    blurb: "The real Solar System on any date: planets, 29 moons, dwarf planets, asteroids, comets and belts, then zoom out to the stars and galaxies.",
+    id: "solarsystem", domain: "physics", title: "Universe Map",
+    blurb: "One map from the Sun to the edge of the observable universe: every planet and moon on any date, 12,000 stars, all 88 constellations, 3,800 planetary systems, the Milky Way and 11,000 named galaxies.",
     load: () => import("./solarsystem.js"),
     art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="40" cy="64" r="26" fill="#ffb640"/><circle cx="40" cy="64" r="34" fill="#ffb640" fill-opacity=".2"/>
       <ellipse cx="40" cy="64" rx="80" ry="22" fill="none" stroke="#4f8fe0" stroke-opacity=".5"/><ellipse cx="40" cy="64" rx="150" ry="44" fill="none" stroke="#d6a77a" stroke-opacity=".4"/>
       <circle cx="118" cy="70" r="6" fill="#4f8fe0"/><circle cx="186" cy="92" r="12" fill="#d6a77a"/><ellipse cx="186" cy="92" rx="22" ry="5" fill="none" stroke="#e3cf96" stroke-width="2"/>`),
   },
   {
-    id: "universe", domain: "physics", title: "Universe Explorer",
+    id: "universe", domain: "physics", title: "Universe Map (outer view)", hidden: true, // same map as solarsystem, opened at the largest scale
     blurb: "From planets to the edge of the observable universe: 12,000 real stars, the Milky Way, 11,000 galaxies and the cosmic microwave background.",
     load: () => import("./universe.js"),
     art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="120" cy="64" r="58" fill="none" stroke="#ff9a5a" stroke-opacity=".55" stroke-width="3"/><circle cx="120" cy="64" r="40" fill="none" stroke="#4f78b0" stroke-opacity=".5"/>

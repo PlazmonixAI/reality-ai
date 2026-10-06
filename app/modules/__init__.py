@@ -64,6 +64,7 @@ from app.modules.physics import ephemeris  # noqa: F401
 from app.modules.physics import rocketry  # noqa: F401
 from app.modules.physics import smallbodies  # noqa: F401
 from app.modules.physics import universe  # noqa: F401
+from app.modules.physics import skyatlas  # noqa: F401
 from app.modules.physics import rocketdesign  # noqa: F401
 from app.modules.physics import vehicles  # noqa: F401
 from app.modules.physics import fleet  # noqa: F401

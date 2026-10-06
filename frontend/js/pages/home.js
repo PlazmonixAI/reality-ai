@@ -4,10 +4,10 @@ import { api, currentUser, history, when } from "../core/session.js";
 import { openLink, KIND_LABEL } from "./history.js";
 
 const PLACES = [
+  ["#/sim/solarsystem", "Universe Map", "One map from the planets to the edge of the observable universe, with every constellation and named galaxy.", "planet"],
   ["/teach", "ASM Teach", "The separate classroom app for schools: teacher accounts, a full board and live experiments. Opens its own sign-in.", "book"],
   ["#/sims", "All simulations", "82 research simulations across physics, chemistry and mathematics.", "grid"],
   ["#/ask", "Ask the AI", "Ask a question in plain words; it runs the engine and explains the answer.", "chat"],
-  ["#/sim/solarsystem", "Solar System", "Every planet and moon on any date, out to the stars and galaxies.", "planet"],
   ["#/sim/spaceflight", "Space Program", "Build a rocket from parts or pick a real one, fly it to orbit or the Moon, then run your fleet in Mission Control.", "rocket"],
   ["#/company", "Mission Control", "Inside the Space Program: launch satellites, keep them flying, take pictures, send probes.", "sat"],
   ["#/challenges", "Challenges", "Set missions checked by the engine, from the Kármán line to Jupiter.", "flag"],

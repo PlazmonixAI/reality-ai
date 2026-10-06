@@ -1081,3 +1081,20 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .cards.featured .card { border-color: rgba(255,91,46,.35); }
 .cards.featured .card-body h3::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #FF5B2E; margin-right: 7px; vertical-align: 1px; }
 .sf-small.on { background: #FF5B2E; color: #0B1526; border-color: #FF5B2E; }
+
+/* Universe map: settings panel, constellations, deep-sky and exoplanet names */
+.ss-gear { position: absolute; right: 16px; bottom: 54px; z-index: 6; background: rgba(10,18,32,.82); color: #e7eefa; border: 1px solid rgba(120,160,220,.35); border-radius: 10px; padding: 8px 12px; font: 600 13px Plex, system-ui; cursor: pointer; }
+.ss-gear:hover { border-color: #FF5B2E; }
+.ss-settings { position: absolute; right: 16px; bottom: 98px; z-index: 7; width: 300px; max-height: calc(100% - 140px); overflow: auto; padding: 12px 14px; border-radius: 14px; background: rgba(8,14,26,.94); border: 1px solid rgba(120,160,220,.3); color: #e7eefa; backdrop-filter: blur(8px); }
+.ss-settings.hidden { display: none; }
+.ss-settings-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.ss-settings h4 { margin: 10px 0 4px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8fa7c6; }
+.ss-check { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 3px 0; cursor: pointer; }
+.ss-check input { accent-color: #FF5B2E; }
+.ss-density { display: flex; gap: 8px; align-items: center; font-size: 12px; color: #9fb3cc; }
+.ss-density input { flex: 1; accent-color: #FF5B2E; }
+.ss-label.con { font-size: 10.5px; letter-spacing: .18em; color: #9fc3ff; opacity: .85; }
+.ss-label.con::before { display: none; }
+.ss-label.dso { color: #ffd0dc; }
+.ss-label.exo { color: #b9f7d0; }
+@media (max-width: 760px) { .ss-settings { left: 10px; right: 10px; width: auto; } .ss-gear { bottom: 64px; } }

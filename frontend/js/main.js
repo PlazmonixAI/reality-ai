@@ -48,7 +48,7 @@ async function route() {
   const simMatch = path.match(/^\/sim\/([\w-]+)/);
   const sim = simMatch && SIMS.find((s) => s.id === simMatch[1]);
   crumb.textContent = "";
-  if (sim) { setActive(sim.id === "spaceflight" ? "spaceflight" : "sims"); await openSim(sim, params); }
+  if (sim) { setActive(["spaceflight", "solarsystem"].includes(sim.id) ? sim.id : sim.id === "universe" ? "solarsystem" : "sims"); await openSim(sim, params); }
   else if (path.startsWith("/ask")) { setActive("ask"); crumb.textContent = ""; document.title = "Ask AI · Reality ASM"; mountAsk(app, params); }
   else if (path.startsWith("/sims")) { setActive("sims"); renderGallery(); }
   else {
@@ -77,7 +77,7 @@ function renderGallery() {
   const shelves = el("div", { class: "shelf-tabs", role: "tablist", "aria-label": "Sections" });
   const drawShelves = () => shelves.replaceChildren(...[{ id: "", label: "All" }, ...DOMAINS].map((d) => el("button", { type: "button", role: "tab", class: `chip${shelf === d.id ? " on" : ""}`, "aria-selected": String(shelf === d.id),
     onclick: () => { shelf = d.id; try { sessionStorage.setItem("sims.shelf", shelf); } catch { /* private mode */ } drawShelves(); draw(); } },
-    d.label.replace(/^Physics: /, ""), el("span", { class: "count" }, String(d.id ? SIMS.filter((s) => sectionOf(s) === d.id).length : SIMS.length)))));
+    d.label.replace(/^Physics: /, ""), el("span", { class: "count" }, String(d.id ? SIMS.filter((s) => sectionOf(s) === d.id).length : SIMS.filter((s) => !s.hidden).length)))));
   drawShelves();
   const draw = () => {
     const q = query.trim().toLowerCase();
