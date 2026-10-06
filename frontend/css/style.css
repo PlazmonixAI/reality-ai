@@ -1196,3 +1196,4 @@ canvas:focus-visible, .ss-tool:focus-visible, .jr-btn:focus-visible, .jr-chip:fo
 }
 .ss-media { margin: 8px 0 10px; } .ss-media img, .ss-media-canvas { display: block; width: 100%; height: auto; border-radius: 8px; background: #03060c; }
 .ss-media figcaption { margin-top: 4px; font-size: 11px; line-height: 1.35; color: #8fa3bf; }
+.ss-root:not(.ss-solar) .ss-clock { display: none !important; }

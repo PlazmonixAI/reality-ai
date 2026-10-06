@@ -579,6 +579,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
       if (!interactive) setInteractive(false);
       prevLevel = level;
       for (const x of [toolbar, timebar]) x.style.display = level === 0 ? "" : "none";
+      rootEl.classList.toggle("ss-solar", level === 0); // time travel (the clock) belongs to the Solar System scale only
       brand.replaceChildren("UNIVERSE MAP ", el("b", {}, LEVELS[level].name.toUpperCase()));
       ladderBtns.forEach((b, k) => b.classList.toggle("on", k === level));
       resize();
@@ -644,7 +645,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
       PageUp: () => goLevel(level + 1), PageDown: () => goLevel(level - 1),
       1: () => goLevel(0), 2: () => goLevel(1), 3: () => goLevel(2), 4: () => goLevel(3), 5: () => goLevel(4),
       h: () => (level === 0 ? select(null) : universe.levels[level - 1].enter("out")), n: () => bLabels.click(), j: () => journey.start(), "?": () => help.classList.toggle("hidden"),
-      " ": () => level === 0 && bPlay.click(), ",": () => setSpeed(speedIdx - 1), ".": () => setSpeed(speedIdx + 1),
+      " ": () => level === 0 && bPlay.click(), ",": () => level === 0 && setSpeed(speedIdx - 1), ".": () => level === 0 && setSpeed(speedIdx + 1),
       Escape: () => { help.classList.add("hidden"); gear.sheet.classList.add("hidden"); info.classList.add("hidden"); },
     }[k.length === 1 ? k.toLowerCase() : k];
     if (!act || !interactive) return;
@@ -842,7 +843,8 @@ export function mountAt(root, startLevel = 0, params = {}) {
     }
   }
   raf = requestAnimationFrame(frame);
-  if (startLevel) setTimeout(() => goLevel(startLevel), 50);
+  rootEl.classList.toggle("ss-solar", !startLevel);
+  if (startLevel) { timebar.style.display = "none"; toolbar.style.display = "none"; setTimeout(() => goLevel(startLevel), 50); }
 
   return () => {
     cancelAnimationFrame(raf); ro.disconnect(); controls.dispose(); universe.dispose(); journey.stop(); window.removeEventListener("keydown", onKey);
