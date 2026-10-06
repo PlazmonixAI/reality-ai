@@ -9,7 +9,7 @@ import { fmt } from "../core/format.js";
 import { planetMaterial, atmosphereMaterial, glowTexture } from "./shaders.js";
 import { buildSky } from "./sky.js";
 
-const TEX = "assets/textures/";
+const TEX = "/app/assets/textures/"; // absolute, so the same view works inside ASM Teach
 const KM = 1e-6;                 // scene unit = 1,000 km
 const EARTH_R = 6371, MOON_R = 1737.4, MOON_D = 384400, MOON_SOI = 66194; // km
 const toScene = (p) => new THREE.Vector3(p[0], p[2], -p[1]); // equatorial (x, y, z) → three.js (x, z, −y)

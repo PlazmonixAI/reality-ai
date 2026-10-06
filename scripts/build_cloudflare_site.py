@@ -95,9 +95,13 @@ def main() -> None:
     print(f"built {OUT.relative_to(ROOT)} ({sum(1 for _ in OUT.rglob('*') if _.is_file())} files)")
 
 
-TITLE = "Reality ASM · Physics, Chemistry and Maths Simulations"
-DESCRIPTION = ("Live physics, chemistry and maths simulations computed by a real engine, and ASM Teach, the classroom board "
-               "for Indian schools. Built in India by Plazmonix AI.")
+TITLE = "Reality ASM · 3D Universe Map with every galaxy and constellation"
+DESCRIPTION = ("Fly through the universe in one 3D map: planets on any date, 12,000 stars, all 88 constellations, 3,800 "
+               "planetary systems, the Milky Way and 11,000 named galaxies to the edge of the observable universe. Plus physics, "
+               "chemistry and maths simulations and ASM Teach for schools. Built in India by Plazmonix AI.")
+KEYWORDS = ("universe map, 3D universe map, interactive universe map, galaxy map, map of the galaxies, constellation map, 3D star map, "
+            "solar system 3D, observable universe, Andromeda galaxy, Milky Way map, exoplanet map, physics simulations, "
+            "chemistry virtual lab, maths graphing sandbox, rocket simulator, PSLV, ASM Teach, Reality ASM, Plazmonix AI")
 
 
 def seo_head(html: str, site: str, email: str) -> str:
@@ -111,21 +115,40 @@ def seo_head(html: str, site: str, email: str) -> str:
         org,
         {"@type": "WebSite", "@id": f"{site}/#website", "url": f"{site}/", "name": "Reality ASM", "inLanguage": "en-IN",
          "publisher": {"@id": f"{site}/#org"}},
+        {"@type": "WebPage", "@id": f"{site}/#page", "url": f"{site}/", "name": TITLE, "description": DESCRIPTION,
+         "isPartOf": {"@id": f"{site}/#website"}, "primaryImageOfPage": f"{site}/static/brand/og-image.jpg",
+         "about": [{"@type": "Thing", "name": n} for n in ("Universe", "Galaxy", "Constellation", "Solar System", "Milky Way", "Exoplanet")]},
+        {"@type": "SoftwareApplication", "name": "Reality ASM Universe Map", "url": f"{site}/#universe", "applicationCategory": "EducationalApplication",
+         "applicationSubCategory": "Astronomy", "operatingSystem": "Any modern web browser", "image": f"{site}/static/img/uv_galaxies_named.jpg",
+         "publisher": {"@id": f"{site}/#org"},
+         "description": "One continuous 3D map from the Solar System to the edge of the observable universe: planets and moons on any "
+                        "date, 12,000 real stars, all 88 constellations joined to their stars in 3D (with Hindi names), 3,800 exoplanet "
+                        "systems, the Milky Way with 6,500 open clusters, 11,000 galaxies with their common names, galaxy clusters, "
+                        "superclusters, great walls, voids and the most distant objects known, placed by redshift.",
+         "featureList": ["Five scales in one map: Solar System, stars, Milky Way, galaxies, observable universe",
+                         "88 constellations with lines, names, Hindi names and boundaries, each switchable in Settings",
+                         "11,000 galaxies, the famous ones named: Andromeda, Triangulum, Whirlpool, Sombrero, Pinwheel, Centaurus A",
+                         "3,800 planetary systems from the Open Exoplanet Catalogue", "Distances from redshift with Planck 2018 cosmology"]},
         {"@type": "SoftwareApplication", "name": "Reality ASM", "url": f"{site}/", "applicationCategory": "EducationalApplication",
          "operatingSystem": "Any modern web browser", "image": f"{site}/static/brand/og-image.jpg", "publisher": {"@id": f"{site}/#org"},
          "description": "A simulation engine for physics, chemistry and mathematics. Every number is computed by tested engine tools "
                         "with SI units and stated assumptions; an AI analyst explains the results.",
-         "featureList": ["82 interactive simulations in physics, chemistry and maths", "3D Solar System from JPL orbital elements",
-                         "Space Program with 13 real launch vehicles", "AI analyst that explains every result",
-                         "ASM Teach: 281 classroom experiments, Equation Lab and Listen mode"]},
+         "featureList": ["The Universe Map: Solar System, stars, constellations, Milky Way and 11,000 named galaxies in one 3D map",
+                         "83 interactive simulations split into physics, chemistry and mathematics",
+                         "Virtual chemistry lab with 72 chemicals, lift-and-pour glassware and gas cylinders",
+                         "Maths sandbox: functions, equations, inequalities, polar and parametric curves with roots and turning points",
+                         "Space Program with 13 real launch vehicles including PSLV, LVM3 and Falcon 9",
+                         "AI analyst that explains every result"]},
         {"@type": "SoftwareApplication", "name": "ASM Teach", "url": f"{site}/#teach", "applicationCategory": "EducationalApplication",
          "operatingSystem": "Any modern web browser", "publisher": {"@id": f"{site}/#org"},
          "audience": {"@type": "EducationalAudience", "educationalRole": "teacher"},
-         "description": "A classroom board for schools: every senior school derivation and practical in physics, chemistry and maths "
-                        "as a live experiment. Write an equation and it is built from the mathematics; wrong equations are flagged."},
+         "description": "A separate classroom app for schools: every senior school derivation and practical in physics, chemistry and maths "
+                        "as a live experiment, plus the Universe Map, the chemistry and maths sandboxes and every Reality ASM simulation. "
+                        "Write an equation and it is built from the mathematics; wrong equations are flagged."},
     ]}
     tags = f"""<title>{TITLE}</title>
   <meta name="description" content="{DESCRIPTION}">
+  <meta name="keywords" content="{KEYWORDS}">
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
   <link rel="canonical" href="{site}/">
   <meta name="theme-color" content="#0B1526">
@@ -140,7 +163,7 @@ def seo_head(html: str, site: str, email: str) -> str:
   <meta property="og:image" content="{site}/static/brand/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Reality ASM: physics, chemistry and maths you can see">
+  <meta property="og:image:alt" content="The Reality ASM Universe Map: named galaxies, clusters and superclusters around the Milky Way">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{TITLE}">
   <meta name="twitter:description" content="{DESCRIPTION}">

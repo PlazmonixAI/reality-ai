@@ -38,14 +38,17 @@ ask_limit = RateLimiter(settings.ask_rate_per_min, per=60.0)
 
 # ---------------------------------------------------------------- security middleware
 def _importmap_hash() -> str:
-    try:
-        html = (FRONTEND_DIR / "index.html").read_text()
+    """CSP hashes for the inline import maps of the app and the ASM Teach app (three.js for 3D views)."""
+    hashes = []
+    for page in ("index.html", "teach.html"):
+        try:
+            html = (FRONTEND_DIR / page).read_text()
+        except OSError:
+            continue
         m = re.search(r'<script type="importmap">(.*?)</script>', html, re.S)
         if m:
-            return "'sha256-" + base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode() + "'"
-    except OSError:
-        pass
-    return ""
+            hashes.append("'sha256-" + base64.b64encode(hashlib.sha256(m.group(1).encode()).digest()).decode() + "'")
+    return " ".join(hashes)
 
 
 CSP = ("default-src 'self'; script-src 'self' " + _importmap_hash() + "; style-src 'self' 'unsafe-inline'; "

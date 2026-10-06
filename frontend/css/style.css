@@ -878,6 +878,7 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .ta-page { padding: 22px clamp(14px, 3vw, 32px) 40px; max-width: 1280px; margin: 0 auto; }
 .ta-page.ta-board { padding: 0; max-width: none; }
 .ta-page.ta-teach { padding: 0; max-width: none; }
+.ta-page.ta-universe, .ta-page:has(> .sim-page) { padding: 0; max-width: none; }
 .ta-head { margin-bottom: 18px; }
 .ta-head h1 { margin: 0 0 4px; font-size: 28px; }
 .ta-head p { margin: 0; }
@@ -1130,3 +1131,14 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 .msb-zoom { position: absolute; left: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .msb-zoom button { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: #0B1526; font-size: 16px; cursor: pointer; }
 @media (max-width: 860px) { .msb { grid-template-columns: 1fr; height: auto; } .msb-stage { height: 62vh; } .msb-side { max-height: none; } }
+
+/* Simulations gallery: subjects on top, physics topics underneath */
+.subject-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0 8px; border-bottom: 1px solid var(--border); }
+.subject-tab { border: 0; background: none; padding: 10px 16px; font: inherit; font-size: 15px; font-weight: 600; color: var(--text-2); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.subject-tab .count { margin-left: 6px; font-size: 12px; font-weight: 500; color: var(--text-3); }
+.subject-tab:hover { color: var(--accent); }
+.subject-tab.on { color: var(--text); border-bottom-color: #FF5B2E; }
+.shelf-tabs[hidden] { display: none; }
+.subject-title { font-size: 22px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.shelf-title { font-size: 16px; margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; color: var(--text-2); }
+.shelf-title .count { color: var(--text-3); font-weight: 500; font-size: 13px; }

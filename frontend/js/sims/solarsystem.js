@@ -12,7 +12,7 @@ import { createUniverseLevels } from "../space/universe.js";
 import { buildSky } from "../space/sky.js";
 import { createSettings, settingsPanel } from "../space/settings.js";
 
-const TEX = "assets/textures/";
+const TEX = "/app/assets/textures/"; // absolute, so the same view works inside ASM Teach
 const COLORS = { sun: "#ffcc55", mercury: "#9c8f86", venus: "#d8b27a", earth: "#4f8fe0", moon: "#b9b9b9", mars: "#d0643b",
   jupiter: "#d6a77a", saturn: "#e3cf96", uranus: "#8fd3e0", neptune: "#4a6fe0", pluto: "#bfa58a" };
 const KIND_COLOR = { "natural satellite": "#b8c4d6", "dwarf planet": "#c9a27e", asteroid: "#9a9189", comet: "#7fd6ff", centaur: "#b58f6a", "Kuiper belt object": "#c98a6a" };

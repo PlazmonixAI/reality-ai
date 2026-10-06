@@ -24,7 +24,7 @@ const latlon = (lat, lon) => `${Math.abs(lat).toFixed(2)}° ${lat >= 0 ? "N" : "
 const dateOf = (ts) => new Date(ts * 1000).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 const loadImg = (src) => new Promise((ok, fail) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => ok(i); i.onerror = fail; i.src = src; });
 let earthLoading = null, dayImg = null, nightImg = null;
-const earthImages = () => (earthLoading ||= Promise.all([loadImg("assets/textures/earth_day.jpg"), loadImg("assets/textures/earth_night.jpg")])
+const earthImages = () => (earthLoading ||= Promise.all([loadImg("/app/assets/textures/earth_day.jpg"), loadImg("/app/assets/textures/earth_night.jpg")])
   .then(([d, n]) => { dayImg = d; nightImg = n; return [d, n]; }));
 
 function fact(label, value, cls = "") { return el("div", { class: `mc-fact ${cls}` }, el("span", {}, label), el("b", {}, value)); }

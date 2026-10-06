@@ -207,3 +207,7 @@ a.choice:hover { border-color: var(--ink); border-left-color: var(--ember); tran
 .door.teach .tag { color: #FF8A63; }
 .door.teach .door-go { color: #FF8A63; }
 @media (max-width: 760px) { .doors .wrap { grid-template-columns: 1fr; } }
+.doors-head { grid-column: 1 / -1; margin: 0 0 4px; font-weight: 600; color: var(--muted); }
+.subhead { margin: 56px 0 0; font-size: 20px; }
+.band .grid-shots figcaption { color: var(--on-ink-muted); }
+.band .grid-shots img { box-shadow: 0 0 0 1px rgba(255,255,255,.12); }

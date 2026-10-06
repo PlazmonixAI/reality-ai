@@ -61,9 +61,14 @@ def save_run(user_id: str, kind: str, title: str, payload: dict, summary: dict, 
 
 @router.get("")
 def list_runs(kind: str | None = None, q: str | None = None, starred: bool = False, limit: int = 50, before: float | None = None,
-              user=Depends(current_user)):
+              exclude: str | None = None, user=Depends(current_user)):
+    """exclude: comma-separated kinds to leave out (Reality ASM leaves out ASM Teach lessons)."""
     limit = max(1, min(200, limit))
+    skip = [k for k in (exclude or "").split(",") if k in KINDS]
     sql, args = "SELECT * FROM runs WHERE user_id = ?", [user["id"]]
+    if skip:
+        sql += f" AND kind NOT IN ({','.join('?' * len(skip))})"
+        args.extend(skip)
     if kind:
         sql += " AND kind = ?"
         args.append(kind)
@@ -80,7 +85,7 @@ def list_runs(kind: str | None = None, q: str | None = None, starred: bool = Fal
     with db.connect() as conn:
         rows = conn.execute(sql, args).fetchall()
         counts = {r["kind"]: r["n"] for r in conn.execute(
-            "SELECT kind, COUNT(*) AS n FROM runs WHERE user_id = ? GROUP BY kind", (user["id"],))}
+            "SELECT kind, COUNT(*) AS n FROM runs WHERE user_id = ? GROUP BY kind", (user["id"],)) if r["kind"] not in skip}
     return {"items": [_row(r) for r in rows[:limit]], "more": len(rows) > limit, "counts": counts}
 
 

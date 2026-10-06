@@ -5,8 +5,7 @@ import { openLink, KIND_LABEL } from "./history.js";
 
 const PLACES = [
   ["#/sim/solarsystem", "Universe Map", "One map from the planets to the edge of the observable universe, with every constellation and named galaxy.", "planet"],
-  ["/teach", "ASM Teach", "The separate classroom app for schools: teacher accounts, a full board and live experiments. Opens its own sign-in.", "book"],
-  ["#/sims", "All simulations", "82 research simulations across physics, chemistry and mathematics.", "grid"],
+  ["#/sims", "All simulations", "Research simulations in physics, chemistry and mathematics, with the most powerful first.", "grid"],
   ["#/ask", "Ask the AI", "Ask a question in plain words; it runs the engine and explains the answer.", "chat"],
   ["#/sim/spaceflight", "Space Program", "Build a rocket from parts or pick a real one, fly it to orbit or the Moon, then run your fleet in Mission Control.", "rocket"],
   ["#/company", "Mission Control", "Inside the Space Program: launch satellites, keep them flying, take pictures, send probes.", "sat"],
@@ -41,7 +40,7 @@ export default {
       const h = new Date().getHours();
       hello.textContent = `${h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening"}, ${u.name.split(" ")[0]}`;
     }).catch(() => {});
-    history.list({ limit: 6 }).then(({ items }) => {
+    history.list({ limit: 6, exclude: "lesson" }).then(({ items }) => {
       if (!alive) return;
       recent.replaceChildren(...(items.length ? items.map((r) => el("a", { class: "recent-item", href: openLink(r) },
         el("span", { class: `kind k-${r.kind}` }, KIND_LABEL[r.kind] || r.kind), el("b", {}, r.title), el("small", {}, when(r.updated_at))))

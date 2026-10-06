@@ -350,3 +350,38 @@
 - **Space Program:** side boosters have symmetry choices (2, 3, 4 or 6 around the core). The boosters behind the core are drawn faded.
 - **Checked in the browser:** the simulations without a plain slider (circuit builder, charges, molecule shapes, build an atom, phase portraits, vectors, fitting, shortest paths, balancing, Universe, Solar System) have no errors. The only network notice is the expected "no space company yet" reply for a new account.
 - **Still open (larger projects):** handwriting recognition on the board, Hindi interface and Hindi listen mode, class assignments, email verification, inclined 3D ascents, constellation lines and exoplanets, Kerr black hole, 2D wave packets, and real Groq keys for the AI.
+
+## 2026-10-06: Universe Map, lab pouring, Maths Sandbox, ASM and ASM Teach apart
+- **Universe Map (the main simulation).**
+  - The Solar System, Stars, Milky Way, Galaxies and Universe views are one map, "Universe Map": the first card, its own nav entry, and one card in the gallery (the old Universe Explorer route still works).
+  - New tool `physics.sky_atlas` built from open catalogues (`scripts/build_sky_atlas.py`):
+    - d3-celestial constellations: 88, with Serpens in two parts, plus boundaries and Hindi names; 880 of 893 line vertices are matched to HYG stars, so the figures join real stars in 3D.
+    - OpenNGC nebulae and clusters, with literature distances.
+    - The Open Exoplanet Catalogue: 3,804 systems, Proxima included (the builder used to drop planets in binary systems).
+    - Celestia open clusters.
+    - 34 large-scale structures and 8 record-distance objects at comoving distance from redshift.
+  - `galaxy_catalog` returns common names (Andromeda, Whirlpool, Sombrero, Pinwheel, Leo Triplet...), and can add redshift-only NGC/IC galaxies.
+  - A Settings panel switches names (planets, stars, nebulae, exoplanets, galaxies, catalogue galaxies, structures), constellation lines, names, Hindi names, boundaries and real 3D shapes, and layers. It also sets how many names are shown. Constellations are drawn on a far sky dome by default, so they look as they do from Earth.
+- **Space Program:** the pad starts empty. You build your own rocket or add a real one (PSLV-XL, GSLV, LVM3, SSLV, Falcon 9...) or an example from the empty-pad picker.
+- **Chemistry lab:**
+  - Vessels go anywhere on the bench.
+  - Hold a vessel over another and it tilts and pours a steady stream until you let go; the pours go to the engine in small steps and the notebook records one line.
+  - Tap the bench with a liquid in hand to set down a labelled reagent bottle.
+  - The Gases shelf and "Bubble gas in" use a new `gas` action in `lab_step`: H2, O2, CO2, NH3, SO2 and NO2 from a cylinder, as an ideal gas at 25 °C.
+- **Maths Sandbox:** a new simulation with a new tool, `mathematics.sandbox`.
+  - It takes functions, x = g(y), implicit equations (marching squares), inequalities (shaded), points, parametric and polar curves, sliders, named functions f(x), and plain sums.
+  - The engine finds roots (Brent), turning points (bounded search), y-intercepts and intersections.
+  - The page pans, zooms and pinches, and shows values on hover.
+  - `parse_expression` takes an optional `functions=` argument.
+- **ASM vs ASM Teach:**
+  - ASM no longer links to Teach, has no `#/teach` route, and leaves Teach lessons out of history and home (`/api/history?exclude=lesson`).
+  - ASM Teach gains Universe and Simulations: the shared gallery in `frontend/js/pages/simgallery.js` plus every simulation with its AI analyst. Teach has its own import map, and the CSP now carries both hashes.
+  - Texture paths are absolute so 3D views work under /teach.
+- **Gallery** by subject: Physics (Space, Quantum, Relativity and nuclear, Motion, Waves, Electricity, Heat), Chemistry, Mathematics.
+- **Landing and SEO:**
+  - New hero and a Universe Map section with six new screenshots; the lab, the sandbox and PSLV pictures; a two-product chooser.
+  - The Cloudflare build has a new title, description, keywords, share image and JSON-LD for the Universe Map. The site was rebuilt.
+- Tests: `test_physics_skyatlas.py`, `test_mathematics_sandbox.py`, lab gas and bottle tests, history exclude. 900 tests pass.
+- **Known issues and next steps:**
+  - The sandbox reuses the three series colours with dashes for a fourth line and beyond.
+  - Mission Control links inside the Space Program point to the ASM app when opened from Teach.

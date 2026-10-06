@@ -8,12 +8,18 @@ export const DOMAINS = [
   { id: "space", label: "Space and astronomy" },
   { id: "quantum", label: "Quantum mechanics" },
   { id: "modern", label: "Relativity and nuclear physics" },
-  { id: "mechanics", label: "Physics: motion and forces" },
-  { id: "waves", label: "Physics: waves, sound and light" },
-  { id: "electricity", label: "Physics: electricity and magnetism" },
-  { id: "heat", label: "Physics: heat and fluids" },
+  { id: "mechanics", label: "Motion and forces" },
+  { id: "waves", label: "Waves, sound and light" },
+  { id: "electricity", label: "Electricity and magnetism" },
+  { id: "heat", label: "Heat and fluids" },
   { id: "chemistry", label: "Chemistry" },
   { id: "mathematics", label: "Mathematics" },
+];
+/** The three subjects at the top of the gallery, each made of one or more shelves. */
+export const SUBJECTS = [
+  { id: "physics", label: "Physics", shelves: ["space", "quantum", "modern", "mechanics", "waves", "electricity", "heat"] },
+  { id: "chemistry", label: "Chemistry", shelves: ["chemistry"] },
+  { id: "mathematics", label: "Mathematics", shelves: ["mathematics"] },
 ];
 const SECTION = {
   projectile: "mechanics", ramp: "mechanics", collisions: "mechanics", pendulum: "mechanics", doublependulum: "mechanics", springs: "mechanics",
@@ -667,9 +673,10 @@ export const SIMS = [
     id: "solarsystem", domain: "physics", title: "Universe Map",
     blurb: "One map from the Sun to the edge of the observable universe: every planet and moon on any date, 12,000 stars, all 88 constellations, 3,800 planetary systems, the Milky Way and 11,000 named galaxies.",
     load: () => import("./solarsystem.js"),
-    art: sky(`<rect width="240" height="128" fill="#02040a"/><circle cx="40" cy="64" r="26" fill="#ffb640"/><circle cx="40" cy="64" r="34" fill="#ffb640" fill-opacity=".2"/>
-      <ellipse cx="40" cy="64" rx="80" ry="22" fill="none" stroke="#4f8fe0" stroke-opacity=".5"/><ellipse cx="40" cy="64" rx="150" ry="44" fill="none" stroke="#d6a77a" stroke-opacity=".4"/>
-      <circle cx="118" cy="70" r="6" fill="#4f8fe0"/><circle cx="186" cy="92" r="12" fill="#d6a77a"/><ellipse cx="186" cy="92" rx="22" ry="5" fill="none" stroke="#e3cf96" stroke-width="2"/>`),
+    art: sky(`<rect width="240" height="128" fill="#02040a"/>${Array.from({ length: 40 }, (_, i) => `<circle cx="${(i * 89) % 240}" cy="${(i * 47) % 128}" r="${i % 4 ? 0.7 : 1.3}" fill="#fff" fill-opacity=".75"/>`).join("")}
+      <path d="M150 22 L172 34 L196 30 L214 48 M172 34 L178 58" fill="none" stroke="#6f9fe0" stroke-opacity=".8"/><circle cx="150" cy="22" r="1.8" fill="#cfe0ff"/><circle cx="172" cy="34" r="1.8" fill="#cfe0ff"/><circle cx="196" cy="30" r="1.8" fill="#cfe0ff"/><circle cx="214" cy="48" r="1.8" fill="#cfe0ff"/><circle cx="178" cy="58" r="1.8" fill="#cfe0ff"/>
+      <ellipse cx="196" cy="98" rx="30" ry="9" fill="#cfd8ff" fill-opacity=".35" transform="rotate(-24 196 98)"/><ellipse cx="196" cy="98" rx="12" ry="4" fill="#fff3d6" fill-opacity=".7" transform="rotate(-24 196 98)"/>
+      <circle cx="58" cy="70" r="16" fill="#ffb640"/><circle cx="58" cy="70" r="24" fill="#ffb640" fill-opacity=".18"/><ellipse cx="58" cy="70" rx="52" ry="15" fill="none" stroke="#4f8fe0" stroke-opacity=".55"/><ellipse cx="58" cy="70" rx="92" ry="28" fill="none" stroke="#d6a77a" stroke-opacity=".4"/><circle cx="110" cy="74" r="4" fill="#4f8fe0"/>`),
   },
   {
     id: "universe", domain: "physics", title: "Universe Map (outer view)", hidden: true, // same map as solarsystem, opened at the largest scale
