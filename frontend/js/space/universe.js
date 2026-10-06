@@ -7,6 +7,12 @@ import { simulate } from "../core/api.js";
 import { el } from "../core/ui.js";
 import { fmt } from "../core/format.js";
 import { pointsMaterial, hexToRgb, glowTexture } from "./shaders.js";
+import { drawGalaxy, drawNebula, drawStar, galaxyKind, hashName, spikeTexture, toTexture } from "./spaceart.js";
+
+// pictures for the info panels: a real photograph with its credit, or a picture drawn from the object's data
+const photo = (src, credit) => el("figure", { class: "ss-media" }, el("img", { src, alt: "", loading: "lazy" }), el("figcaption", {}, credit));
+const drawn = (cnv, caption) => { cnv.className = "ss-media-canvas"; return el("figure", { class: "ss-media" }, cnv, el("figcaption", {}, caption)); };
+const sized = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
 
 const toScene = (x, y, z) => new THREE.Vector3(x, z, -y); // catalogue frame (x, y, z) → three.js, plane horizontal
 const commas = (n) => Math.round(n).toLocaleString("en-US");
@@ -151,6 +157,12 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     label(stars, "Sun · you are here", "#ffcc55", new THREE.Vector3(0, 0, 0), { priority: 100, onclick: () => goLevel(0) });
     const named = [];
     for (let i = 0; i < n; i++) if (s.proper_name[i]) named.push(i);
+    const spike = spikeTexture();
+    for (const i of named) { // a telescope-style glint on every named star
+      const g = new THREE.Sprite(new THREE.SpriteMaterial({ map: spike, color: new THREE.Color(s.color[i]), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, sizeAttenuation: false }));
+      const k = Math.min(0.06, 0.012 + 0.008 * Math.log10(1 + s.luminosity_solar[i]));
+      g.scale.set(k, k, 1); g.position.copy(toScene(s.x_ly[i], s.y_ly[i], s.z_ly[i])); stars.scene.add(g);
+    }
     for (const i of named) {
       const lum = s.luminosity_solar[i];
       label(stars, s.name[i], s.color[i], toScene(s.x_ly[i], s.y_ly[i], s.z_ly[i]), { cls: "star", lum, onclick: () => starInfo(i), kind: "star" });
@@ -170,7 +182,9 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
       ["Spectral type", s.spectral_type[i] || "–"], ["Temperature", `${commas(s.temperature_k[i])} K`],
       ["Luminosity (V band)", `${fmt(s.luminosity_solar[i], 4)} × Sun`], ["Apparent magnitude", fmt(s.apparent_magnitude[i], 3)],
       ["Absolute magnitude", fmt(s.absolute_magnitude[i], 3)], ["Constellation", s.constellation[i] || "–"],
-    ], "physics.star_catalog (HYG v4.1). Temperature from the B−V colour index.");
+      s.radius_solar && ["Radius", `${fmt(s.radius_solar[i], 3)} × Sun`],
+    ], "physics.star_catalog (HYG v4.1). Temperature from the B−V colour index; radius from the Stefan–Boltzmann law.",
+    s.radius_solar ? (() => { const c = sized(320, 180); drawStar(c, { colour: s.color[i], radius_solar: s.radius_solar[i], temperature_k: s.temperature_k[i], seed: i + 1 }); return drawn(c, "Drawn from the engine's temperature and radius: colour, size against the Sun, limb darkening."); })() : null);
   }
   stars.onPick = (ndc) => { const s = data.stars, i = nearestPoint(stars, ndc, s.x_ly, s.y_ly, s.z_ly); if (i >= 0) starInfo(i); };
 
@@ -217,8 +231,12 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
 
   // ---------- 3. Galaxies of the local universe (1 unit = 1 million ly) ----------
   const galaxies = base("Galaxies", "✺", { start: new THREE.Vector3(0, 60, 150), min: 0.25, max: 9000, near: 0.001, far: 1e6, prev: 2, next: 4 });
+  // the full galaxy catalogue and the cosmology, fetched once and shared by both scales (and the Journey)
+  let fullGalaxies = null, cosmologyP = null;
+  const getGalaxies = () => (fullGalaxies ||= simulate("physics", "galaxy_catalog", { max_distance_mly: 6000, limit: 25000, include_redshift: true }).then((r) => r.result));
+  const getCosmology = () => (cosmologyP ||= simulate("physics", "cosmology", { z: 1 }).then((r) => r.result));
   galaxies.load = async () => {
-    const r = (await simulate("physics", "galaxy_catalog", { max_distance_mly: 6000, limit: 25000, include_redshift: true })).result;
+    const r = await getGalaxies();
     data.galaxies = r;
     const pos = [], col = [], size = [];
     for (let i = 0; i < r.count; i++) {
@@ -227,6 +245,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
       pos.push(v.x, v.y, v.z); col.push(...TYPE_COLOR(r.type[i]).map((c) => c * Math.min(1, 0.55 + 0.45 * lum))); size.push(Math.max(r.radius_ly[i], 5000) / 1e6 * 2.2);
     }
     galaxies.scene.add(pointCloud(pos, col, size, { scale: 6000, fixedSize: false, minSize: 1.8, maxSize: 70 }));
+    galaxies.scene.add((galaxies.groups.galaxy_art = galaxyDiscs(r)));
     galaxies.maxLabels = 30;
     galaxies.scene.add(glowSprite(0.12, [[0, "rgba(255,240,215,1)"], [0.3, "rgba(200,210,255,.4)"], [1, "rgba(150,170,255,0)"]]));
     label(galaxies, "Milky Way · you are here", "#ffcc55", new THREE.Vector3(0, 0, 0), { priority: 100, onclick: () => goLevel(2) });
@@ -251,6 +270,30 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     applySettings();
     galaxies.onEnter();
   };
+  // The nearest galaxies as simulated pictures: a disc of their Hubble type, at their true size, tilted at random
+  function galaxyDiscs(r, n = 1800) {
+    const group = new THREE.Group(), kinds = ["spiral", "barred", "elliptical", "lenticular", "irregular"], VAR = 3;
+    const mats = {};
+    for (const k of kinds) mats[k] = [...Array(VAR)].map((_, v) => new THREE.MeshBasicMaterial({ map: toTexture(drawGalaxy(k, 101 + v * 977 + k.length, 256, k === "elliptical" ? `E${2 + v * 2}` : "")),
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    const idx = [...Array(r.count).keys()].sort((a, b) => r.distance_mly[a] - r.distance_mly[b]).slice(0, n);
+    const buckets = {};
+    for (const i of idx) { const k = galaxyKind(r.type[i]), v = Math.abs(hashName(r.name[i])) % VAR; (buckets[`${k}|${v}`] ||= []).push(i); }
+    const plane = new THREE.PlaneGeometry(1, 1), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+    for (const [key, list] of Object.entries(buckets)) {
+      const [k, v] = key.split("|"), mesh = new THREE.InstancedMesh(plane, mats[k][+v], list.length);
+      list.forEach((i, j) => {
+        const h = hashName(r.name[i]);
+        e.set(((h & 255) / 255) * Math.PI, (((h >> 8) & 255) / 255) * Math.PI * 2, (((h >> 16) & 255) / 255) * Math.PI);
+        q.setFromEuler(e);
+        const d = Math.max(r.radius_ly[i], 3000) * 2 / 1e6 * 1.15; // diameter in million ly (texture margin)
+        m.compose(toScene(r.x_mly[i], r.y_mly[i], r.z_mly[i]), q, new THREE.Vector3(d, d, d));
+        mesh.setMatrixAt(j, m);
+      });
+      mesh.frustumCulled = false; group.add(mesh);
+    }
+    return group;
+  }
   galaxies.onEnter = () => {
     const r = data.galaxies;
     if (!r) return;
@@ -268,15 +311,15 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
       ["Absolute magnitude", fmt(r.absolute_magnitude[i], 3)],
       ["Moving away (Hubble law)", r.hubble_velocity_km_s[i] === null ? "bound by local gravity" : `${commas(r.hubble_velocity_km_s[i])} km/s`],
       ["Redshift z", r.redshift[i] === null ? "–" : fmt(r.redshift[i], 4)],
-    ], "physics.galaxy_catalog: measured distance; recession speed from Hubble's law with H0 = 67.66 km/s/Mpc.");
+    ], "physics.galaxy_catalog: measured distance; recession speed from Hubble's law with H0 = 67.66 km/s/Mpc.",
+    drawn(drawGalaxy(galaxyKind(r.type[i]), hashName(r.name[i]), 256, r.type[i]), `Simulated picture of a ${r.type[i] || "spiral"} galaxy, drawn from its Hubble type (not a photograph).`));
   }
   galaxies.onPick = (ndc) => { const r = data.galaxies; if (!r) return; const i = nearestPoint(galaxies, ndc, r.x_mly, r.y_mly, r.z_mly); if (i >= 0) galaxyInfo(i); };
 
   // ---------- 4. The observable universe (1 unit = 1 billion ly, comoving) ----------
   const cosmos = base("Universe", "◯", { start: new THREE.Vector3(0, 55, 125), min: 0.4, max: 400, near: 0.001, far: 1e5, prev: 3 });
   cosmos.load = async () => {
-    const [c, g] = await Promise.all([simulate("physics", "cosmology", { z: 1 }), data.galaxies ? Promise.resolve({ result: data.galaxies }) : simulate("physics", "galaxy_catalog", { max_distance_mly: 3000 })]);
-    const r = c.result, gal = g.result;
+    const [r, gal] = await Promise.all([getCosmology(), getGalaxies()]);
     data.cosmology = r; data.galaxies = gal;
     const pos = [], col = [], size = [];
     for (let i = 0; i < gal.count; i++) { const v = toScene(gal.x_mly[i] / 1000, gal.y_mly[i] / 1000, gal.z_mly[i] / 1000); pos.push(v.x, v.y, v.z); col.push(...TYPE_COLOR(gal.type[i]).map((x) => x * 0.8)); size.push(0.02); }
@@ -365,6 +408,11 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
       if (!d.xyz_ly || d.distance_ly > 9000) continue;
       const col = DSO_COLOR(d.type), sp = glowSprite(Math.max(4, Math.min(60, (d.size_arcmin || 10) / 60 * Math.PI / 180 * d.distance_ly * 6)), [[0, col + "cc"], [0.4, col + "44"], [1, col + "00"]]);
       sp.position.copy(toScene(...d.xyz_ly)); dso.add(sp);
+      if (d.image?.width_ly) { // the real photograph, at the object's true size and place
+        const map = texLoader.load(`/app/assets/dso/${d.image.file}`); map.colorSpace = THREE.SRGBColorSpace;
+        const ph = new THREE.Sprite(new THREE.SpriteMaterial({ map, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+        ph.scale.set(d.image.width_ly, d.image.width_ly * (d.image.height_deg / d.image.width_deg), 1); ph.position.copy(sp.position); dso.add(ph);
+      }
       label(stars, d.name, col, sp.position.clone(), { cls: "minor dso", priority: 12 - (d.magnitude || 8), onclick: () => dsoInfo(d), kind: "deepsky", minDist: 5 });
     }
     stars.scene.add((stars.groups.deep_sky = dso));
@@ -380,8 +428,11 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     showPanel(d.name, DSO_COLOR(d.type), [["Type", d.type], ["Catalogue", [d.messier, d.id].filter(Boolean).join(" · ")],
       ["Distance", d.distance_ly ? `${commas(d.distance_ly)} ly` : "not measured"], ["Light you see left it", d.distance_ly ? `${commas(d.distance_ly)} years ago` : "–"],
       ["Brightness (magnitude)", d.magnitude === null ? "–" : fmt(d.magnitude, 3)], ["Size on the sky", d.size_arcmin ? `${fmt(d.size_arcmin, 3)}′` : "–"]],
-      `OpenNGC (NGC/IC/Messier) via physics.sky_atlas; distance from ${d.distance_source || "no measurement"}.`);
+      `OpenNGC (NGC/IC/Messier) via physics.sky_atlas; distance from ${d.distance_source || "no measurement"}.`,
+      d.image ? photo(`/app/assets/dso/${d.image.file}`, `Photograph: ${d.image.credit}`)
+        : drawn(drawNebula(d.type, hashName(d.id), 256), `Illustration of a ${d.type.toLowerCase()} (no free photograph of this object is bundled).`));
   }
+  const texLoader = new THREE.TextureLoader();
   function atlasGalaxy() {
     if (galaxy.atlasDone || !data.atlas) return; galaxy.atlasDone = true;
     const A = data.atlas, O = A.open_clusters, pos = [], col = [], size = [];
@@ -437,7 +488,8 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
 
   const levels = [stars, galaxy, galaxies, cosmos];
   return {
-    levels,
+    levels, data, toScene,
+    prefetch() { getGalaxies().catch(() => {}); getCosmology().catch(() => {}); },
     setData(d) {
       Object.assign(data, d);
       if (d.atlas) { if (stars.ready) atlasStars(); if (galaxy.ready) atlasGalaxy(); if (data.galaxies && galaxies.ready) atlasGalaxies(); if (data.cosmology && cosmos.ready) atlasCosmos(); }

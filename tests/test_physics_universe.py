@@ -93,3 +93,15 @@ def test_cosmology_limits():
     assert eds["comoving_distance_gly"] == pytest.approx(2 * (1 - 1 / math.sqrt(1.5)) * 299792.458 / 70 * 3.2616 / 1000, rel=1e-4)
     with pytest.raises(ValueError):
         cosmology(z=-1)
+
+
+def test_star_radius_from_stefan_boltzmann():
+    from app.modules.physics.universe import bolometric_correction, star_radius_solar
+    assert star_radius_solar(4.83, 5772) == pytest.approx(1.0, abs=0.01)       # the Sun
+    assert bolometric_correction(5772) == pytest.approx(-0.08, abs=0.02)
+    radius = lambda n: star_catalog(name=n)["result"]["radius_solar"][0]  # noqa: E731
+    assert radius("Sirius") == pytest.approx(1.711, rel=0.05)                    # interferometry (Davis+ 2011)
+    assert radius("Vega") == pytest.approx(2.5, rel=0.12)
+    assert radius("Arcturus") == pytest.approx(25.4, rel=0.15)
+    assert radius("Rigel") == pytest.approx(78.9, rel=0.12)
+    assert radius("Betelgeuse") > 300

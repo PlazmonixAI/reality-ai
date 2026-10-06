@@ -385,3 +385,30 @@
 - **Known issues and next steps:**
   - The sandbox reuses the three series colours with dashes for a fourth line and beyond.
   - Mission Control links inside the Space Program point to the ASM app when opened from Teach.
+
+## 2026-10-06 (later): Journey from the Big Bang, fuller Solar System, controls, pictures
+- **New tool `physics.cosmic_history`:** the epochs from the Planck time to today.
+  - Radiation era: t = 2.42 s · g*^-1/2 (kT/MeV)^-2, with a smoothed Standard Model g*. The scale factor comes from entropy conservation.
+  - After that: the Friedmann equation.
+  - Each epoch has time, redshift, temperature, the size then of today's observable universe, and the colour of that light. There are also 120 to 400 animation frames.
+  - Tests: Planck values, ~0.74 s at 1 MeV, ~4.5 minutes for nucleosynthesis, CMB at 372,000 years and 2,973 K, z_eq ≈ 3,400, acceleration at z ≈ 0.63, and a universe that only cools.
+- **`asteroid_belt`** adds the Hildas (3:2 with Jupiter, 3.97 AU), near-Earth asteroids (q < 1.3 AU), the scattered disc and the Oort cloud (2,000–100,000 AU, modelled), plus where Voyager 1 and 2 crossed the termination shock and the heliopause.
+- **Universe Map:**
+  - Bigger, brighter belts with name tags; the heliopause and termination shock; labels no longer pile up near the Sun.
+  - **Journey** (button, J key or `?journey=1`): Big Bang animation → observable universe → galaxies (down to Andromeda) → Milky Way → stars → the Solar System's edge → every planet. Captions come from engine data. It has pause, 1/2/4× speed, chapters and Esc.
+- **Controls:**
+  - Universe Map: arrows/WASD, + −, Page Up/Down, 1–5, H, N, J, Space, ?, zoom buttons, and pinch past the end of a scale.
+  - Shared `enablePanZoom`: pinch, plus arrow and +/− keys when the canvas has focus.
+  - `playerKeys`: Space, R, ← →, [ ] for every playback bar.
+  - Space Program: builder keys (↑ ↓, Shift+↑ ↓, + −, Delete, Enter, Esc), and flight zoom buttons, +/− keys and pinch.
+  - Maths Sandbox keys. Larger touch targets on touch screens.
+- **Pictures:**
+  - `scripts/build_dso_images.py` keeps only openly licensed observatory images (Hubble, ESO, NOIRLab, SDSS, 2MASS, Pan-STARRS) from Stellarium's set. That gives 56 nebulae and clusters, shown at their true size in 3D and with credits in the panels.
+  - Galaxies are simulated pictures by Hubble type (spirals with arms, knots and dust, barred, elliptical by axis ratio, lenticular, irregular). The nearest 1,800 are drawn as tilted discs at their true size.
+  - Stars get a close-up drawn from their temperature and radius. `star_catalog` now returns `radius_solar`, from the Stefan–Boltzmann law with the Torres (2010) bolometric correction: Sirius 1.69, Vega 2.48, Arcturus 27.9.
+  - Named stars get diffraction-spike glints.
+- **Known issues:**
+  - Free photographs of the most famous nebulae are not in the bundled set (only amateur images exist there). NASA, ESA and Wikimedia can't be reached from this build environment.
+  - Radii of M dwarfs and supergiants are rough because temperatures come from B−V.
+  - Chemistry lab keyboard controls are next.
+

@@ -127,6 +127,13 @@ def _load():
     return con, dso, exo, ocl, glob
 
 
+@lru_cache(maxsize=1)
+def dso_images() -> dict[str, dict]:
+    """OpenNGC id → real telescope image (scripts/build_dso_images.py): file, credit and size on the sky."""
+    path = DATA / "dso_images.json"
+    return {r["id"]: r for r in json.loads(path.read_text())} if path.exists() else {}
+
+
 def _hip_positions() -> dict[str, tuple[np.ndarray, float]]:
     """HIP id → (equatorial unit vector, distance ly) for the catalogue stars."""
     s = star_table()
@@ -192,9 +199,9 @@ def sky_atlas(frame: str = "ecliptic", layers: list[str] | None = None, exoplane
     if "deep_sky" in layers:
         ocl_by_name = {r["name"].replace(" ", ""): r for r in ocl}
         glob_by_name = {r["name"].replace(" ", ""): r for r in glob}
-        items = []
+        items, images = [], dso_images()
         for r in dso:
-            if not (r["common"] or r["messier"]) or r["type"] in ("Galaxy", "Galaxy pair", "Galaxy triplet", "Galaxy group"):
+            if not (r["common"] or r["messier"] or r["id"] in images) or r["type"] in ("Galaxy", "Galaxy pair", "Galaxy triplet", "Galaxy group"):
                 continue
             dist = NEBULA_DIST_LY.get(r["messier"]) or NEBULA_DIST_LY.get(r["id"])
             src = "literature" if dist else None
@@ -207,11 +214,15 @@ def sky_atlas(frame: str = "ecliptic", layers: list[str] | None = None, exoplane
             ueq = radec_unit(float(r["ra_h"]), float(r["dec_deg"]))
             u = rot @ ueq
             gc = galactocentric(ueq, dist / PC_LY / 1000) if dist else None
-            name = r["common"] or r["messier"]
+            name = r["common"] or r["messier"] or r["id"]
+            img = images.get(r["id"])
             items.append({"name": name, "id": r["id"], "messier": r["messier"], "type": r["type"],
                           "magnitude": float(r["mag"]) if r["mag"] else None, "size_arcmin": float(r["major_arcmin"]) if r["major_arcmin"] else None,
                           "unit": _r(u, 5), "distance_ly": dist, "distance_source": src,
-                          "xyz_ly": _r(u * dist, 2) if dist else None, "galactocentric_kpc": _r(gc, 4) if gc is not None else None})
+                          "xyz_ly": _r(u * dist, 2) if dist else None, "galactocentric_kpc": _r(gc, 4) if gc is not None else None,
+                          "image": None if img is None else {"file": img["file"], "credit": img["credit"], "width_deg": img["width_deg"],
+                                                             "height_deg": img["height_deg"],
+                                                             "width_ly": round(math.radians(img["width_deg"]) * dist, 3) if dist else None}})
         out["deep_sky"] = items
 
     if "exoplanets" in layers:

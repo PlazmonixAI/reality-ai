@@ -178,6 +178,18 @@ def minor_bodies(date: str | None = None, kind: str = "all", span_days: float = 
     }
 
 
+OORT_INNER_AU, OORT_OUTER_AU = 2_000.0, 100_000.0
+# Where the Voyagers crossed the edges of the Sun's wind bubble (NASA/JPL mission results)
+HELIOSPHERE = [
+    {"name": "Termination shock (Voyager 1, Dec 2004)", "distance_au": 94.0},
+    {"name": "Termination shock (Voyager 2, Aug 2007)", "distance_au": 83.7},
+    {"name": "Heliopause (Voyager 1, Aug 2012)", "distance_au": 121.6},
+    {"name": "Heliopause (Voyager 2, Nov 2018)", "distance_au": 119.0},
+    {"name": "Inner edge of the Oort cloud (model)", "distance_au": OORT_INNER_AU},
+    {"name": "Outer edge of the Oort cloud (model)", "distance_au": OORT_OUTER_AU},
+]
+
+
 def _resonance_a(planet: str, period_ratio: float) -> float:
     """Semi-major axis (AU) whose period is period_ratio × the planet's (Kepler's third law)."""
     return ELEMENTS[planet][0][0] * period_ratio ** (2 / 3)
@@ -194,16 +206,21 @@ def _mean_longitude(planet: str, jd: float) -> float:
     description=(
         "Statistical model of the Solar System's debris belts on a date: the main asteroid belt with its Kirkwood "
         "gaps (Jupiter resonances 4:1, 3:1, 5:2, 7:3, 2:1), the Jupiter trojans at L4/L5, and the Kuiper belt "
-        "(classical belt, plutinos in 3:2 and twotinos in 2:1 resonance with Neptune). Returns resonance locations "
-        "from Kepler's third law and sample particles with one orbit sampled in time for animation."
+        "(classical belt, plutinos in 3:2 and twotinos in 2:1 resonance with Neptune). Optional: the Hilda group "
+        "(3:2 with Jupiter), near-Earth asteroids, the scattered disc and the Oort cloud (n_hilda, n_nea, n_scattered, "
+        "n_oort). Returns resonance locations from Kepler's third law, the heliosphere boundaries the Voyagers "
+        "crossed, and sample particles with one orbit sampled in time for animation."
     ),
 )
 def asteroid_belt(date: str | None = None, n_main: int = 2000, n_trojans: int = 500, n_kuiper: int = 1200,
-                  seed: int = 1, samples_per_orbit: int = 16) -> dict:
+                  seed: int = 1, samples_per_orbit: int = 16, n_hilda: int = 0, n_nea: int = 0, n_scattered: int = 0,
+                  n_oort: int = 0) -> dict:
     jd = julian_date(date)
     _check_date(jd)
     if not (0 <= n_main <= 20000 and 0 <= n_trojans <= 5000 and 0 <= n_kuiper <= 10000):
         raise ValueError("n_main must be 0..20000, n_trojans 0..5000 and n_kuiper 0..10000")
+    if not all(0 <= n <= 5000 for n in (n_hilda, n_nea, n_scattered, n_oort)):
+        raise ValueError("n_hilda, n_nea, n_scattered and n_oort must be 0..5000")
     if not 4 <= samples_per_orbit <= 64:
         raise ValueError("samples_per_orbit must be 4..64")
     rng = np.random.default_rng(seed)
@@ -244,11 +261,33 @@ def asteroid_belt(date: str | None = None, n_main: int = 2000, n_trojans: int = 
     kuiper = {"a": ka, "e": ke, "i": np.radians(ki), "node": rng.uniform(0, 2 * np.pi, n_kuiper),
               "argp": rng.uniform(0, 2 * np.pi, n_kuiper), "lam": rng.uniform(0, 2 * np.pi, n_kuiper)}
 
-    def group(name, g):
+    # Hildas: 3:2 resonance with Jupiter (three orbits for every two of Jupiter's), ~3.97 AU
+    a_hilda = _resonance_a("jupiter", 2 / 3)
+    hilda = {"a": a_hilda + rng.normal(0, 0.03, n_hilda), "e": rng.uniform(0.07, 0.3, n_hilda),
+             "i": np.radians(rayleigh(6.0, n_hilda, 20.0)), "node": rng.uniform(0, 2 * np.pi, n_hilda),
+             "argp": rng.uniform(0, 2 * np.pi, n_hilda), "lam": rng.uniform(0, 2 * np.pi, n_hilda)}
+    # Near-Earth asteroids: perihelion q < 1.3 AU (the NEO definition)
+    na = rng.uniform(0.8, 2.6, n_nea)
+    nq = np.minimum(rng.uniform(0.6, 1.3, n_nea), na * 0.98)
+    nea = {"a": na, "e": 1 - nq / na, "i": np.radians(rayleigh(8.0, n_nea, 40.0)), "node": rng.uniform(0, 2 * np.pi, n_nea),
+           "argp": rng.uniform(0, 2 * np.pi, n_nea), "lam": rng.uniform(0, 2 * np.pi, n_nea)}
+    # Scattered disc: perihelia near Neptune (30–40 AU), semi-major axes 50–300 AU
+    sa = np.exp(rng.uniform(math.log(50), math.log(300), n_scattered))
+    sq = rng.uniform(30, 40, n_scattered)
+    scattered = {"a": sa, "e": 1 - sq / sa, "i": np.radians(rayleigh(15.0, n_scattered, 60.0)),
+                 "node": rng.uniform(0, 2 * np.pi, n_scattered), "argp": rng.uniform(0, 2 * np.pi, n_scattered),
+                 "lam": rng.uniform(0, 2 * np.pi, n_scattered)}
+    # Oort cloud: a spherical shell, 2,000–100,000 AU, random orientations, thermal eccentricities f(e) = 2e
+    oa = np.exp(rng.uniform(math.log(OORT_INNER_AU), math.log(OORT_OUTER_AU), n_oort))
+    oort = {"a": oa, "e": np.minimum(np.sqrt(rng.random(n_oort)), 0.95), "i": np.arccos(rng.uniform(-1, 1, n_oort)),
+            "node": rng.uniform(0, 2 * np.pi, n_oort), "argp": rng.uniform(0, 2 * np.pi, n_oort),
+            "lam": rng.uniform(0, 2 * np.pi, n_oort)}
+
+    def group(name, g, samples=samples_per_orbit):
         n = g["a"].size
         period = 365.25 * g["a"] ** 1.5  # Kepler's third law with the Sun's GM (days)
         m0 = g["lam"] - g["node"] - g["argp"]  # mean anomaly at the date
-        steps = np.linspace(0, 2 * np.pi, samples_per_orbit, endpoint=False)
+        steps = np.linspace(0, 2 * np.pi, samples, endpoint=False)
         orbits = np.stack([kepler_xyz(g["a"], g["e"], g["i"], g["node"], g["argp"], m0 + s) for s in steps], axis=0)
         return {"name": name, "count": n, "period_days": period.round(2).tolist(),
                 "semi_major_axis_au": g["a"].round(4).tolist(),
@@ -260,12 +299,21 @@ def asteroid_belt(date: str | None = None, n_main: int = 2000, n_trojans: int = 
             "julian_date": jd, "orbit_start_jd": jd, "samples_per_orbit": samples_per_orbit,
             "kirkwood_gaps": [{"resonance": r, "semi_major_axis_au": ar} for r, ar, _ in kirkwood],
             "neptune_resonances": [{"resonance": r, "semi_major_axis_au": ar} for r, ar in neptune],
-            "groups": [group("main belt", main), group("Jupiter trojans", troj), group("Kuiper belt", kuiper)],
+            "groups": [group("main belt", main), group("Jupiter trojans", troj), group("Kuiper belt", kuiper)]
+            + [group(name, g, k) for name, g, n, k in (("Hildas", hilda, n_hilda, samples_per_orbit),
+                                                       ("near-Earth asteroids", nea, n_nea, samples_per_orbit),
+                                                       ("scattered disc", scattered, n_scattered, samples_per_orbit),
+                                                       ("Oort cloud", oort, n_oort, 1)) if n],
+            "hilda_resonance_au": a_hilda,
+            "boundaries": HELIOSPHERE,
         },
         "units": "positions and semi-major axes in AU (heliocentric ecliptic J2000), periods in days",
         "assumptions": [
             "Statistical sample: element distributions resemble the observed belts, individual particles are not real objects",
             "Resonance locations from Kepler's third law with the planets' J2000 semi-major axes",
             "Each particle moves on a fixed Keplerian ellipse; orbit samples are equally spaced in time from the date",
+            "Oort cloud particles get one position only (their orbits take millions of years)",
+            "The Oort cloud has never been observed directly: its 2,000–100,000 AU extent is the standard model inferred from long-period comets",
+            "Heliosphere boundaries are where Voyager 1 and 2 crossed them; the real boundary moves with the solar cycle",
         ],
     }

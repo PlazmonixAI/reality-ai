@@ -47,38 +47,68 @@ export class View {
   toWorld(sx, sy) { return [this.cx + (sx - this.w / 2) / this.scale, this.cy - (sy - this.h / 2) / this.scale]; }
 }
 
-/** Mouse-wheel zoom and drag-to-pan. onChange is called after every change; returns a detach function. */
-export function enablePanZoom(canvas, view, onChange, { enabled = () => true } = {}) {
-  let drag = null;
-  const wheel = (e) => {
-    if (!enabled()) return;
-    e.preventDefault();
-    const r = canvas.getBoundingClientRect();
-    const [wx, wy] = view.toWorld(e.clientX - r.left, e.clientY - r.top);
-    const f = Math.exp(-e.deltaY * 0.0015);
+/** Pan and zoom for mouse, touch and keyboard: wheel or pinch to zoom, drag to pan, and with the canvas focused
+ * (tap or Tab to it) the arrow keys pan, + and − zoom, 0 resets. onChange runs after every change; returns a detach. */
+export function enablePanZoom(canvas, view, onChange, { enabled = () => true, onReset = null } = {}) {
+  const pts = new Map();
+  let drag = null, pinch = null;
+  const local = (e) => { const r = canvas.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  const zoomAt = (sx, sy, f) => {
+    const [wx, wy] = view.toWorld(sx, sy);
     view.scale *= f;
     view.cx = wx - (wx - view.cx) / f;
     view.cy = wy - (wy - view.cy) / f;
     onChange();
   };
-  const down = (e) => { if (enabled() && e.button === 0) { drag = { x: e.clientX, y: e.clientY }; canvas.setPointerCapture(e.pointerId); } };
+  const wheel = (e) => {
+    if (!enabled()) return;
+    e.preventDefault();
+    const [x, y] = local(e);
+    zoomAt(x, y, Math.exp(-e.deltaY * 0.0015));
+  };
+  const down = (e) => {
+    if (!enabled() || (e.pointerType === "mouse" && e.button !== 0)) return;
+    pts.set(e.pointerId, local(e)); canvas.setPointerCapture(e.pointerId);
+    if (pts.size === 1) drag = { x: e.clientX, y: e.clientY };
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]) }; drag = null; }
+  };
   const move = (e) => {
+    if (pts.has(e.pointerId)) pts.set(e.pointerId, local(e));
+    if (pinch && pts.size === 2) {
+      const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (d > 0 && pinch.d > 0) zoomAt((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, d / pinch.d);
+      pinch.d = d; return;
+    }
     if (!drag) return;
     view.cx -= (e.clientX - drag.x) / view.scale;
     view.cy += (e.clientY - drag.y) / view.scale;
     drag = { x: e.clientX, y: e.clientY };
     onChange();
   };
-  const up = () => { drag = null; };
+  const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (!pts.size) drag = null; };
+  const key = (e) => {
+    if (!enabled()) return;
+    const step = 60 / view.scale, w = view.w / 2, h = view.h / 2;
+    const act = { ArrowLeft: () => { view.cx -= step; onChange(); }, ArrowRight: () => { view.cx += step; onChange(); },
+      ArrowUp: () => { view.cy += step; onChange(); }, ArrowDown: () => { view.cy -= step; onChange(); },
+      "+": () => zoomAt(w, h, 1.25), "=": () => zoomAt(w, h, 1.25), "-": () => zoomAt(w, h, 0.8), 0: () => onReset?.() }[e.key];
+    if (act) { e.preventDefault(); act(); }
+  };
+  if (!canvas.hasAttribute("tabindex")) canvas.tabIndex = 0;
+  canvas.style.touchAction = "none";
   canvas.addEventListener("wheel", wheel, { passive: false });
   canvas.addEventListener("pointerdown", down);
   canvas.addEventListener("pointermove", move);
   canvas.addEventListener("pointerup", up);
+  canvas.addEventListener("pointercancel", up);
+  canvas.addEventListener("keydown", key);
   return () => {
     canvas.removeEventListener("wheel", wheel);
     canvas.removeEventListener("pointerdown", down);
     canvas.removeEventListener("pointermove", move);
     canvas.removeEventListener("pointerup", up);
+    canvas.removeEventListener("pointercancel", up);
+    canvas.removeEventListener("keydown", key);
   };
 }
 

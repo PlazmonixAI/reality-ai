@@ -210,6 +210,12 @@ export default {
     const up = (e) => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (!pointers.size) pan = null; };
     canvas.addEventListener("pointerup", up); canvas.addEventListener("pointercancel", up);
     canvas.addEventListener("pointerleave", () => { hover = null; tip.hidden = true; });
+    canvas.tabIndex = 0; canvas.title = "Drag or arrow keys to move, scroll, pinch or + − to zoom, 0 to reset";
+    canvas.addEventListener("keydown", (e) => {
+      const st = 60 / view.ppu, act = { ArrowLeft: () => { view.cx -= st; }, ArrowRight: () => { view.cx += st; }, ArrowUp: () => { view.cy += st; }, ArrowDown: () => { view.cy -= st; },
+        "+": () => zoom(1.25), "=": () => zoom(1.25), "-": () => zoom(0.8), 0: () => home() }[e.key];
+      if (act) { e.preventDefault(); act(); recompute(); }
+    });
     canvas.addEventListener("wheel", (e) => { e.preventDefault(); const [px, py] = loc(e); zoom(Math.exp(-e.deltaY * 0.0015), px, py); }, { passive: false });
     function hoverAt([px, py]) {
       hover = null;

@@ -42,7 +42,8 @@ const SITES = [[-52.77, "Kourou (Guiana)"], [80.23, "Sriharikota (India)"], [-80
 const SITE_ID_LON = { kourou: -52.77, sriharikota: 80.23, canaveral: -80.6, baikonur: 63.3, wenchang: 110.95, mahia: 177.86, vandenberg: -120.61, tanegashima: 130.97 };
 const KEYS = [["Z / X", "Full throttle / cut engines"], ["Shift / Ctrl", "Throttle up / down"], ["A D or ← →", "Turn left / right"], ["Q / E", "Nudge 1° left / right"], ["Space", "Stage"],
   ["F", "Drop the fairing"], ["M", "Map"], ["V", "3D view (Earth flights)"], [", .", "Slower / faster time"], ["P", "Pause"],
-  ["K", "Quick save"], ["L", "Quick load"], ["H", "Show or hide these keys"]];
+  ["+ / −", "Zoom (or pinch, or the + − buttons)"], ["K", "Quick save"], ["L", "Quick load"], ["H", "Show or hide these keys"]];
+const BUILD_KEYS = "Keys: ↑ ↓ pick a part · Shift+↑ ↓ move it · + − engines · Delete removes · Enter launches";
 const takeStored = (key) => { try { const v = localStorage.getItem(key); localStorage.removeItem(key); return v; } catch { return null; } };
 const putStored = (key, v) => { try { localStorage.setItem(key, v); } catch { /* storage unavailable */ } };
 const loadCustom = () => { try { return JSON.parse(localStorage.getItem(STORE)) || {}; } catch { return {}; } };
@@ -330,7 +331,7 @@ export default {
 
     function renderPartBox() {
       if (attachStage >= 0) return renderAttachBox();
-      if (selected < 0 || !stack[selected]) { partBox.replaceChildren(el("p", { class: "sf-hint" }, "Tap a part on the left to add it above the selected part (or on top). Drag parts on the rocket up or down to reorder them, or drag one from the left onto the rocket. Tap a + beside a stage to attach side boosters. Decouplers split stages; the lowest stage fires first. Put an interstage under a decoupler to cover the next engine, and a fairing on top to protect satellites.")); return; }
+      if (selected < 0 || !stack[selected]) { partBox.replaceChildren(el("p", { class: "sf-hint" }, "Tap a part on the left to add it above the selected part (or on top). Drag parts on the rocket up or down to reorder them, or drag one from the left onto the rocket. Tap a + beside a stage to attach side boosters. Decouplers split stages; the lowest stage fires first. Put an interstage under a decoupler to cover the next engine, and a fairing on top to protect satellites."), el("p", { class: "sf-hint small" }, BUILD_KEYS)); return; }
       const p = partOf(stack[selected]);
       const row = [el("div", { class: "sf-part-name" }, p.name)];
       if (isBooster(p)) {
@@ -697,6 +698,8 @@ export default {
     const flightView = el("div", { class: "sf-flight hidden" }, fCanvas, hud, toast, camNote,
       el("div", { class: "sf-topright" },
         el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx - 1) }, "«"), warpLabel, el("button", { class: "sf-btn", type: "button", onclick: () => setWarp(warpIdx + 1) }, "»"),
+        el("button", { class: "sf-btn", type: "button", title: "Zoom in (+)", "aria-label": "Zoom in", onclick: () => zoomFlight(1.4) }, "+"),
+        el("button", { class: "sf-btn", type: "button", title: "Zoom out (−)", "aria-label": "Zoom out", onclick: () => zoomFlight(1 / 1.4) }, "−"),
         el("button", { class: "sf-btn wide", type: "button", onclick: () => { mapView = !mapView; show3d(false); } }, "MAP"), focusBtn, camBtn, btn3d, pauseBtn, apBtn, peBtn, deployBtn, helpBtn,
         el("button", { class: "sf-btn wide", type: "button", onclick: () => toBuild() }, "BUILD")), keysBox,
       el("div", { class: "sf-throttle-box" }, el("div", { class: "sf-thr-title" }, "THROTTLE"), thr, thrLabel,
@@ -945,7 +948,9 @@ export default {
 
     // Keyboard
     const onKey = (e, down) => {
-      if (mode !== "flight" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT" || !rootEl.isConnected) return;
+      if (mode === "build") { if (down) buildKey(e); return; }
+      if (mode !== "flight") return;
       const k = e.key.toLowerCase();
       if (["arrowleft", "a"].includes(k)) { rotating = down ? -0.6 : 0; if (down) setSas("free"); e.preventDefault(); }
       if (["arrowright", "d"].includes(k)) { rotating = down ? 0.6 : 0; if (down) setSas("free"); e.preventDefault(); }
@@ -957,12 +962,40 @@ export default {
       if (k === "v" && body === "earth") show3d(!view3dOn);
       if (k === "p") togglePause(); if (k === "k") quickSave(); if (k === "l") quickLoad(); if (k === "h" || k === "?") keysBox.classList.toggle("hidden");
       if (k === "." || k === ">") setWarp(warpIdx + 1); if (k === "," || k === "<") setWarp(warpIdx - 1);
+      if (k === "+" || k === "=") zoomFlight(1.25); if (k === "-" || k === "_") zoomFlight(0.8);
     };
+    // the builder from the keyboard: pick, move, count, remove, launch
+    function buildKey(e) {
+      if (e.target.closest?.("button") && (e.key === "Enter" || e.key === " ")) return; // let a focused button do its own thing
+      const k = e.key, n = stack.length;
+      const swap = (a, b) => { [stack[a], stack[b]] = [stack[b], stack[a]]; selected = b; refresh(); };
+      const counted = () => selected >= 0 && stack[selected] && (isEngine(partOf(stack[selected])) || isBooster(partOf(stack[selected]))); // only engines and boosters come in clusters
+      const act = {
+        ArrowUp: () => (e.shiftKey ? selected >= 0 && selected < n - 1 && swap(selected, selected + 1) : (selected = Math.min(n - 1, selected + 1), refresh())),
+        ArrowDown: () => (e.shiftKey ? selected > 0 && swap(selected, selected - 1) : (selected = Math.max(0, selected - 1), refresh())),
+        Delete: () => { if (selected >= 0) { stack.splice(selected, 1); selected = Math.min(selected, stack.length - 1); refresh(); } },
+        "+": () => { if (counted()) { stack[selected].count = Math.min(9, (stack[selected].count || 1) + 1); refresh(); } },
+        "-": () => { if (counted()) { stack[selected].count = Math.max(1, (stack[selected].count || 1) - 1); refresh(); } },
+        Enter: () => { if (!launchBtn.disabled) startFlight(); }, Escape: () => { selected = -1; refresh(); },
+      };
+      act.Backspace = act.Delete; act["="] = act["+"];
+      if (act[k] && n) { e.preventDefault(); act[k](); }
+    }
+    const zoomFlight = (f) => { zoom = Math.max(0.0005, Math.min(60, zoom * f)); };
+    // pinch to zoom the flight view on a touch screen
+    const fPts = new Map(); let fPinch = 0;
+    fCanvas.style.touchAction = "none";
+    fCanvas.addEventListener("pointerdown", (e) => { fPts.set(e.pointerId, [e.clientX, e.clientY]); if (fPts.size === 2) { const [a, b] = [...fPts.values()]; fPinch = Math.hypot(a[0] - b[0], a[1] - b[1]); drag = null; } });
+    fCanvas.addEventListener("pointermove", (e) => {
+      if (!fPts.has(e.pointerId)) return; fPts.set(e.pointerId, [e.clientX, e.clientY]);
+      if (fPts.size === 2 && fPinch) { const [a, b] = [...fPts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); zoomFlight(d / fPinch); fPinch = d; drag = null; dragMoved = true; }
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => fCanvas.addEventListener(ev, (e) => { fPts.delete(e.pointerId); if (fPts.size < 2) fPinch = 0; }));
     const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
     window.addEventListener("keydown", kd); window.addEventListener("keyup", ku);
     let panY = 0, drag = null; // drag the flight view along the rocket to inspect it; double-click recentres
     let dragMoved = false;
-    fCanvas.addEventListener("pointerdown", (e) => { dragMoved = false; if (!mapView) drag = [e.clientY, panY]; });
+    fCanvas.addEventListener("pointerdown", (e) => { dragMoved = false; if (!mapView && fPts.size < 2) drag = [e.clientY, panY]; });
     fCanvas.addEventListener("pointermove", (e) => { if (drag && Math.abs(e.clientY - drag[0]) > 6) dragMoved = true; });
     // Tap a stage on the rocket to separate it (and everything below it)
     fCanvas.addEventListener("click", (e) => {

@@ -23,6 +23,7 @@ export const SETTINGS = [
     ["deep_sky", "Nebulae and clusters (glows)", true],
     ["open_clusters", "Open star clusters in the Milky Way", true],
     ["structures", "Shapes of clusters and superclusters", true],
+    ["galaxy_art", "Galaxy pictures (simulated from each galaxy's type)", true],
     ["rings", "Distance rings", true],
   ]],
 ];

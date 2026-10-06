@@ -96,3 +96,19 @@ def test_galaxies_have_common_names():
     assert names["M 104"] == "Sombrero Galaxy"
     assert names["LMC"] == "Large Magellanic Cloud"
     assert sum(1 for c in r["common_name"] if c) > 40
+
+
+def test_real_photographs_of_nebulae_and_clusters(atlas):
+    import json
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    imgs = json.loads((root / "app/data/space/dso_images.json").read_text())
+    assert len(imgs) >= 40
+    for im in imgs:
+        assert (root / "frontend/assets/dso" / im["file"]).is_file()
+        assert not any(w in im["credit"] for w in ("DSS", "Digitized Sky Survey"))   # only openly licensed sources
+        assert im["type"] not in ("Galaxy", "Galaxy pair", "Galaxy triplet", "Galaxy group")
+    shown = [d for d in atlas["deep_sky"] if d["image"]]
+    assert len(shown) == len(imgs)
+    jewel = next(d for d in shown if d["id"] == "NGC 4755")
+    assert jewel["image"]["width_ly"] == pytest.approx(math.radians(jewel["image"]["width_deg"]) * jewel["distance_ly"], rel=1e-3)
