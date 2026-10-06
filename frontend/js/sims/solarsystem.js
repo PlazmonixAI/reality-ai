@@ -496,10 +496,10 @@ export function mountAt(root, startLevel = 0, params = {}) {
   }
   const fact = (k, v) => el("div", { class: "ss-fact" }, el("span", {}, k), el("b", {}, v));
   const days = (d) => (d > 700 ? `${fmt(d / 365.25, 4)} years` : d > 2 ? `${fmt(d, 4)} days` : `${fmt(d * 24, 4)} h`);
-  function showPanel(name, color, rows, note) {
+  function showPanel(name, color, rows, note, media = null) {
     info.classList.remove("hidden");
     info.replaceChildren(el("button", { class: "ss-close", type: "button", "aria-label": "Close", onclick: () => { info.classList.add("hidden"); if (level === 0) select(null); } }, "×"),
-      el("div", { class: "ss-info-name", style: `--c:${color}` }, name), ...rows.filter(Boolean).map(([k, v]) => fact(k, v)), el("p", { class: "ss-note" }, note));
+      el("div", { class: "ss-info-name", style: `--c:${color}` }, name), media || "", ...rows.filter(Boolean).map(([k, v]) => fact(k, v)), el("p", { class: "ss-note" }, note));
   }
   function showInfo(id) {
     const b = bodies[id], d = { ...b.data, ...(window_?.bodies[id] || {}) };

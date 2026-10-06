@@ -194,8 +194,10 @@ export function createJourney({ rootEl, universe, goLevel, getLevel, solar }) {
     if (and >= 0) {
       const p = universe.toScene(G.x_mly[and], G.y_mly[and], G.z_mly[and]);
       say("The Local Group", [["Andromeda", `${fmt(G.distance_mly[and], 4)} million light years`], ["Members", "the Milky Way, Andromeda, Triangulum and about 80 dwarfs"]], "Our own small group of galaxies. Andromeda is falling towards us.");
-      await flight(L, L.camera.position.clone(), p.clone().multiplyScalar(0.5).add(new THREE.Vector3(0.6, 1.4, 2.6)), 8, t, { target: new THREE.Vector3(), targetTo: p.clone().multiplyScalar(0.5) });
+      await flight(L, L.camera.position.clone(), p.clone().add(new THREE.Vector3(0.12, 0.2, 0.32)), 10, t, { target: new THREE.Vector3(), targetTo: p });
       await wait(3, t);
+      say("Back to our own galaxy", [["Andromeda to the Milky Way", `${fmt(G.distance_mly[and], 4)} million light years`]], "The galaxy pictures are simulated from each galaxy's type; their sizes and places are measured.");
+      await flight(L, L.camera.position.clone(), new THREE.Vector3(0.12, 0.2, 0.32), 6, t, { target: p, targetTo: new THREE.Vector3() });
     }
   }
 

@@ -219,3 +219,10 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] ASM and ASM Teach separated: no Teach items in ASM; Teach gets the Universe Map and every simulation
 - [x] Simulations gallery by subject (Physics, Chemistry, Mathematics) with physics topics underneath
 - [x] Landing page with new screenshots and search tags built around the Universe Map
+- [x] Universe Journey: Big Bang (`cosmic_history`) to the Earth, flying through every scale with engine captions
+- [x] Fuller Solar System: Hildas, near-Earth asteroids, scattered disc, Oort cloud, heliosphere boundaries, belt name tags
+- [x] Keyboard, mouse-only and touch controls: Universe Map, shared canvas kit (pinch, keys), playback keys, Space Program builder and flight
+- [x] Detailed pictures: 56 openly licensed telescope photos of nebulae and clusters, simulated galaxy pictures by Hubble type, star close-ups from Stefan–Boltzmann radii
+- [ ] Free photographs of the most famous nebulae (Orion, Crab, Ring, Eagle, Pleiades): the bundled set has only amateur images for these
+- [ ] Chemistry lab keyboard controls
+

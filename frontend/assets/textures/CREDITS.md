@@ -16,3 +16,17 @@ to the outer edge). Replace any file with a higher-resolution map of the same na
 
 The night sky is not a texture: it is drawn from the real HYG star catalogue (CC BY-SA 4.0) and the engine's
 Milky Way model. Before a commercial release, check each licence's attribution/share-alike terms.
+
+## Photographs of nebulae and star clusters (`frontend/assets/dso/`)
+
+56 images taken from the Stellarium nebula texture set (github.com/Stellarium/stellarium, `nebulae/default`), keeping
+only openly licensed observatory images: NASA/ESA Hubble (public domain / CC BY 4.0), ESO (CC BY 4.0), NOIRLab/KPNO/CTIO
+(CC BY 4.0), SDSS, 2MASS and Pan-STARRS1 (free with acknowledgement). Several were cleaned up by Sun Shuwei for
+Stellarium. Each image's own credit is in `app/data/space/dso_images.json` and is shown under it in the app.
+Rebuild with `python scripts/build_dso_images.py`.
+
+## Drawn pictures
+
+Galaxies, nebulae without a free photograph, star close-ups and star glints are drawn in the browser
+(`frontend/js/space/spaceart.js`) from each object's catalogue data (Hubble type, nebula type, temperature, radius).
+They are illustrations and are labelled as such.

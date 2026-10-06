@@ -83,6 +83,27 @@ def _hex(rgb: np.ndarray) -> list[str]:
     return ["#%02x%02x%02x" % tuple(int(round(255 * v)) for v in c) for c in rgb]
 
 
+# Bolometric correction BC_V(T_eff): Flower (1996) polynomials as corrected by Torres (2010), AJ 140, 1158
+_BC_LOW = (-0.190537291496456e5, 0.155144866764412e5, -0.421278819301717e4, 0.381476328422343e3)
+_BC_MID = (-0.370510203809015e5, 0.385672629965804e5, -0.150651486316025e5, 0.261724637119416e4, -0.170623810323864e3)
+_BC_HIGH = (-0.118115450538963e6, 0.137145973583929e6, -0.636233812100225e5, 0.147412923562646e5,
+            -0.170587278406872e4, 0.788731721804990e2)
+T_SUN = 5772.0
+
+
+def bolometric_correction(temperature_k) -> np.ndarray:
+    lt = np.log10(np.asarray(temperature_k, float))
+    poly = lambda c: sum(k * lt ** i for i, k in enumerate(c))  # noqa: E731
+    return np.where(lt < 3.70, poly(_BC_LOW), np.where(lt < 3.90, poly(_BC_MID), poly(_BC_HIGH)))
+
+
+def star_radius_solar(abs_mag_v, temperature_k) -> np.ndarray:
+    """Radius in solar radii: bolometric luminosity from M_V + BC, then L = 4πR²σT⁴ (Stefan–Boltzmann)."""
+    m_bol = np.asarray(abs_mag_v, float) + bolometric_correction(temperature_k)
+    l_bol = 10 ** (-0.4 * (m_bol - 4.74))          # IAU 2015: M_bol,Sun = 4.74
+    return np.sqrt(l_bol) * (T_SUN / np.asarray(temperature_k, float)) ** 2
+
+
 def bv_temperature(bv: np.ndarray) -> np.ndarray:
     """Effective temperature (K) from the B−V colour index (Ballesteros 2012, EPL 97, 34008)."""
     bv = np.asarray(bv, float)
@@ -160,6 +181,7 @@ def star_catalog(max_magnitude: float = 6.5, nearby_ly: float = 0.0, max_distanc
             "distance_ly": s["dist_ly"][sel].round(4).tolist(), "apparent_magnitude": s["mag"][sel].tolist(),
             "absolute_magnitude": s["abs_mag"][sel].tolist(), "luminosity_solar": lum.round(6).tolist(),
             "temperature_k": temp.round(0).tolist(), "color": _hex(rgb),
+            "radius_solar": star_radius_solar(s["abs_mag"][sel], temp).round(4).tolist(),
         },
         "units": "positions and distances in light years, luminosity in solar V-band luminosities, temperature in K",
         "assumptions": [
@@ -167,6 +189,8 @@ def star_catalog(max_magnitude: float = 6.5, nearby_ly: float = 0.0, max_distanc
             "Luminosity is V-band (no bolometric correction); temperature from B−V (Ballesteros 2012), "
             "or from the spectral class when B−V is missing",
             "Colours are blackbody colours in sRGB, normalised to the brightest channel",
+            "Radius from the Stefan–Boltzmann law with the Torres (2010) bolometric correction; good to tens of per cent "
+            "because the temperature comes from a colour index",
         ],
     }
 
