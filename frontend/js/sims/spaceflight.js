@@ -256,7 +256,7 @@ function iconCanvas(p) {
 
 export default {
   mount(root, params = {}) {
-    let catalogue = null, stack = TEMPLATES.orbiter.parts.map((p) => ({ ...p })), body = "earth", selected = -1, design = null;
+    let catalogue = null, stack = [], body = "earth", selected = -1, design = null;
     let mode = "build", customs = loadCustom();
     const rootEl = el("div", { class: "sf-root" });
     root.append(spaceTabs("fly"), rootEl);
@@ -280,7 +280,7 @@ export default {
       if (t) { stack = t.parts.map((p) => ({ ...p })); body = t.body; bodySel.value = body; selected = -1; designName = t.name; refresh(); }
     };
     const tplSel = el("select", { class: "sf-select", "aria-label": "Rocket templates", onchange: () => applyTemplate(tplSel.value) },
-      el("option", { value: "" }, "Rockets and templates"),
+      el("option", { value: "" }, "Add a ready-made rocket"),
       el("optgroup", { label: "Examples" }, ...Object.entries(TEMPLATES).map(([k, t]) => el("option", { value: k }, t.name))));
     let designName = "My rocket";
     const bodySel = el("select", { class: "sf-select", "aria-label": "Launch from", onchange: () => { body = bodySel.value; refresh(); } },
@@ -293,6 +293,17 @@ export default {
     const startSel = el("select", { class: "sf-select", "aria-label": "Start" }, el("option", { value: "pad" }, "Start on the launch pad"), el("option", { value: "orbit" }, "Start in low orbit (skip ascent)"));
     const launchBtn = el("button", { class: "sf-launch", type: "button", onclick: () => startFlight() }, "GO FOR LAUNCH");
     const clearBtn = el("button", { class: "sf-small", type: "button", onclick: () => { stack = []; selected = -1; refresh(); } }, "Clear");
+    // An empty pad: build from parts, or start from a real rocket or an example
+    const readyList = el("div", { class: "sf-ready-list" });
+    const emptyPad = el("div", { class: "sf-empty" },
+      el("h3", {}, "The pad is empty"),
+      el("p", {}, "Drag engines, tanks and a capsule from the parts list to build your own rocket, or add a ready-made one and change it."),
+      readyList);
+    const fillReady = () => readyList.replaceChildren(
+      ...(vehicles.length ? [el("b", { class: "sf-ready-head" }, "Real rockets")] : []),
+      ...vehicles.map((v) => el("button", { type: "button", class: "sf-small", onclick: () => { tplSel.value = `v:${v.id}`; applyTemplate(tplSel.value); } }, v.name)),
+      el("b", { class: "sf-ready-head" }, "Examples to start from"),
+      ...Object.entries(TEMPLATES).map(([k, t]) => el("button", { type: "button", class: "sf-small ghost", onclick: () => { tplSel.value = k; applyTemplate(k); } }, t.name)));
     const buildView = el("div", { class: "sf-build" },
       el("div", { class: "sf-build-top" }, el("span", { class: "sf-title" }, "VEHICLE ASSEMBLY"), tplSel, bodySel, siteSel, dateIn, startSel, clearBtn,
         el("button", { class: "sf-small accent", type: "button", onclick: () => openEngineDesigner() }, "Engine designer"),
@@ -300,7 +311,7 @@ export default {
         el("button", { class: "sf-small", type: "button", onclick: () => saveDesign() }, "Save design"),
         el("a", { class: "sf-small", href: "#/company?probe=1", title: "Plan a mission to Mars, Venus, Jupiter or Saturn in Mission Control (Space Program)" }, "Planet missions"),
         el("span", { class: "sf-spacer" }), launchBtn),
-      palette, el("div", { class: "sf-build-stage" }, bCanvas), el("div", { class: "sf-right" }, partBox, statsBox));
+      palette, el("div", { class: "sf-build-stage" }, bCanvas, emptyPad), el("div", { class: "sf-right" }, partBox, statsBox));
     rootEl.append(buildView);
 
     function renderPalette() {
@@ -423,6 +434,7 @@ export default {
     let bLayout = [], attachHits = [], dropY = null, bGeom = null;
     function drawBuild() {
       const c = bCanvas, W = c.clientWidth, H = c.clientHeight;
+      emptyPad.hidden = stack.length > 0 || !catalogue;
       if (!W || !catalogue) return;
       const dpr = Math.min(2, devicePixelRatio); c.width = W * dpr; c.height = H * dpr;
       const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1209,7 +1221,7 @@ export default {
           ...vehicles.filter((v) => v.agency === a).map((v) => el("option", { value: `v:${v.id}` }, `${v.name} (${v.country})`)))));
       }
       for (const id of Object.keys(customs)) if (!customs[id]?.spec) delete customs[id];
-      renderPalette();
+      renderPalette(); fillReady();
       if (params.challenge) {
         try {
           const { challenges } = await api("/api/challenges");

@@ -258,6 +258,14 @@ table.ice thead th { color: var(--text-2); font-weight: 600; }
 .sf-part canvas { grid-row: 1 / 3; }
 .sf-part span { font-size: 13px; font-weight: 600; } .sf-part small { font-size: 11px; color: #9cc0ea; }
 .sf-build-stage { position: relative; min-width: 0; }
+.sf-empty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); width: min(460px, 90%); padding: 18px 20px; border: 1px solid rgba(143,163,194,.35);
+  border-radius: 12px; background: rgba(11,21,38,.97); max-height: 80%; overflow: auto; color: #e6edf7; text-align: center; }
+.sf-empty[hidden] { display: none; }
+.sf-empty h3 { margin: 0 0 6px; font-size: 16px; letter-spacing: .04em; }
+.sf-empty p { margin: 0 0 12px; font-size: 13px; color: #a9b8cf; line-height: 1.45; }
+.sf-ready-list { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.sf-ready-list .ghost { opacity: .75; }
+.sf-ready-head { flex-basis: 100%; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #FF5B2E; margin-top: 6px; }
 .sf-build-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
 .sf-right { overflow: auto; background: #122f55; border-left: 1px solid rgba(255,255,255,.12); padding: 12px; }
 .sf-partbox { padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,.15); }
