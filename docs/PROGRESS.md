@@ -424,5 +424,6 @@
 ## 2026-10-07 — Keeping the free Render server awake
 
 - `/health` now answers HEAD as well as GET (UptimeRobot and some other monitors send HEAD and were getting 405).
-- `.github/workflows/keep-alive.yml` pings `app.realityasm.com/health` and the Plazmon backend health page every 10 minutes from GitHub, waiting up to 2 minutes and retrying, so a sleeping server has time to start. It backs up cron-job.org. Run it by hand from the Actions tab to check.
+- `.github/workflows/keep-alive.yml` pings `reality-ai.onrender.com/health` and the Plazmon backend health page every 10 minutes from GitHub, waiting up to 2 minutes and retrying, so a sleeping server has time to start. It backs up cron-job.org. Run it by hand from the Actions tab to check.
+- `app.realityasm.com` goes through Cloudflare, whose bot protection answers scripts (GitHub, cron-job.org) with 403 in 0.1 s, so monitors must use the onrender.com address.
 - Known limit: Render's free plan gives 750 running hours a month per account, so two services kept awake on one account run out near the end of the month.

@@ -18,7 +18,8 @@ jobs:
       fail-fast: false
       matrix:
         url:
-          - https://app.realityasm.com/health
+          # the Render address, not app.realityasm.com: Cloudflare's bot protection answers scripts there with 403
+          - https://reality-ai.onrender.com/health
           - https://plazmon-backend.onrender.com/api/v1/health
     steps:
       - name: Ping ${{ matrix.url }}
