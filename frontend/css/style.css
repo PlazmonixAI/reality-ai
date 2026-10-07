@@ -1148,6 +1148,11 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 /* Universe Map: zoom buttons, help, Journey */
 .ss-zoom { position: absolute; left: 14px; top: 300px; z-index: 5; display: flex; flex-direction: column; gap: 6px; padding: 6px; border-radius: 8px; background: rgba(7,13,24,.84); border: 1px solid #1f2f4c; }
 .ss-zoom .ss-tool { font-size: 18px; }
+.ss-zoom { align-items: center; }
+.ss-rail { writing-mode: vertical-lr; direction: rtl; width: 22px; height: 150px; margin: 2px 0; accent-color: #FF5B2E; cursor: ns-resize; }
+.ss-xfade { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; z-index: 1; transform-origin: 50% 50%; }
+.ss-scale { position: absolute; left: 14px; top: 262px; z-index: 5; padding: 5px 10px; border-radius: 8px; background: rgba(7,13,24,.84); border: 1px solid #1f2f4c; color: #c9d4e4; font: 12px Plex, system-ui; pointer-events: none; white-space: nowrap; }
+.journey-on .ss-scale { display: none; }
 .ss-help { position: absolute; left: 70px; top: 120px; z-index: 8; width: min(640px, calc(100% - 100px)); padding: 12px 14px; border-radius: 12px; background: rgba(8,14,26,.96); border: 1px solid rgba(120,160,220,.3); color: #e7eefa; font-size: 13px; }
 .ss-help table { width: 100%; border-collapse: collapse; } .ss-help th { text-align: left; color: #FF8A66; font-weight: 600; padding: 6px 8px 6px 0; vertical-align: top; white-space: nowrap; }
 .ss-help td { padding: 6px 8px; border-top: 1px solid rgba(120,160,220,.15); color: #c9d4e4; } .ss-help th { border-top: 1px solid rgba(120,160,220,.15); }
@@ -1174,6 +1179,7 @@ a.sf-small { text-decoration: none; display: inline-flex; align-items: center; }
 @media (max-width: 700px) {
   .ss-journey { top: 6px; right: 10px; padding: 7px 10px; font-size: 12px; } .ss-journey .long { display: none; }
   .ss-zoom { top: auto; bottom: 128px; transform: none; right: 12px; }
+  .ss-rail { height: 96px; } .ss-scale { top: auto; left: 10px; bottom: 128px; font-size: 11px; }
   .ss-gear { bottom: 262px; right: 12px; }
   .ss-ladder { top: 150px; bottom: auto; right: 12px; left: auto; flex-direction: column; padding: 6px 4px; }
   .ss-clock-rate, .ss-clock .ss-time { display: none; } .ss-clock { padding: 8px 10px; } .ss-clock .ss-date { font-size: 18px; }

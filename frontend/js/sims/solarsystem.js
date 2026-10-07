@@ -558,11 +558,15 @@ export function mountAt(root, startLevel = 0, params = {}) {
   let level = 0;
   const ladderBtns = LEVELS.map((L, i) => el("button", { class: "ss-rung", type: "button", title: L.name, onclick: () => goLevel(i) }, el("span", {}, L.icon), el("small", {}, L.name)));
   ladder.append(...ladderBtns);
-  function goLevel(i) {
+  function goLevel(i, hand = null) {
     if (i === level || i < 0 || i >= LEVELS.length) return;
-    fade.classList.add("on");
     switchedAt = performance.now();
-    setTimeout(() => {
+    if (hand) { crossfade(hand.dir); swap(i, hand); return; } // continuous zoom: no black frame
+    fade.classList.add("on");
+    setTimeout(() => { swap(i, null); fade.classList.remove("on"); }, 350);
+  }
+  function swap(i, hand) {
+    {
       if (level > 0) universe.levels[level - 1].exit();
       level = i;
       info.classList.add("hidden"); list.classList.add("hidden");
@@ -573,9 +577,12 @@ export function mountAt(root, startLevel = 0, params = {}) {
         for (const n of skyNames) labels.append(n.el);
         for (const b of beltLabels) labels.append(b.el);
         controls.enabled = true;
-        camera.position.set(0, 1800, 4200); controls.target.set(0, 0, 0); select(null); // glide in from the stars
+        select(null);
+        if (hand) { controls.target.set(0, 0, 0); camera.position.copy(hand.offset); fly = null; }
+        else camera.position.set(0, 1800, 4200); // glide in from the stars
+        controls.target.set(0, 0, 0);
         if (!interactive) fly = null;
-      } else { controls.enabled = false; universe.levels[level - 1].enter(i < prevLevel ? "in" : "out"); }
+      } else { controls.enabled = false; universe.levels[level - 1].enter(i < prevLevel ? "in" : "out", hand); }
       if (!interactive) setInteractive(false);
       prevLevel = level;
       for (const x of [toolbar, timebar]) x.style.display = level === 0 ? "" : "none";
@@ -583,8 +590,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
       brand.replaceChildren("UNIVERSE MAP ", el("b", {}, LEVELS[level].name.toUpperCase()));
       ladderBtns.forEach((b, k) => b.classList.toggle("on", k === level));
       resize();
-      fade.classList.remove("on");
-    }, 350);
+    }
   }
   let prevLevel = 0;
   ladderBtns[0].classList.add("on");
@@ -597,10 +603,8 @@ export function mountAt(root, startLevel = 0, params = {}) {
     controls.enabled = on && level === 0;
     universe.levels.forEach((L, i) => { L.controls.enabled = on && level === i + 1; });
   }
-  function zoomBy(f) { // f < 1 moves closer; past the end of a scale, go to the next one
+  function zoomBy(f) { // f < 1 moves closer; the scale changes on its own at the hand-off distances
     const { camera: c, controls: k } = camOf(), off = c.position.clone().sub(k.target), d = off.length(), nd = d * f;
-    if (f > 1 && d >= k.maxDistance * 0.97) return goLevel(level + 1);
-    if (f < 1 && d <= k.minDistance * 1.05 && level > 0) return goLevel(level - 1);
     c.position.copy(k.target).add(off.setLength(Math.min(k.maxDistance, Math.max(k.minDistance, nd))));
     if (level === 0) { follow = null; fly = null; }
   }
@@ -610,29 +614,108 @@ export function mountAt(root, startLevel = 0, params = {}) {
     sph.theta += yaw; sph.phi = Math.min(Math.PI - 0.05, Math.max(0.05, sph.phi + pitch));
     c.position.copy(k.target).add(new THREE.Vector3().setFromSpherical(sph));
   }
+  // ---------- one continuous zoom, from the planets to the edge of the observable universe ----------
+  // Each scale hands the view to the next at set distances and keeps the direction you look from, so scrolling,
+  // pinching, + and − and the zoom rail run straight through every scale. Distances are in light years from home.
+  const LY_AU = 63241.077, LY_PER = [0, 1, 3261.56, 1e6, 1e9];
+  const OUT_LY = [null, 9000, 300 * 3261.56, 7e9]; // leave scale i outwards beyond this camera distance
+  const IN_LY = [null, 0.7, 3261.56, 3e5, 6e8]; // and inwards closer than this
+  const solarLy = (d) => (realScale ? d / 40 : Math.pow(d / 40, 1 / 0.55)) / LY_AU;
+  const solarScene = (ly) => (realScale ? 40 * ly * LY_AU : 40 * Math.pow(ly * LY_AU, 0.55));
+  const camOfLevel = (i) => (i === 0 ? { camera, controls } : universe.levels[i - 1]);
+  function frameRot(c, toEcliptic) { // the far scales use galactic axes, the near ones ecliptic axes
+    const M = universe.data.milkyWay?.galactic_to_ecliptic;
+    if (!M) return c;
+    return [0, 1, 2].map((r) => (toEcliptic ? M[r][0] * c[0] + M[r][1] * c[1] + M[r][2] * c[2] : M[0][r] * c[0] + M[1][r] * c[1] + M[2][r] * c[2]));
+  }
+  const toHome = (i, v) => { const c = [v.x, -v.z, v.y]; return i >= 2 ? frameRot(c, true) : c; }; // scene vector → ecliptic catalogue axes
+  const fromHome = (i, c) => { const r = i >= 2 ? frameRot(c, false) : c; return new THREE.Vector3(r[0], r[2], -r[1]); };
+  function homePoint(i) { // the centre of the view, in light years from the Sun
+    if (i === 0) return [0, 0, 0];
+    const L = universe.levels[i - 1], t = L.controls.target.clone();
+    if (L.anchor) t.sub(L.anchor(L.camera.position.distanceTo(t)));
+    return toHome(i, t.multiplyScalar(LY_PER[i]));
+  }
+  function viewLy() {
+    const { camera: c, controls: k } = camOfLevel(level), d = c.position.distanceTo(k.target);
+    return level === 0 ? solarLy(d) : d * LY_PER[level];
+  }
+  function levelForLy(ly) {
+    if (ly < solarLy(controls.maxDistance * 0.9)) return 0;
+    return ly < 8000 ? 1 : ly < 280 * 3261.56 ? 2 : ly < 6.5e9 ? 3 : 4;
+  }
+  function handTo(i, ly, centre = homePoint(level)) {
+    const { camera: c, controls: k } = camOfLevel(level);
+    const dir = toHome(level, c.position.clone().sub(k.target).normalize());
+    let nd = i === 0 ? solarScene(ly) : ly / LY_PER[i];
+    if (i === 0) nd = Math.min(nd, controls.maxDistance * 0.9);
+    else {
+      const L = universe.levels[i - 1], hi = OUT_LY[i] ? (OUT_LY[i] / LY_PER[i]) * 0.87 : L.controls.maxDistance * 0.95;
+      nd = Math.min(hi, Math.max((IN_LY[i] / LY_PER[i]) * 1.15, nd));
+    }
+    const target = i === 0 ? new THREE.Vector3() : fromHome(i, centre).divideScalar(LY_PER[i]);
+    if (i > 0 && universe.levels[i - 1].anchor) target.add(universe.levels[i - 1].anchor(nd));
+    goLevel(i, { offset: fromHome(i, dir).setLength(nd), target, dir: i > level ? "out" : "in" });
+  }
+  function zoomHandoff() {
+    if (!interactive || performance.now() - switchedAt < 700) return;
+    if (level === 0 ? fly : universe.levels[level - 1].fly?.t < 1) return; // a glide is running
+    const { camera: c, controls: k } = camOfLevel(level), d = c.position.distanceTo(k.target), ly = viewLy();
+    if (level === 0 ? d >= k.maxDistance * 0.97 : OUT_LY[level] && ly >= OUT_LY[level]) return handTo(level + 1, ly);
+    // only dive into the smaller scale when the view is centred near home (the Sun, our Galaxy)
+    if (level > 0 && ly <= IN_LY[level] && Math.hypot(...homePoint(level)) < IN_LY[level] * 2) handTo(level - 1, ly);
+  }
+  const xfade = el("canvas", { class: "ss-xfade", "aria-hidden": "true" });
+  view.append(xfade);
+  function crossfade(dir) { // the last frame of the old scale shrinks (or grows) away while the new one shows through
+    const src = renderer.domElement;
+    xfade.width = src.width; xfade.height = src.height;
+    try { xfade.getContext("2d").drawImage(src, 0, 0); } catch { return; }
+    xfade.style.transition = "none"; xfade.style.opacity = "1"; xfade.style.transform = "none";
+    void xfade.offsetWidth;
+    xfade.style.transition = "opacity .9s ease, transform .9s ease";
+    xfade.style.opacity = "0"; xfade.style.transform = `scale(${dir === "out" ? 0.55 : 1.8})`;
+  }
+  const RAIL_LO = -4.5, RAIL_HI = 11.6; // log10 of light years: about 2 AU up to 400 billion light years
+  let railHeld = false;
+  const rail = el("input", { type: "range", class: "ss-rail", min: "0", max: "1000", step: "1", "aria-label": "Zoom across every scale",
+    title: "Drag to zoom from the planets to the edge of the observable universe" });
+  rail.addEventListener("pointerdown", () => { railHeld = true; });
+  window.addEventListener("pointerup", () => { railHeld = false; });
+  rail.addEventListener("input", () => {
+    const ly = Math.pow(10, RAIL_LO + (RAIL_HI - RAIL_LO) * (Number(rail.value) / 1000)), to = levelForLy(ly);
+    if (to === level) {
+      const { camera: c, controls: k } = camOfLevel(level);
+      const nd = level === 0 ? solarScene(ly) : ly / LY_PER[level];
+      c.position.copy(k.target).add(c.position.clone().sub(k.target).setLength(Math.min(k.maxDistance, Math.max(k.minDistance, nd))));
+      if (level === 0) { follow = null; fly = null; }
+    } else if (performance.now() - switchedAt > 250) handTo(to, ly, to < level ? [0, 0, 0] : homePoint(level));
+  });
+  const scaleRead = el("div", { class: "ss-scale", "aria-live": "off" });
+  const fmtLy = (ly) => (ly < 0.05 ? `${fmt(ly * LY_AU, 3)} AU` : ly < 1e4 ? `${fmt(ly, 3)} light years` : ly < 1e6 ? `${fmt(ly / 1e3, 3)} thousand light years`
+    : ly < 1e9 ? `${fmt(ly / 1e6, 3)} million light years` : `${fmt(ly / 1e9, 3)} billion light years`);
+  let lastRead = 0;
+  function updateScaleRead(now) {
+    if (now - lastRead < 120) return;
+    lastRead = now;
+    const ly = viewLy();
+    scaleRead.textContent = `Viewing from ${fmtLy(ly)} away`;
+    if (!railHeld) rail.value = String(Math.round(((Math.log10(ly) - RAIL_LO) / (RAIL_HI - RAIL_LO)) * 1000));
+  }
+  rootEl.append(scaleRead);
   const zoomBtns = el("div", { class: "ss-zoom" },
     el("button", { type: "button", class: "ss-tool", title: "Zoom in (+). Past the closest view: the smaller scale", "aria-label": "Zoom in", onclick: () => zoomBy(0.7) }, "+"),
+    rail,
     el("button", { type: "button", class: "ss-tool", title: "Zoom out (−). Past the widest view: the next scale out", "aria-label": "Zoom out", onclick: () => zoomBy(1.45) }, "−"),
     el("button", { type: "button", class: "ss-tool", title: "Keyboard and touch help (?)", "aria-label": "Controls help", onclick: () => help.classList.toggle("hidden") }, "?"));
   const help = el("div", { class: "ss-help hidden", role: "dialog", "aria-label": "Controls" },
     el("div", { class: "ss-settings-head" }, el("b", {}, "Controls"), el("button", { type: "button", class: "ss-close", "aria-label": "Close", onclick: () => help.classList.add("hidden") }, "×")),
     el("table", {}, ...[["Look around", "drag · arrow keys or W A S D", "drag with one finger"], ["Zoom", "scroll · + and −", "pinch · + − buttons"],
-      ["Change scale", "zoom past the end · Page Up / Page Down · keys 1 to 5", "pinch past the end · scale buttons on top"],
+      ["Change scale", "keep zooming: each scale hands over to the next · zoom rail · Page Up / Page Down · keys 1 to 5", "keep pinching · zoom rail · scale buttons"],
       ["Pick a body or star", "click it", "tap it"], ["Time (Solar System)", "Space: hold or run · , and . slower or faster", "clock panel"],
       ["Names on or off", "N", "Aa button"], ["Back to the whole view", "H", "⌂ button"], ["Journey from the Big Bang", "J (Space pause, ← → chapters, Esc leave)", "Journey button"]]
       .map(([a, b, c]) => el("tr", {}, el("th", {}, a), el("td", {}, b), el("td", {}, c)))));
   rootEl.append(zoomBtns, help);
-  // touch and trackpad: pinching past the end of a scale changes scale, like the mouse wheel does
-  for (const [i, k] of [[0, controls], ...universe.levels.map((L, j) => [j + 1, L.controls])]) {
-    let startD = 0;
-    k.addEventListener("start", () => { startD = k.object.position.distanceTo(k.target); });
-    k.addEventListener("end", () => {
-      if (!interactive || level !== i || performance.now() - switchedAt < 1200) return;
-      const d = k.object.position.distanceTo(k.target);
-      if (d >= k.maxDistance * 0.97 && d > startD * 1.02) goLevel(i + 1);
-      else if (i > 0 && d <= k.minDistance * 1.05 && d < startD * 0.98) goLevel(i - 1);
-    });
-  }
   function onKey(e) {
     if (!rootEl.isConnected) return;
     if (journey.key(e)) return;
@@ -662,14 +745,7 @@ export function mountAt(root, startLevel = 0, params = {}) {
   if (params.journey) setTimeout(() => journey.start(), 600);
   // Labels sit above the canvas: pass their wheel events through so zooming works anywhere
   labels.addEventListener("wheel", (e) => { e.preventDefault(); renderer.domElement.dispatchEvent(new WheelEvent("wheel", e)); }, { passive: false });
-  // Zooming past the edge of a level moves to the next scale
   let switchedAt = 0;
-  renderer.domElement.addEventListener("wheel", (e) => {
-    if (!interactive || performance.now() - switchedAt < 1200) return; // let one scroll gesture finish before changing scale again
-    if (level === 0) {
-      if (e.deltaY > 0 && camera.position.distanceTo(controls.target) > controls.maxDistance * 0.97) goLevel(1);
-    } else universe.levels[level - 1].wheel(e, (to) => goLevel(to));
-  }, { passive: true });
 
   // ---------- animation ----------
   function resize() {
@@ -841,6 +917,8 @@ export function mountAt(root, startLevel = 0, params = {}) {
       if (!window_ && !loading) loadWindow(simJd); // the sky and stars data arrive with the first Solar System load
       universe.levels[level - 1].frame(dt, now);
     }
+    zoomHandoff();
+    updateScaleRead(now);
   }
   raf = requestAnimationFrame(frame);
   rootEl.classList.toggle("ss-solar", !startLevel);

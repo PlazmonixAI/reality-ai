@@ -412,3 +412,11 @@
   - Radii of M dwarfs and supergiants are rough because temperatures come from B−V.
   - Chemistry lab keyboard controls are next.
 
+
+## 2026-10-07 — Universe Map: one continuous zoom
+
+- The five scales (Solar System, Stars, Milky Way, Galaxies, Universe) now join into one zoom. Scrolling, pinching, + and − and the new zoom rail carry on through every scale. Each scale hands the view to the next at set distances (1.6 ly, 9,000 ly, 300 kpc, 7 billion ly, with lower hand-back points so it never flickers) and keeps the direction you look from, turning ecliptic axes into galactic ones with the engine's `galactic_to_ecliptic` matrix.
+- The Milky Way view centres on the Sun when you arrive from the stars and slides to the Galaxy's centre as you pull back (and back again on the way in).
+- The last frame of the old scale shrinks or grows away over the new one instead of a black fade. A readout shows how far out the camera is, from AU to billions of light years.
+- Zooming in only drops to the smaller scale when the view is centred near home, so zooming onto Andromeda stops at the Galaxies scale instead of jumping into the Milky Way.
+- Next: chemistry lab keyboard controls. Known issue: with real-scale distances on, the Solar System reaches only 600 AU, so the jump out to the Stars scale is larger.
