@@ -692,7 +692,8 @@ export function mountAt(root, startLevel = 0, params = {}) {
     if (to === level) {
       const { camera: c, controls: k } = camOfLevel(level);
       const nd = level === 0 ? solarScene(ly) : ly / LY_PER[level];
-      c.position.copy(k.target).add(c.position.clone().sub(k.target).setLength(Math.min(k.maxDistance, Math.max(k.minDistance, nd))));
+      const off = c.position.clone().sub(k.target); // measure the direction before moving the camera
+      c.position.copy(k.target).add(off.setLength(Math.min(k.maxDistance, Math.max(k.minDistance, nd))));
       if (level === 0) { follow = null; fly = null; }
     } else if (performance.now() - switchedAt > 250) handTo(to, ly, to < level ? [0, 0, 0] : homePoint(level));
   });
