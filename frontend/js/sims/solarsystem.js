@@ -583,10 +583,9 @@ export function mountAt(root, startLevel = 0, params = {}) {
         for (const n of skyNames) labels.append(n.el);
         for (const b of beltLabels) labels.append(b.el);
         controls.enabled = true;
-        select(null);
-        if (hand) { controls.target.set(0, 0, 0); camera.position.copy(hand.offset); fly = null; }
-        else camera.position.set(0, 1800, 4200); // glide in from the stars
         controls.target.set(0, 0, 0);
+        if (hand) { select(null); camera.position.copy(hand.offset); fly = null; } // carry on from the zoom: no glide
+        else { camera.position.set(0, 1800, 4200); select(null); } // glide in from the stars
         if (!interactive) fly = null;
       } else { controls.enabled = false; universe.levels[level - 1].enter(i < prevLevel ? "in" : "out", hand); }
       if (!interactive) setInteractive(false);
@@ -768,7 +767,10 @@ export function mountAt(root, startLevel = 0, params = {}) {
   const probeGeo = new THREE.OctahedronGeometry(1, 0), probeMat = new THREE.MeshBasicMaterial({ color: 0xff5b2e });
   async function loadProbes() {
     let fleet;
-    try { fleet = (await api("/api/company/fleet")).fleet; } catch { return; } // no company yet
+    try {
+      if (!(await api("/api/company")).company) return; // no space company yet: nothing to draw, and no error to log
+      fleet = (await api("/api/company/fleet")).fleet;
+    } catch { return; }
     for (const s of fleet.filter((x) => x.kind === "probe")) {
       try {
         const d = await api(`/api/company/spacecraft/${s.id}`);

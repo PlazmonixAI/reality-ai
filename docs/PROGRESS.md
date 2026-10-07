@@ -435,3 +435,13 @@
 - `/simulate` encodes results with `json` directly; FastAPI's generic encoder took 1.2 s on the 4.5 MB belt alone.
 - The browser hands the stars and the Galaxy to the far scales as soon as they arrive, downloads the galaxy catalogue early, and builds the Stars, Milky Way, Galaxies and Universe scenes in idle time (shaders compiled ahead), so changing scale does not wait.
 - Labels measure their width once instead of forcing a layout per label per frame.
+
+## 2026-10-07 — Bug sweep
+
+Every simulation, every app page, the public site and ASM Teach were opened in a browser and their buttons pressed; fixed what showed up:
+- Quantum oscillator and Rabi oscillation crashed now and then: the frame clock could run a moment behind the engine result, giving a negative frame index.
+- Curves: switching to "Parametric" with empty x(t), y(t) boxes sent blank formulas and showed an error; it now loads an example of that type.
+- Universe Map logged a 409 for everyone without a space company (it asked for the fleet first); it now checks for a company.
+- The owner account (OWNER_EMAIL) is always an admin, so the Beta admin page opens without also setting ADMIN_EMAILS.
+- Universe Map: choosing the Solar System button from a far scale started the glide from a stale camera position (regression from the continuous zoom).
+- Server: the catalogue cache now has a memory budget (48 MB, entries over 12 MB are not kept) so unusual requests cannot exhaust the 512 MB free server; NaN or infinity in a result is sent as null instead of invalid JSON.

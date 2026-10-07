@@ -25,7 +25,10 @@ export default {
     let res = null, frac = 1;
 
     const preset = select({ label: "Curve", value: "rose", options: Object.entries(PRESETS).map(([v, p]) => ({ value: v, label: p.label })), onChange: (v) => load(v) });
-    const kind = segmented({ label: "Type", value: "polar", options: [{ value: "polar", label: "Polar r(θ)" }, { value: "parametric", label: "Parametric (x(t), y(t))" }], onChange: () => { sync(); recompute(); } });
+    const kind = segmented({ label: "Type", value: "polar", options: [{ value: "polar", label: "Polar r(θ)" }, { value: "parametric", label: "Parametric (x(t), y(t))" }], onChange: (v) => { // an empty formula box would only give an error: start from an example of that type
+      const empty = v === "parametric" ? !xIn.value.trim() || !yIn.value.trim() : !rIn.value.trim();
+      if (empty) { const first = Object.keys(PRESETS).find((k) => PRESETS[k].kind === v); preset.set?.(first); return load(first); }
+      sync(); recompute(); } });
     const rIn = textInput({ label: "r(θ) =", mono: true, onChange: () => recompute() });
     const xIn = textInput({ label: "x(t) =", mono: true, onChange: () => recompute() });
     const yIn = textInput({ label: "y(t) =", mono: true, onChange: () => recompute() });

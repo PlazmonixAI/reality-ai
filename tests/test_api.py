@@ -78,3 +78,24 @@ def test_catalogue_tools_are_cached_and_gzipped():
 def test_large_json_is_compressed():
     r = client.get("/tools", headers={"Accept-Encoding": "gzip"})
     assert r.status_code == 200 and r.headers.get("content-encoding") == "gzip"
+
+
+def test_catalogue_cache_stays_within_its_memory_budget():
+    import app.main as m
+    for z in (0.5, 1.5, 2.5, 3.5):
+        assert client.post("/simulate", json={"domain": "physics", "name": "cosmology", "args": {"z": z}}).status_code == 200
+    assert len(m._catalogue_cache) <= m.CATALOGUE_CACHE_SIZE
+    assert sum(len(a) + len(b) for a, b in m._catalogue_cache.values()) <= m.CATALOGUE_CACHE_BYTES
+
+
+def test_non_finite_numbers_are_sent_as_null():
+    import json as _json
+    from app.main import _json_bytes
+    assert _json.loads(_json_bytes({"a": float("nan"), "b": [1.0, float("inf")]})) == {"a": None, "b": [1.0, None]}
+
+
+def test_owner_account_is_an_admin(monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "owner_email", " Owner@Example.com ")
+    monkeypatch.setattr(settings, "admin_emails", "a@example.com")
+    assert settings.admins == {"owner@example.com", "a@example.com"}
