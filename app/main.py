@@ -1,14 +1,20 @@
 import base64
+import gzip
 import hashlib
 import hmac
+import json
 import logging
 import re
+import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 
 import app.modules  # noqa: F401  (registers all tools)
@@ -27,6 +33,22 @@ app = FastAPI(title="Reality ASM", version="0.9.0-beta",
               description="Reality ASM (Advanced Simulation Machine): physics, chemistry and mathematics simulations",
               docs_url="/docs" if settings.enable_api_docs else None, redoc_url=None,
               openapi_url="/openapi.json" if settings.enable_api_docs else None)
+
+_PRECOMPRESSED = (".jpg", ".jpeg", ".png", ".webp", ".gif", ".woff2", ".mp4", ".webm")
+
+
+class CompressText:
+    """gzip for JSON, HTML, JS and CSS; images and video are already compressed, so they pass straight through."""
+    def __init__(self, app):
+        self.app, self.gz = app, GZipMiddleware(app, minimum_size=1024, compresslevel=5)
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and not scope.get("path", "").lower().endswith(_PRECOMPRESSED):
+            return await self.gz(scope, receive, send)
+        return await self.app(scope, receive, send)
+
+
+app.add_middleware(CompressText)
 
 ROOT = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = ROOT / "frontend"
@@ -152,6 +174,62 @@ def tools(user=Depends(current_user)):
 
 FLIGHT_TOOLS = {"physics.rocket_launch_state", "physics.rocket_flight"}
 
+# Catalogue tools whose answer depends only on their arguments (no clock, no randomness without a fixed seed).
+# Their results are large (1 to 2 MB of JSON), so each one is computed, encoded and gzipped once and kept.
+CATALOGUE_TOOLS = {"physics.galaxy_catalog", "physics.milky_way", "physics.star_catalog", "physics.sky_atlas", "physics.cosmology",
+                   "physics.asteroid_belt"}  # the belt sample is seeded; the map asks for it once per day
+_catalogue_cache: dict[str, tuple[bytes, bytes]] = {}
+_catalogue_lock = threading.Lock()
+CATALOGUE_CACHE_SIZE = 24
+
+
+def _json_bytes(out: dict) -> bytes:
+    """Encode a tool result straight to JSON. FastAPI's generic encoder walks every number first, which takes
+    over a second for a few MB of results; tool results are plain lists and numbers, so json can do it directly."""
+    try:
+        return json.dumps(out, separators=(",", ":"), allow_nan=False).encode()
+    except (TypeError, ValueError):
+        return json.dumps(jsonable_encoder(out), separators=(",", ":")).encode()
+
+
+def catalogue_response(domain: str, name: str, args: dict, accept_encoding: str) -> Response:
+    key = f"{domain}.{name}:" + json.dumps(args, sort_keys=True, separators=(",", ":"))
+    hit = _catalogue_cache.get(key)
+    if hit is None:
+        body = _json_bytes(run_tool(domain, name, args))
+        hit = (body, gzip.compress(body, 6))
+        with _catalogue_lock:
+            if len(_catalogue_cache) >= CATALOGUE_CACHE_SIZE:
+                _catalogue_cache.pop(next(iter(_catalogue_cache)))
+            _catalogue_cache[key] = hit
+    if "gzip" in accept_encoding:
+        return Response(hit[1], media_type="application/json", headers={"Content-Encoding": "gzip", "Vary": "Accept-Encoding"})
+    return Response(hit[0], media_type="application/json")
+
+
+# The Universe Map asks for these on every visit: prepare them while the server starts, off the request path
+UNIVERSE_MAP_CALLS = [
+    ("galaxy_catalog", {"max_distance_mly": 6000, "limit": 25000, "include_redshift": True}),
+    ("milky_way", {"n_points": 40000}),
+    ("star_catalog", {"max_magnitude": 6.5, "nearby_ly": 100, "frame": "ecliptic"}),
+    ("sky_atlas", {"frame": "ecliptic"}),
+    ("cosmology", {"z": 1}),
+]
+
+
+def _belt_call() -> tuple[str, dict]:  # same arguments as the Universe Map, for today (UTC)
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00.000Z")
+    return ("asteroid_belt", {"date": day, "n_main": 4500, "n_trojans": 1100, "n_kuiper": 2600, "n_hilda": 500, "n_nea": 260,
+                              "n_scattered": 700, "n_oort": 2500, "samples_per_orbit": 16})
+
+
+def warm_catalogues() -> None:
+    for name, args in [_belt_call(), *UNIVERSE_MAP_CALLS]:
+        try:
+            catalogue_response("physics", name, args, "")
+        except Exception:  # noqa: BLE001 (warming is best effort; a real request reports any error)
+            log.exception("could not prepare %s", name)
+
 
 def flight_seal(user_id: str, state: dict, args: dict) -> str:
     """Signature over a flight state and the rocket it belongs to, so challenges can trust a reported flight."""
@@ -173,11 +251,13 @@ def run_tool(domain: str, name: str, args: dict) -> dict:
 
 
 @app.post("/simulate")
-def simulate(req: SimulateRequest, user=Depends(current_user)):
+def simulate(req: SimulateRequest, request: Request, user=Depends(current_user)):
     if not simulate_limit.allow(user["id"]):
         raise HTTPException(429, "Too many engine calls at once. Slow down a little.")
-    out = run_tool(req.domain, req.name, req.args)
     key = f"{req.domain}.{req.name}"
+    if key in CATALOGUE_TOOLS:
+        return catalogue_response(req.domain, req.name, req.args, request.headers.get("accept-encoding", ""))
+    out = run_tool(req.domain, req.name, req.args)
     if key in FLIGHT_TOOLS and isinstance(out.get("result"), dict):
         # A launch starts a verified flight; each step stays verified only if it continues a verified state
         trusted = key == "physics.rocket_launch_state" or (
@@ -186,7 +266,7 @@ def simulate(req: SimulateRequest, user=Depends(current_user)):
         out["verified"] = bool(trusted)
         if trusted and isinstance(state, dict):
             out["signature"] = flight_seal(user["id"], state, req.args)
-    return out
+    return Response(_json_bytes(out), media_type="application/json")
 
 
 def check_flight(user_id: str, state: dict, args: dict, signature: str | None) -> bool:
@@ -319,3 +399,5 @@ async def not_found(request: Request, exc):
         return HTMLResponse((SITE_DIR / "404.html").read_text(), status_code=404)
     return JSONResponse({"detail": detail}, status_code=404)
 
+
+threading.Thread(target=warm_catalogues, daemon=True, name="warm-catalogues").start()

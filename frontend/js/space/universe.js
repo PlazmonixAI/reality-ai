@@ -127,7 +127,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
       const d = cam.distanceTo(it.pos);
       tmp.copy(it.pos).project(L.camera);
       let ok = tmp.z < 1 && Math.abs(tmp.x) < 1.02 && Math.abs(tmp.y) < 1.02 && d >= it.minDist && d <= it.maxDist;
-      const x = ((tmp.x + 1) / 2) * w, y = ((1 - tmp.y) / 2) * h, lw = (it.w = it.el.offsetWidth || it.w || 120);
+      const x = ((tmp.x + 1) / 2) * w, y = ((1 - tmp.y) / 2) * h, lw = ok ? it.w || (it.w = it.el.offsetWidth) || 120 : 0; // measure once: reading sizes every frame forces a layout per label
       if (ok && (shown >= cap || placed.some(([px, py, pw]) => Math.abs(px - x) < (pw + lw) / 2 + 6 && Math.abs(py - y) < 18))) ok = false; // avoid clutter
       if (ok) { placed.push([x, y, lw]); shown++; }
       it.el.style.display = ok ? "" : "none";
@@ -178,7 +178,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     }
     if (data.atlas) atlasStars();
     applySettings();
-    stars.onEnter();
+    if (stars.controls.enabled) stars.onEnter(); // built ahead in the background: no panel until you arrive
   };
   stars.onEnter = () => showPanel("Our stellar neighbourhood", "#cfe0ff", [
     ["Stars shown", commas(data.stars.count)], ["Nearest star", "Proxima Centauri · 4.24 ly"],
@@ -231,7 +231,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     gc.name.forEach((nm, i) => { if (famous[nm]) label(galaxy, famous[nm], "#ffd98a", toScene(gc.x_kpc[i], gc.y_kpc[i], gc.z_kpc[i]), { cls: "minor", priority: 10, maxDist: 60, kind: "deepsky" }); });
     if (data.atlas) atlasGalaxy();
     applySettings();
-    galaxy.onEnter();
+    if (galaxy.controls.enabled) galaxy.onEnter(); // built ahead in the background: no panel until you arrive
   };
   galaxy.onEnter = () => {
     const m = data.milkyWay;
@@ -283,7 +283,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     for (const d of [10, 100, 1000]) { grings.add(circle(d, 0x4f78b0, 0.3)); label(galaxies, `${commas(d)} million ly`, "#4f78b0", new THREE.Vector3(d, 0, 0), { cls: "minor", priority: -1, maxDist: d * 10, kind: "ring" }); }
     if (data.atlas) atlasGalaxies();
     applySettings();
-    galaxies.onEnter();
+    if (galaxies.controls.enabled) galaxies.onEnter(); // built ahead in the background: no panel until you arrive
   };
   // The nearest galaxies as simulated pictures: a disc of their Hubble type, at their true size, tilted at random
   function galaxyDiscs(r, n = 1800) {
@@ -360,7 +360,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     label(cosmos, "Mapped galaxies (~2 billion ly)", "#ffcc55", new THREE.Vector3(0, 0, 0), { priority: 100, onclick: () => goLevel(3), maxDist: 150 });
     if (data.atlas) atlasCosmos();
     applySettings();
-    cosmos.onEnter();
+    if (cosmos.controls.enabled) cosmos.onEnter(); // built ahead in the background: no panel until you arrive
   };
   cosmos.onEnter = () => {
     const r = data.cosmology;
@@ -505,6 +505,17 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
   return {
     levels, data, toScene,
     prefetch() { getGalaxies().catch(() => {}); getCosmology().catch(() => {}); },
+    // Build the far scales ahead of time, one at a time while the browser is idle, so they are ready on arrival
+    async warm() {
+      const idle = () => new Promise((r) => (window.requestIdleCallback ? requestIdleCallback(r, { timeout: 1500 }) : setTimeout(r, 200)));
+      for (const L of levels) {
+        if (L.ready || (L.requires && !data[L.requires])) continue;
+        await idle();
+        if (L.ready) continue;
+        L.ready = true;
+        try { await L.load?.(); renderer.compile(L.scene, L.camera); } catch (e) { console.warn("prepare", L.name, e); }
+      }
+    },
     setData(d) {
       Object.assign(data, d);
       if (d.atlas) { if (stars.ready) atlasStars(); if (galaxy.ready) atlasGalaxy(); if (data.galaxies && galaxies.ready) atlasGalaxies(); if (data.cosmology && cosmos.ready) atlasCosmos(); }
