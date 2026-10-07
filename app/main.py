@@ -130,7 +130,7 @@ def _database_state() -> str:
         return f"{type(e).__name__}: {str(e)[:160]}"
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])  # uptime monitors often send HEAD
 def health():
     return {"status": "ok", "service": "reality-asm", "tools": len(list_tools()), "database": _database_state(),
             "owner_account": "set" if settings.owner_email and settings.owner_password else "not set"}

@@ -12,6 +12,11 @@ def test_health():
     assert r.json()["service"] == "reality-asm"
 
 
+def test_health_answers_head_for_uptime_monitors():
+    r = client.head("/health")
+    assert r.status_code == 200
+
+
 def test_tools_listing():
     r = client.get("/tools")
     assert "mathematics" in r.json()
