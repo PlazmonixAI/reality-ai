@@ -427,3 +427,11 @@
 - `.github/workflows/keep-alive.yml` pings `reality-ai.onrender.com/health` and the Plazmon backend health page every 10 minutes from GitHub, waiting up to 2 minutes and retrying, so a sleeping server has time to start. It backs up cron-job.org. Run it by hand from the Actions tab to check.
 - `app.realityasm.com` goes through Cloudflare, whose bot protection answers scripts (GitHub, cron-job.org) with 403 in 0.1 s, so monitors must use the onrender.com address.
 - Known limit: Render's free plan gives 750 running hours a month per account, so two services kept awake on one account run out near the end of the month.
+
+## 2026-10-07 — Universe Map loads faster
+
+- Responses are gzipped (JSON, HTML, JS, CSS; images pass through). The Universe Map's data drops from about 10 MB to about 3.5 MB.
+- The catalogue tools (galaxies, Milky Way, stars, sky atlas, cosmology) and the day's asteroid belt sample are computed, encoded and gzipped once, then served from memory (5 ms instead of seconds). The server prepares the map's exact calls in a background thread while it starts.
+- `/simulate` encodes results with `json` directly; FastAPI's generic encoder took 1.2 s on the 4.5 MB belt alone.
+- The browser hands the stars and the Galaxy to the far scales as soon as they arrive, downloads the galaxy catalogue early, and builds the Stars, Milky Way, Galaxies and Universe scenes in idle time (shaders compiled ahead), so changing scale does not wait.
+- Labels measure their width once instead of forcing a layout per label per frame.

@@ -278,11 +278,16 @@ export function mountAt(root, startLevel = 0, params = {}) {
   // ---------- engine data ----------
   let moonsData = null, belts = null, beltPoints = new THREE.Points();
   async function loadStatic() {
+    // the stars and the Galaxy feed the far scales: hand them over the moment they arrive, without waiting for the belts
+    const starsP = simulate("physics", "star_catalog", { max_magnitude: 6.5, nearby_ly: 100, frame: "ecliptic" });
+    const mwP = simulate("physics", "milky_way", { n_points: 40000 });
+    Promise.all([starsP, mwP]).then(([st, m]) => { if (!universe.data.stars) universe.setData({ stars: st.result, milkyWay: m.result }); }).catch(() => {});
+    universe.prefetch();
+    // the belt is sampled at the start of the UTC day (positions follow from its orbits), so the server can keep it
     const [moons, belt, stars, mw] = await Promise.all([
       simulate("physics", "planet_moons", { date: jdToDate(simJd).toISOString(), planet: "all", orbit_points: 256 }),
-      simulate("physics", "asteroid_belt", { date: jdToDate(simJd).toISOString(), n_main: 4500, n_trojans: 1100, n_kuiper: 2600, n_hilda: 500, n_nea: 260, n_scattered: 700, n_oort: 2500, samples_per_orbit: 16 }),
-      simulate("physics", "star_catalog", { max_magnitude: 6.5, nearby_ly: 100, frame: "ecliptic" }),
-      simulate("physics", "milky_way", { n_points: 40000 }),
+      simulate("physics", "asteroid_belt", { date: `${jdToDate(simJd).toISOString().slice(0, 10)}T00:00:00.000Z`, n_main: 4500, n_trojans: 1100, n_kuiper: 2600, n_hilda: 500, n_nea: 260, n_scattered: 700, n_oort: 2500, samples_per_orbit: 16 }),
+      starsP, mwP,
     ]);
     moonsData = moons.result.moons;
     for (const m of moonsData) { bodies[m.id] = makeBody(m, "natural satellite"); }
@@ -293,7 +298,8 @@ export function mountAt(root, startLevel = 0, params = {}) {
     rebuildScale();
     for (const m of moonsData) buildMoonOrbit(m.id);
     buildList();
-    simulate("physics", "sky_atlas", { frame: "ecliptic" }).then((r) => { universe.setData({ atlas: r.result }); buildSkyAtlas(r.result); }).catch((e) => console.warn("sky atlas", e));
+    simulate("physics", "sky_atlas", { frame: "ecliptic" }).then((r) => { universe.setData({ atlas: r.result }); buildSkyAtlas(r.result); }).catch((e) => console.warn("sky atlas", e))
+      .finally(() => setTimeout(() => universe.warm(), 1500));
   }
   // ---------- constellations on the night sky (directions only, as seen from the Sun) ----------
   const skyCon = new THREE.Group(), skyBorders = new THREE.Group(), skyNames = [];
