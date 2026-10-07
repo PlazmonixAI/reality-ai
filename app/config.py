@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     waitlist_origins: str = ""  # comma separated sites allowed to post to /api/waitlist, e.g. https://realityasm.com
     test_gate_username: str = ""  # when both are set, the whole app asks for this username and password (private testing)
     test_gate_password: str = ""
+    # the gate turns itself off at this moment (ISO time); the public beta opens on 20 October 2026. Empty: never.
+    test_gate_until: str = "2026-10-20T00:00:00+05:30"
     owner_email: str = ""  # with OWNER_PASSWORD: this account is created on startup if missing, so no sign-up is needed
     owner_password: str = ""
     contact_email: str = "support@plazmonix.ai"

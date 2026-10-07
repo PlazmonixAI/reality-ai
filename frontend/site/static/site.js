@@ -118,3 +118,13 @@ document.querySelectorAll("form[data-form]").forEach((form) => {
   if (err === "google" && msg) show(msg, "Google sign-in didn't complete. Try again, or use your email and password.");
   if (err === "invite" && msg) show(msg, "The beta is invite-only right now. Sign up with an invite code first.");
 })();
+
+// ---- launch day: 4 November 2026. The beta wording on this page changes by itself (same date as cloudflare/site.config.json)
+(function launchDay() {
+  if (Date.now() < Date.parse("2026-11-04T00:00:00+05:30")) return;
+  document.querySelectorAll(".eyebrow").forEach((e) => { if (e.textContent.trim() === "Public beta") e.textContent = "Now open to everyone"; });
+  document.querySelectorAll(".hero-note").forEach((e) => { if (e.textContent.includes("during the beta")) e.textContent = "Free to start. Works in any modern browser, no install."; });
+  document.querySelectorAll("a.btn").forEach((a) => { if (a.textContent.trim() === "Join the beta") a.textContent = "Get started"; });
+  document.querySelectorAll(".beta h2").forEach((e) => { if (e.textContent.trim() === "Join the beta") e.textContent = "Get started"; });
+  document.querySelectorAll(".beta .sub").forEach((e) => { if (e.textContent.includes("free while we test")) e.textContent = "Make a free account and open the universe, the labs and the space program in your browser."; });
+})();

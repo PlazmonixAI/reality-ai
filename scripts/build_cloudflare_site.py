@@ -8,6 +8,10 @@ Settings come from cloudflare/site.config.json:
   waitlist_endpoint  empty = the waitlist form is a dummy that only says thank you; set it to
                      https://<render app>/api/waitlist to store emails in the Render backend
   beta_app_url       the Render app, e.g. https://app.realityasm.com: the /test team desk links to it and checks its /health
+  beta_opens         when the public beta opens (ISO time, IST), e.g. 2026-10-20T00:00:00+05:30
+  launch             when the main app launches, e.g. 2026-11-04T00:00:00+05:30
+                     From those moments the page switches by itself (waitlist.js): "Join the beta", then "Get started",
+                     with every button pointing at beta_app_url/signup. No rebuild is needed on the day.
 
 Run:  python scripts/build_cloudflare_site.py
 """
@@ -24,6 +28,17 @@ CF = ROOT / "cloudflare"
 OUT = CF / "public"
 
 
+def nice_day(iso: str) -> str:  # "2026-10-20T00:00:00+05:30" -> "20 October 2026"
+    if not iso:
+        return ""
+    d = date.fromisoformat(iso[:10])
+    return f"{d.day} {d.strftime('%B')} {d.year}"
+
+
+def when(day: str) -> str:
+    return f"on {day}" if day else "soon"
+
+
 def main() -> None:
     cfg = json.loads((CF / "site.config.json").read_text())
     email = cfg.get("contact_email") or "contact@plazmonixai.in"
@@ -36,7 +51,11 @@ def main() -> None:
     shutil.copy(CF / "src" / "prelaunch.css", OUT / "static" / "prelaunch.css")
     for name in ("apple-touch-icon.png", "icon-192.png", "icon-512.png", "og-image.jpg"):
         shutil.copy(CF / "src" / name, OUT / "static" / "brand" / name)
+    beta_opens, launch = cfg.get("beta_opens", ""), cfg.get("launch", "")
+    beta_day = nice_day(beta_opens)
     js = (CF / "src" / "waitlist.js").read_text().replace("__WAITLIST_ENDPOINT__", cfg.get("waitlist_endpoint", ""))
+    js = (js.replace("__BETA_OPENS__", beta_opens).replace("__LAUNCH__", launch)
+          .replace("__APP_URL__", cfg.get("beta_app_url", "").rstrip("/")).replace("__BETA_DAY__", beta_day))
     (OUT / "static" / "waitlist.js").write_text(js)
 
     # --- main page: the real landing page, with every sign-in / sign-up link turned into the waitlist
@@ -48,9 +67,10 @@ def main() -> None:
         ('<a class="btn btn-primary" href="/signup" data-signed-out>Create a free account</a>\n            <a class="btn btn-primary" href="/app/" data-signed-in hidden>Open the app</a>',
          '<a class="btn btn-primary" href="#waitlist">Join the waitlist</a>'),
         ('<p class="hero-note">Free during the beta. Works in any modern browser, no install.</p>',
-         '<p class="hero-note">The public beta opens soon. Leave your email and we\'ll let you know first.</p>'),
+         f'<p class="hero-note" data-phase="note">The public beta opens {when(beta_day)}. Leave your email and we\'ll let you know first.</p>'),
         ('<h2>Join the beta</h2>\n        <p class="sub">It\'s free while we test. Tell us what breaks, what\'s confusing and what you want next.</p>',
-         '<h2>Join the waitlist</h2>\n        <p class="sub">Kindly leave your email. We\'ll write once, when the public beta opens.</p>'),
+         f'<h2 data-phase="title">Join the waitlist</h2>\n        <p class="sub" data-phase="sub">Kindly leave your email. We\'ll write once, {when(beta_day)}, when the public beta opens.</p>'),
+        ('<span class="eyebrow">Public beta</span>', f'<span class="eyebrow" data-phase="eyebrow">{"Beta opens " + beta_day if beta_day else "Public beta"}</span>'),
         ('<a class="btn btn-primary" href="/signup" data-signed-out>Create your account</a>\n          <a class="btn btn-primary" href="/app/" data-signed-in hidden>Open the app</a>\n          <a class="btn btn-ghost" href="/about">About the project</a>',
          form),
         ('<script type="module" src="/static/site.js"></script>', '<script type="module" src="/static/waitlist.js"></script>'),

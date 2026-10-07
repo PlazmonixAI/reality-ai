@@ -2,5 +2,7 @@
   "domain": "realityasm.com",
   "contact_email": "contact@plazmonixai.in",
   "waitlist_endpoint": "/api/waitlist",
-  "beta_app_url": "https://app.realityasm.com"
+  "beta_app_url": "https://app.realityasm.com",
+  "beta_opens": "2026-10-20T00:00:00+05:30",
+  "launch": "2026-11-04T00:00:00+05:30"
 }
