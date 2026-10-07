@@ -456,3 +456,8 @@ Every simulation, every app page, the public site and ASM Teach were opened in a
 - The app's own landing page changes its beta wording on 4 Nov.
 - Open owner items before 20 Oct (in LAUNCH.md): Render Starter plan with a disk so beta accounts survive restarts,
   environment variables, Google redirect URI, waitlist email.
+
+## 2026-10-07 — Zoom rail fix
+
+- Universe Map: moving the zoom rail within the Solar System (or any one scale) threw the camera onto the Sun, because
+  the camera was moved before its direction was measured. Fixed; rail values now give the matching distance.
