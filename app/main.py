@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import json
 import logging
+import math
 import re
 import threading
 from datetime import datetime, timezone
@@ -181,6 +182,8 @@ CATALOGUE_TOOLS = {"physics.galaxy_catalog", "physics.milky_way", "physics.star_
 _catalogue_cache: dict[str, tuple[bytes, bytes]] = {}
 _catalogue_lock = threading.Lock()
 CATALOGUE_CACHE_SIZE = 24
+CATALOGUE_CACHE_BYTES = 48 * 1024 * 1024  # memory budget for the cache (the free server has 512 MB)
+CATALOGUE_MAX_ENTRY = 12 * 1024 * 1024  # a result bigger than this is sent but not kept
 
 
 def _json_bytes(out: dict) -> bytes:
@@ -188,8 +191,18 @@ def _json_bytes(out: dict) -> bytes:
     over a second for a few MB of results; tool results are plain lists and numbers, so json can do it directly."""
     try:
         return json.dumps(out, separators=(",", ":"), allow_nan=False).encode()
-    except (TypeError, ValueError):
-        return json.dumps(jsonable_encoder(out), separators=(",", ":")).encode()
+    except (TypeError, ValueError):  # numpy scalars, or NaN/infinity, which JSON cannot carry: send them as null
+        return json.dumps(_finite(jsonable_encoder(out)), separators=(",", ":"), allow_nan=False).encode()
+
+
+def _finite(x):
+    if isinstance(x, float):
+        return x if math.isfinite(x) else None
+    if isinstance(x, dict):
+        return {k: _finite(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_finite(v) for v in x]
+    return x
 
 
 def catalogue_response(domain: str, name: str, args: dict, accept_encoding: str) -> Response:
@@ -198,10 +211,14 @@ def catalogue_response(domain: str, name: str, args: dict, accept_encoding: str)
     if hit is None:
         body = _json_bytes(run_tool(domain, name, args))
         hit = (body, gzip.compress(body, 6))
-        with _catalogue_lock:
-            if len(_catalogue_cache) >= CATALOGUE_CACHE_SIZE:
-                _catalogue_cache.pop(next(iter(_catalogue_cache)))
-            _catalogue_cache[key] = hit
+        if len(body) + len(hit[1]) <= CATALOGUE_MAX_ENTRY:
+            with _catalogue_lock:
+                _catalogue_cache.pop(key, None)
+                size = lambda: sum(len(a) + len(b) for a, b in _catalogue_cache.values())  # noqa: E731
+                while _catalogue_cache and (len(_catalogue_cache) >= CATALOGUE_CACHE_SIZE
+                                            or size() + len(body) + len(hit[1]) > CATALOGUE_CACHE_BYTES):
+                    _catalogue_cache.pop(next(iter(_catalogue_cache)))  # oldest first
+                _catalogue_cache[key] = hit
     if "gzip" in accept_encoding:
         return Response(hit[1], media_type="application/json", headers={"Content-Encoding": "gzip", "Vary": "Accept-Encoding"})
     return Response(hit[0], media_type="application/json")

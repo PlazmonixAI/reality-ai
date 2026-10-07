@@ -51,8 +51,9 @@ class Settings(BaseSettings):
         return {o.strip().rstrip("/") for o in self.waitlist_origins.split(",") if o.strip()}
 
     @property
-    def admins(self) -> set[str]:
-        return {e.strip().lower() for e in self.admin_emails.split(",") if e.strip()}
+    def admins(self) -> set[str]:  # the owner account always counts as an admin
+        owner = {self.owner_email.strip().lower()} if self.owner_email and self.owner_email.strip() else set()
+        return {e.strip().lower() for e in self.admin_emails.split(",") if e.strip()} | owner
 
     @property
     def invite_codes(self) -> set[str]:

@@ -47,7 +47,7 @@ export default {
       }
       const axes = [[[0, 0, 1], "|g⟩ ground"], [[0, 0, -1], "|e⟩ excited"], [[1, 0, 0], "x"], [[0, 1, 0], "y"]];
       axes.forEach(([v, name]) => { const [px, py] = P(v); const [ox, oy] = P([0, 0, 0]); ctx.strokeStyle = "rgba(201,206,214,.25)"; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(px, py); ctx.stroke(); label(ctx, name, px + 6, py, { color: "#c9ced6", font: "12px system-ui" }); });
-      const n = res.bloch.length, i = Math.floor((((now - start) / 6000) % 1) * (n - 1));
+      const n = res.bloch.length, i = Math.floor((((Math.max(0, now - start)) / 6000) % 1) * (n - 1)); // the frame clock can run a moment behind the result
       ctx.strokeStyle = "rgba(235,104,52,.75)"; ctx.lineWidth = 2; ctx.beginPath();
       for (let k = 0; k <= i; k++) { const [px, py] = P(res.bloch[k]); if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
       ctx.stroke();

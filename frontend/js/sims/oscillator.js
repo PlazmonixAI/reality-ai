@@ -59,7 +59,7 @@ export default {
         label(ctx, `n=${l.n}  ${fmt(l.energy_ev, 3)} eV`, lw - 6, y - 8, { align: "right", color: "#c9ced6", font: "11px system-ui" });
       });
       // the superposition, animated from the engine's frames
-      const nf = res.times_fs.length, f = Math.floor((((now - start) / 2600) % 1) * (nf - 1));
+      const nf = res.times_fs.length, f = Math.floor((((Math.max(0, now - start)) / 2600) % 1) * (nf - 1)); // the frame clock can run a moment behind the result
       const d = res.superposition_density[f], dm = Math.max(...res.superposition_density.flat());
       const x2 = lw + 20, ww = w - x2 - 20, bx = (x) => x2 + ((x + xmax) / (2 * xmax)) * ww, base = h * 0.7;
       ctx.beginPath(); ctx.moveTo(bx(-xmax), base);
