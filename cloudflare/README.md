@@ -44,6 +44,8 @@ reuses the code in `functions/` for the waitlist and the /test password; every o
 | `contact_email` | Shown on the pages |
 | `waitlist_endpoint` | `/api/waitlist` (default): emails go to Cloudflare KV (step 4). Later you can point it at `https://<your Render app>/api/waitlist` so they land on the app's Beta admin page. Empty: a placeholder that **stores nothing**. |
 | `beta_app_url` | The Render app's address, shown on /test as "Open the beta app" |
+| `beta_opens` | When the public beta opens (ISO time). From then every "Join" button leads to `beta_app_url`/signup, by itself |
+| `launch` | When the main app launches (ISO time). From then the page says "Get started" instead of "beta" |
 
 After changing it, run `python scripts/build_cloudflare_site.py`, commit, and push; Cloudflare redeploys by itself.
 

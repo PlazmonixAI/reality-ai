@@ -10,6 +10,11 @@ Read this file, then `docs/ROADMAP.md` and `docs/PROGRESS.md`, before doing anyt
 3. The tool runs real numerical/symbolic computation (numpy / scipy / sympy).
 4. The representative explains the result with units, assumptions and limits.
 
+## Key dates (remember these)
+- **20 October 2026: public beta testing starts.** The website and the app's test gate switch over by themselves (see `docs/LAUNCH.md`).
+- **4 November 2026: main app launch** (the founder's birthday). The site wording changes from "beta" to "get started" by itself.
+- Every session before these dates: read `docs/LAUNCH.md`, work its open items, and keep the app stable (no risky rewrites close to a date).
+
 ## Hard rules
 - **Real implementations only.** No stubs, no fake numbers, no `return 42`. Every tool must compute its answer.
 - **Every tool gets tests** in `tests/`, checked against known textbook values (tolerance-based asserts).

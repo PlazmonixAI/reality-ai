@@ -80,9 +80,23 @@ CSP = ("default-src 'self'; script-src 'self' " + _importmap_hash() + "; style-s
        "form-action 'self' https://accounts.google.com")
 
 
+def _gate_expired() -> bool:
+    """True once TEST_GATE_UNTIL has passed: on beta day the private gate opens by itself."""
+    if not settings.test_gate_until:
+        return False
+    try:
+        until = datetime.fromisoformat(settings.test_gate_until)
+    except ValueError:
+        log.warning("TEST_GATE_UNTIL is not an ISO time: %r", settings.test_gate_until)
+        return False
+    if until.tzinfo is None:
+        until = until.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) >= until
+
+
 def _gate_ok(request: Request) -> bool:
     """Private-testing gate: when TEST_GATE_USERNAME/PASSWORD are set, every page needs them (HTTP Basic)."""
-    if not (settings.test_gate_username and settings.test_gate_password):
+    if not (settings.test_gate_username and settings.test_gate_password) or _gate_expired():
         return True
     if request.url.path in ("/health", "/api/waitlist"):
         return True

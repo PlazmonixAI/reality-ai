@@ -445,3 +445,14 @@ Every simulation, every app page, the public site and ASM Teach were opened in a
 - The owner account (OWNER_EMAIL) is always an admin, so the Beta admin page opens without also setting ADMIN_EMAILS.
 - Universe Map: choosing the Solar System button from a far scale started the glide from a stale camera position (regression from the continuous zoom).
 - Server: the catalogue cache now has a memory budget (48 MB, entries over 12 MB are not kept) so unusual requests cannot exhaust the 512 MB free server; NaN or infinity in a result is sent as null instead of invalid JSON.
+
+## 2026-10-07 — Ready for the beta (20 Oct) and the launch (4 Nov)
+
+- Dates recorded in `CLAUDE.md` (Key dates) and `docs/LAUNCH.md` (timeline, owner checklist, beta email draft).
+- realityasm.com now says "Beta opens 20 October 2026" and switches by itself: on 20 Oct every waitlist button becomes
+  "Join the beta" linking to app.realityasm.com/signup; on 4 Nov the words become "Get started". Dates live in
+  `cloudflare/site.config.json` (`beta_opens`, `launch`); checked with a fixed browser clock for all three phases.
+- The app's private test gate opens by itself at `TEST_GATE_UNTIL` (default 20 Oct 2026, 00:00 IST); `/health` stays open.
+- The app's own landing page changes its beta wording on 4 Nov.
+- Open owner items before 20 Oct (in LAUNCH.md): Render Starter plan with a disk so beta accounts survive restarts,
+  environment variables, Google redirect URI, waitlist email.

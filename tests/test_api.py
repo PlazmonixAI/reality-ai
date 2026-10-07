@@ -99,3 +99,22 @@ def test_owner_account_is_an_admin(monkeypatch):
     monkeypatch.setattr(settings, "owner_email", " Owner@Example.com ")
     monkeypatch.setattr(settings, "admin_emails", "a@example.com")
     assert settings.admins == {"owner@example.com", "a@example.com"}
+
+
+def test_test_gate_opens_by_itself_on_beta_day(monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "test_gate_username", "tester")
+    monkeypatch.setattr(settings, "test_gate_password", "secret-pass")
+    monkeypatch.setattr(settings, "test_gate_until", "2999-01-01T00:00:00+05:30")
+    assert client.get("/").status_code == 401  # before the date: private
+    assert client.get("/", auth=("tester", "secret-pass")).status_code == 200
+    assert client.get("/health").status_code == 200  # monitors always get through
+    monkeypatch.setattr(settings, "test_gate_until", "2000-01-01T00:00:00+05:30")
+    assert client.get("/").status_code == 200  # after the date: open
+    monkeypatch.setattr(settings, "test_gate_until", "")
+    assert client.get("/").status_code == 401  # empty: the gate never opens by itself
+
+
+def test_gate_default_ends_when_the_beta_opens():
+    from app.config import Settings
+    assert Settings().test_gate_until.startswith("2026-10-20")
