@@ -420,3 +420,9 @@
 - The last frame of the old scale shrinks or grows away over the new one instead of a black fade. A readout shows how far out the camera is, from AU to billions of light years.
 - Zooming in only drops to the smaller scale when the view is centred near home, so zooming onto Andromeda stops at the Galaxies scale instead of jumping into the Milky Way.
 - Next: chemistry lab keyboard controls. Known issue: with real-scale distances on, the Solar System reaches only 600 AU, so the jump out to the Stars scale is larger.
+
+## 2026-10-07 — Keeping the free Render server awake
+
+- `/health` now answers HEAD as well as GET (UptimeRobot and some other monitors send HEAD and were getting 405).
+- `.github/workflows/keep-alive.yml` pings `app.realityasm.com/health` and the Plazmon backend health page every 10 minutes from GitHub, waiting up to 2 minutes and retrying, so a sleeping server has time to start. It backs up cron-job.org. Run it by hand from the Actions tab to check.
+- Known limit: Render's free plan gives 750 running hours a month per account, so two services kept awake on one account run out near the end of the month.
