@@ -51,3 +51,9 @@ It's a beta, so some things will break. Use "Send feedback" in the menu and tell
 Thank you for waiting with us.
 Subham Agarwal
 Plazmonix AI
+
+## Social posts
+- Instagram allows only **5 hashtags** per post: always use exactly 5 (default set:
+  `#RealityASM #PlazmonixAI #ScienceEducation #EdTech #MadeInIndia`).
+- Promo videos keep the reel design (black frame, three-line headline, rounded card, phonk) but each one needs its
+  own structure, no rolling word lists, and copy that says what the product does and who it helps, not a list of labs.
