@@ -220,6 +220,7 @@ Each one needs its engine tool(s) with textbook-checked tests first, then the in
 - [x] Simulations gallery by subject (Physics, Chemistry, Mathematics) with physics topics underneath
 - [x] Landing page with new screenshots and search tags built around the Universe Map
 - [x] Universe Journey: Big Bang (`cosmic_history`) to the Earth, flying through every scale with engine captions
+- [x] Universe Map: one continuous zoom from the planets to the edge of the observable universe (automatic hand-off between scales, zoom rail, distance readout)
 - [x] Fuller Solar System: Hildas, near-Earth asteroids, scattered disc, Oort cloud, heliosphere boundaries, belt name tags
 - [x] Keyboard, mouse-only and touch controls: Universe Map, shared canvas kit (pinch, keys), playback keys, Space Program builder and flight
 - [x] Detailed pictures: 56 openly licensed telescope photos of nebulae and clusters, simulated galaxy pictures by Hubble type, star close-ups from Stefan–Boltzmann radii

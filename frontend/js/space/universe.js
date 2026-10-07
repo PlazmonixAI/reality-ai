@@ -64,13 +64,17 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
     controls.minDistance = min; controls.maxDistance = max;
     const L = {
       name, icon, scene, camera, controls, labelItems: [], ready: false, groups: {}, atlasDone: false,
-      enter(direction) {
-        controls.enabled = true;
-        const d = direction === "in" ? max * 0.8 : Math.max(min * 3, start.length() * 0.35);
-        camera.position.copy(start).setLength(d); controls.target.set(0, 0, 0); controls.update();
-        L.fly = { from: d, to: start.length(), t: 0 };
+      enter(direction, hand = null) {
+        controls.enabled = true; L.lastD = null;
+        if (hand) { // a continuous zoom from the next scale: carry on from the same view, no glide
+          controls.target.copy(hand.target); camera.position.copy(hand.target).add(hand.offset); controls.update(); L.fly = null;
+        } else {
+          const d = direction === "in" ? max * 0.8 : Math.max(min * 3, start.length() * 0.35);
+          camera.position.copy(start).setLength(d); controls.target.set(0, 0, 0); controls.update();
+          L.fly = { from: d, to: start.length(), t: 0 };
+        }
         for (const it of L.labelItems) labels.append(it.el);
-        if (L.ready) L.onEnter?.();
+        if (L.ready) { if (hand) hidePanel(); else L.onEnter?.(); } // keep the screen clear while zooming through
         else showPanel(`Loading ${name.toLowerCase()}…`, "#9fb3cc", [], "Fetching engine data.");
       },
       exit() { controls.enabled = false; },
@@ -85,6 +89,11 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
           L.fly.t = Math.min(1, L.fly.t + dt * 0.9);
           const k = L.fly.t * L.fly.t * (3 - 2 * L.fly.t);
           camera.position.setLength(L.fly.from + (L.fly.to - L.fly.from) * k);
+        }
+        if (L.anchor && controls.enabled) { // the centre of the view drifts with the zoom (the Milky Way: from the Sun out to its centre)
+          const d = camera.position.distanceTo(controls.target);
+          if (L.lastD && Math.abs(d / L.lastD - 1) > 1e-6) { const shift = L.anchor(d).sub(L.anchor(L.lastD)); controls.target.add(shift); camera.position.add(shift); }
+          L.lastD = d;
         }
         controls.update();
         L.update?.(dt);
@@ -138,7 +147,7 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
   }
 
   // ---------- 1. Nearby stars (1 unit = 1 light year) ----------
-  const stars = base("Stars", "✦", { start: new THREE.Vector3(0, 35, 80), min: 0.6, max: 5000, near: 0.01, far: 1e6, prev: 0, next: 2 });
+  const stars = base("Stars", "✦", { start: new THREE.Vector3(0, 35, 80), min: 0.6, max: 12000, near: 0.01, far: 1e6, prev: 0, next: 2 });
   stars.requires = "stars";
   stars.load = () => {
     const s = data.stars, n = s.count, pos = [], col = [], size = [];
@@ -189,8 +198,14 @@ export function createUniverseLevels({ renderer, labels, showPanel, hidePanel, g
   stars.onPick = (ndc) => { const s = data.stars, i = nearestPoint(stars, ndc, s.x_ly, s.y_ly, s.z_ly); if (i >= 0) starInfo(i); };
 
   // ---------- 2. The Milky Way (1 unit = 1 kpc = 3,262 ly) ----------
-  const galaxy = base("Milky Way", "◎", { start: new THREE.Vector3(0, 38, 24), min: 1.2, max: 400, near: 0.01, far: 1e5, prev: 1, next: 3 });
+  const galaxy = base("Milky Way", "◎", { start: new THREE.Vector3(0, 38, 24), min: 0.8, max: 400, near: 0.01, far: 1e5, prev: 1, next: 3 });
   galaxy.requires = "milkyWay";
+  // close in, the view centres on the Sun; from 3 kpc out to 40 kpc it moves smoothly to the Galaxy's centre
+  galaxy.sun = () => (data.milkyWay ? toScene(...data.milkyWay.sun_position_kpc) : new THREE.Vector3());
+  galaxy.anchor = (d) => {
+    const x = Math.min(1, Math.max(0, Math.log(d / 3) / Math.log(40 / 3)));
+    return galaxy.sun().multiplyScalar(1 - x * x * (3 - 2 * x));
+  };
   galaxy.load = () => {
     const m = data.milkyWay, P = m.points, pos = [], col = [], size = [];
     for (let i = 0; i < P.x_kpc.length; i++) {
