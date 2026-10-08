@@ -35,6 +35,10 @@ document.querySelectorAll("form[data-waitlist]").forEach((form) => {
 (function phase() {
   const now = Date.now(), at = (iso) => (iso && !iso.startsWith("__") ? Date.parse(iso) : NaN);
   const open = at(BETA_OPENS) <= now, live = at(LAUNCH) <= now;
+  // the dates section: what is coming, what is open now
+  const tag = (key, text, cls) => document.querySelectorAll(`[data-when="${key}"]`).forEach((e) => { e.textContent = text; e.classList.add(cls); });
+  if (live) { tag("beta", "Ran 20 Oct to 3 Nov", "done"); tag("launch", "Open now", "open"); }
+  else if (open) tag("beta", "Open now", "open");
   if (!APP || APP.startsWith("__") || !(open || live)) return;
   const signup = `${APP}/signup`, cta = live ? "Get started" : "Join the beta";
   const set = (key, text) => document.querySelectorAll(`[data-phase="${key}"]`).forEach((e) => { e.textContent = text; });
@@ -49,6 +53,7 @@ document.querySelectorAll("form[data-waitlist]").forEach((form) => {
     : "It's free while we test. Tell us what breaks, what's confusing and what you want next.");
   set("cs-title", live ? "This page is not here, but Reality ASM is." : "This page is not here, but the public beta is open.");
   set("cs-lede", "Make a free account and start in the app.");
+  set("dates-note", live ? "Reality ASM is open to everyone. Make a free account and start." : "The beta is open now. Make a free account and start.");
   document.querySelectorAll('a[href="/#waitlist"]').forEach((a) => a.remove()); // the form below becomes the button
   document.querySelectorAll("form[data-waitlist]").forEach((form) => {
     const go = document.createElement("a");

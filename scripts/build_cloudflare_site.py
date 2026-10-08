@@ -35,6 +35,41 @@ def nice_day(iso: str) -> str:  # "2026-10-20T00:00:00+05:30" -> "20 October 202
     return f"{d.day} {d.strftime('%B')} {d.year}"
 
 
+def dates_section(beta_day: str, launch_day: str) -> str:
+    """Both dates, what each one means, and a status that waitlist.js updates on the day."""
+    if not beta_day or not launch_day:
+        return ""
+    def leaf(day: str) -> str:  # "4 November 2026" -> a calendar leaf: NOV / 04 / 2026
+        d, m, y = day.split()
+        return f'<div class="leaf"><b>{m[:3].upper()}</b><span>{int(d):02d}</span><small>{y}</small></div>' 
+    return f'''    <section id="dates" class="dates">
+      <div class="wrap">
+        <span class="eyebrow">Mark the dates</span>
+        <h2>Two dates for your calendar</h2>
+        <div class="when-grid">
+          <article class="when">
+            {leaf(beta_day)}
+            <div><p class="when-tag" data-when="beta">Coming up</p>
+              <h3>Public beta testing begins</h3>
+              <p>Make a free account and use every part of Reality ASM: the Universe Map, the chemistry lab, the maths
+              sandbox, the space program and the AI analyst. Tell us what breaks and what you want next. The beta shapes
+              the launch.</p></div>
+          </article>
+          <article class="when launch">
+            {leaf(launch_day)}
+            <div><p class="when-tag" data-when="launch">Coming up</p>
+              <h3>Main app launch</h3>
+              <p>The full Reality ASM opens to everyone, and ASM Teach opens to schools for their classroom boards,
+              with every practical and derivation from class 9 to 12 as a live experiment.</p></div>
+          </article>
+        </div>
+        <p class="when-note" data-phase="dates-note">Until then, leave your email below and we'll write once, on {beta_day}.</p>
+      </div>
+    </section>
+
+'''
+
+
 def when(day: str) -> str:
     return f"on {day}" if day else "soon"
 
@@ -79,6 +114,7 @@ def main() -> None:
         ('<a class="door teach" href="/teach">', '<a class="door teach" href="#waitlist">'),
         ("{{CONTACT_EMAIL}}", email),
     ]
+    swaps.append(('    <section id="universe" class="band">', dates_section(beta_day, nice_day(launch)) + '    <section id="universe" class="band">'))
     for old, new in swaps:
         if old not in html:
             raise SystemExit(f"landing page changed; update build_cloudflare_site.py (missing: {old[:60]!r})")
@@ -118,7 +154,8 @@ def main() -> None:
 TITLE = "Reality ASM · 3D Universe Map with every galaxy and constellation"
 DESCRIPTION = ("Fly through the universe in one 3D map: planets on any date, 12,000 stars, all 88 constellations, 3,800 "
                "planetary systems, the Milky Way and 11,000 named galaxies to the edge of the observable universe. Plus physics, "
-               "chemistry and maths simulations and ASM Teach for schools. Built in India by Plazmonix AI.")
+               "chemistry and maths simulations and ASM Teach for schools. Built in India by Plazmonix AI. Public beta from "
+               "20 October 2026; main launch on 4 November 2026.")
 KEYWORDS = ("universe map, 3D universe map, interactive universe map, galaxy map, map of the galaxies, constellation map, 3D star map, "
             "solar system 3D, observable universe, Andromeda galaxy, Milky Way map, exoplanet map, physics simulations, "
             "chemistry virtual lab, maths graphing sandbox, rocket simulator, PSLV, ASM Teach, Reality ASM, Plazmonix AI")

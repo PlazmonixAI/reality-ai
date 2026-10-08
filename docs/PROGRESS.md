@@ -461,3 +461,10 @@ Every simulation, every app page, the public site and ASM Teach were opened in a
 
 - Universe Map: moving the zoom rail within the Solar System (or any one scale) threw the camera onto the Sun, because
   the camera was moved before its direction was measured. Fixed; rail values now give the matching distance.
+
+## 2026-10-08 — Dates on the website
+
+- realityasm.com has a "Mark the dates" section under the hero: 20 October 2026 (public beta testing begins) and
+  4 November 2026 (main app launch), each with what it means. Its labels change by themselves: Coming up, then
+  Open now on beta day, then "Ran 20 Oct to 3 Nov" and Open now for the launch. Both dates are also in the search
+  description. Built by `scripts/build_cloudflare_site.py` from `beta_opens` and `launch` in `cloudflare/site.config.json`.
